@@ -1,0 +1,56 @@
+<p-menubar [model]="menuItems" styleClass="app-menubar">
+  <ng-template #start>
+    <span class="app-brand">
+      <img class="app-brand__icon" src="logo.svg" alt="" />
+      <span class="app-brand__title">{{ 'app.name' | translate }}</span>
+    </span>
+  </ng-template>
+
+  <ng-template #end>
+    <div class="app-bar-end">
+      <app-theme-switch />
+
+      <div class="user-menu" #userMenu>
+        <button
+          type="button"
+          class="app-user"
+          aria-haspopup="true"
+          [attr.aria-expanded]="userMenuOpen()"
+          (click)="toggleUserMenu()"
+        >
+          <span class="app-user__avatar">{{ initials() }}</span>
+          <span class="app-user__name">{{ auth.currentUser()?.displayName }}</span>
+          <i class="pi" [class.pi-angle-down]="!userMenuOpen()" [class.pi-angle-up]="userMenuOpen()"></i>
+        </button>
+
+        @if (userMenuOpen()) {
+          <div class="user-menu__panel" role="menu">
+            <div class="user-menu__header">
+              <span class="app-user__avatar">{{ initials() }}</span>
+              <span class="user-menu__identity">
+                <span class="user-menu__name">{{ auth.currentUser()?.displayName }}</span>
+                <span class="user-menu__login">{{ auth.currentUser()?.userName }}</span>
+              </span>
+            </div>
+
+            <a class="user-menu__item" role="menuitem" routerLink="/app/profile" (click)="closeUserMenu()">
+              <i class="pi pi-user"></i>{{ 'nav.profile' | translate }}
+            </a>
+
+            <a class="user-menu__item" role="menuitem" routerLink="/app/settings" (click)="closeUserMenu()">
+              <i class="pi pi-cog"></i>{{ 'nav.settings' | translate }}
+            </a>
+
+            <button type="button" class="user-menu__item user-menu__item--logout" role="menuitem" (click)="logout()">
+              <i class="pi pi-sign-out"></i>{{ 'nav.logout' | translate }}
+            </button>
+          </div>
+        }
+      </div>
+    </div>
+  </ng-template>
+</p-menubar>
+
+<div class="app-content">
+  <router-outlet></router-outlet>
+</div>

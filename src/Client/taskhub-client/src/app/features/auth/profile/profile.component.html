@@ -1,0 +1,72 @@
+<h2 class="page-title"><i class="pi pi-user"></i>{{ 'profile.title' | translate }}</h2>
+
+<p-card styleClass="profile-card">
+  <p class="profile-identity">
+    <strong>{{ auth.currentUser()?.displayName }}</strong> ({{ auth.currentUser()?.email }})
+  </p>
+
+  @if (auth.currentUser()?.twoFactorEnabled) {
+    <p class="profile-2fa profile-2fa--on">
+      <i class="pi pi-verified"></i>
+      {{ 'profile.twoFactorEnabled' | translate }}
+    </p>
+    <p-button [label]="'profile.disableTwoFactor' | translate" severity="danger" [outlined]="true" (onClick)="disable()" />
+  } @else {
+    <p class="profile-2fa">{{ 'profile.twoFactorDisabled' | translate }}</p>
+
+    @if (!setupResponse()) {
+      <p-button [label]="'profile.enableTwoFactor' | translate" icon="pi pi-shield" (onClick)="startSetup()" />
+    } @else {
+      <div class="setup-block">
+        <p class="setting-desc">{{ 'profile.scanQr' | translate }}</p>
+        <p><strong>{{ 'profile.sharedKey' | translate }}:</strong> <code>{{ setupResponse()!.sharedKey }}</code></p>
+        <p class="uri"><code>{{ setupResponse()!.authenticatorUri }}</code></p>
+
+        <form [formGroup]="confirmForm" (ngSubmit)="confirmSetup()">
+          <div class="field">
+            <label for="confirmCode">{{ 'profile.confirmCode' | translate }}</label>
+            <input pInputText id="confirmCode" formControlName="code" inputmode="numeric" maxlength="6" class="w-full" />
+          </div>
+
+          @if (errorMessage()) {
+            <p-message severity="error" [text]="errorMessage()!" styleClass="w-full" />
+          }
+
+          <p-button [label]="'profile.confirm' | translate" icon="pi pi-check" type="submit" [disabled]="confirmForm.invalid" />
+        </form>
+      </div>
+    }
+  }
+</p-card>
+
+<p-card styleClass="profile-card profile-card--google">
+  <h3 class="profile-section-title"><i class="pi pi-google"></i>{{ 'profile.googleTitle' | translate }}</h3>
+
+  @if (auth.currentUser()?.googleLinked) {
+    <p class="profile-2fa profile-2fa--on">
+      <i class="pi pi-verified"></i>
+      {{ 'profile.googleLinked' | translate }}
+      @if (auth.currentUser()?.googleEmail) {
+        ({{ auth.currentUser()?.googleEmail }})
+      }
+    </p>
+    <p-button
+      [label]="'profile.googleUnlink' | translate"
+      icon="pi pi-times"
+      severity="danger"
+      [outlined]="true"
+      (onClick)="unlinkGoogle()"
+    />
+  } @else if (google.clientId()) {
+    <p class="profile-2fa">{{ 'profile.googleHint' | translate }}</p>
+    <app-google-button class="profile-google-button" text="continue_with" (credential)="linkGoogle($event)" />
+  } @else {
+    <p class="profile-2fa"><i class="pi pi-info-circle"></i> {{ 'profile.googleNotConfigured' | translate }}</p>
+  }
+
+  @if (googleErrorKey(); as key) {
+    <p class="error-text">{{ key | translate }}</p>
+  }
+</p-card>
+
+<app-login-history />

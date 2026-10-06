@@ -1,0 +1,51 @@
+<p-confirmdialog />
+
+<div class="page-header">
+  <h1>{{ 'userGroups.title' | translate }}</h1>
+  <p-button [label]="'userGroups.newGroup' | translate" icon="pi pi-plus" (onClick)="createGroup()" />
+</div>
+
+@if (groups().length === 0) {
+  <div class="empty-state">
+    <i class="pi pi-users"></i>
+  </div>
+}
+
+<p-accordion [value]="[]">
+  @for (group of groups(); track group.id) {
+    <p-accordion-panel [value]="group.id">
+      <p-accordion-header (click)="loadMembers(group)">
+        <span class="group-header">
+          <span class="group-header__name"><i class="pi pi-users"></i>{{ group.name }}</span>
+          <span class="chip tone-blue">{{ group.memberCount }} {{ 'userGroups.members' | translate }}</span>
+        </span>
+      </p-accordion-header>
+      <p-accordion-content>
+        @if (group.description) {
+          <p class="description">{{ group.description }}</p>
+        }
+
+        <p-button
+          [label]="'userGroups.addMember' | translate"
+          icon="pi pi-user-plus"
+          severity="secondary"
+          [outlined]="true"
+          (onClick)="addMember(group)"
+        />
+
+        <div class="members-list">
+          @for (member of membersByGroup()[group.id]; track member.userId) {
+            <div class="member-row">
+              <span><i class="pi pi-user member-row__icon"></i>{{ member.displayName }} ({{ member.userName }})</span>
+              <button type="button" class="icon-btn icon-btn--danger" (click)="removeMember(group, member)">
+                <i class="pi pi-times"></i>
+              </button>
+            </div>
+          }
+        </div>
+
+        <p-button [label]="'common.delete' | translate" icon="pi pi-trash" severity="danger" [text]="true" (onClick)="deleteGroup(group)" />
+      </p-accordion-content>
+    </p-accordion-panel>
+  }
+</p-accordion>

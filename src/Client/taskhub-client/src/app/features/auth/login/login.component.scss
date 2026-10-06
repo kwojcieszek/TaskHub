@@ -1,0 +1,30 @@
+:host {
+  display: block;
+}
+
+.google-login {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1.25rem;
+
+  &--hidden {
+    display: none;
+  }
+}
+
+.google-login__divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.8rem;
+  color: var(--p-text-muted-color);
+
+  &::before,
+  &::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--app-border);
+  }
+}

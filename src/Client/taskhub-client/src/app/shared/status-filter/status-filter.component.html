@@ -1,0 +1,13 @@
+<div class="segmented" role="group" [attr.aria-label]="'tasks.statusFilter' | translate">
+  @for (option of options; track option) {
+    <button
+      type="button"
+      class="segmented__option"
+      [class.segmented__option--active]="value === option"
+      [attr.aria-pressed]="value === option"
+      (click)="select(option)"
+    >
+      {{ labelKey(option) | translate }}
+    </button>
+  }
+</div>

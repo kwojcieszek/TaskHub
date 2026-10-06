@@ -1,0 +1,232 @@
+<div class="page-header">
+  <div>
+    <h1>{{ 'reports.title' | translate }}</h1>
+    <div class="report-summary">
+      @for (item of summary(); track item.key) {
+        <span [class]="'chip tone-' + item.tone">
+          <i [class]="item.icon"></i>{{ 'reports.metric.' + item.key | translate }} · {{ item.value }}
+        </span>
+      }
+    </div>
+  </div>
+  <p-button
+    [label]="'reports.refresh' | translate"
+    icon="pi pi-refresh"
+    severity="secondary"
+    [outlined]="true"
+    [loading]="loading()"
+    (onClick)="load()"
+  />
+</div>
+
+<div class="report-filter panel">
+  <div class="field">
+    <label for="reportFrom">{{ 'reports.fromMonth' | translate }}</label>
+    <p-datepicker
+      inputId="reportFrom"
+      view="month"
+      dateFormat="mm.yy"
+      [ngModel]="fromMonth()"
+      (ngModelChange)="fromMonth.set($event)"
+      [maxDate]="toMonth()"
+      [showIcon]="true"
+      [showClear]="true"
+      [readonlyInput]="true"
+    />
+  </div>
+  <div class="field">
+    <label for="reportTo">{{ 'reports.toMonth' | translate }}</label>
+    <p-datepicker
+      inputId="reportTo"
+      view="month"
+      dateFormat="mm.yy"
+      [ngModel]="toMonth()"
+      (ngModelChange)="toMonth.set($event)"
+      [minDate]="fromMonth()"
+      [showIcon]="true"
+      [showClear]="true"
+      [readonlyInput]="true"
+    />
+  </div>
+  <div class="field">
+    <label>{{ 'tasks.statusFilter' | translate }}</label>
+    <app-status-filter [value]="statusFilter()" (valueChange)="statusFilter.set($event)" />
+  </div>
+  <div class="report-filter__presets">
+    <p-button [label]="'reports.currentMonth' | translate" size="small" severity="secondary" (onClick)="showCurrentMonth()" />
+    <p-button [label]="'reports.currentYear' | translate" size="small" severity="secondary" (onClick)="showCurrentYear()" />
+    <p-button [label]="'reports.allTime' | translate" size="small" severity="secondary" (onClick)="showAll()" />
+  </div>
+</div>
+
+@if (loadError()) {
+  <p class="error-text">{{ 'reports.loadError' | translate }}</p>
+}
+
+<p class="report-note">{{ 'reports.note' | translate }}</p>
+
+<ng-template #reportTable let-rows let-labelKey="labelKey">
+  <p-table [value]="rows" styleClass="report-table">
+    <ng-template #header>
+      <tr>
+        <th>{{ labelKey | translate }}</th>
+        <th class="num">{{ 'reports.metric.created' | translate }}</th>
+        <th class="num">{{ 'reports.metric.completed' | translate }}</th>
+        <th class="num">{{ 'reports.metric.due' | translate }}</th>
+        <th class="num">{{ 'reports.metric.overdue' | translate }}</th>
+      </tr>
+    </ng-template>
+    <ng-template #body let-row>
+      <tr>
+        <td class="report-label">{{ row.label }}</td>
+        <td class="num">{{ row.created }}</td>
+        <td class="num">{{ row.completed }}</td>
+        <td class="num">{{ row.due }}</td>
+        <td class="num" [class.num--alert]="row.overdue > 0">{{ row.overdue }}</td>
+      </tr>
+    </ng-template>
+    <ng-template #emptymessage>
+      <tr>
+        <td colspan="5" class="secondary">{{ 'reports.empty' | translate }}</td>
+      </tr>
+    </ng-template>
+  </p-table>
+</ng-template>
+
+<ng-template #taskTable let-rows let-showCompleted="showCompleted">
+  <p-table [value]="rows" [paginator]="rows.length > taskPageSize" [rows]="taskPageSize" styleClass="report-table">
+    <ng-template #header>
+      <tr>
+        <th>{{ 'reports.task' | translate }}</th>
+        <th>{{ 'reports.project' | translate }}</th>
+        <th>{{ 'reports.assignee' | translate }}</th>
+        @if (!showCompleted) {
+          <th>{{ 'tasks.status' | translate }}</th>
+        }
+        <th>{{ 'reports.dueDate' | translate }}</th>
+        @if (showCompleted) {
+          <th>{{ 'reports.startedAt' | translate }}</th>
+          <th>{{ 'reports.completedAt' | translate }}</th>
+          <th>{{ 'reports.duration' | translate }}</th>
+        }
+        <th>{{ 'reports.delay' | translate }}</th>
+      </tr>
+    </ng-template>
+    <ng-template #body let-row>
+      <tr>
+        <td class="report-label">{{ row.title }}</td>
+        <td>{{ row.project }}</td>
+        <td>{{ row.assignee }}</td>
+        @if (!showCompleted) {
+          <td><span class="badge" [attr.data-status]="row.status">{{ 'tasks.status.' + row.status | translate }}</span></td>
+        }
+        <td class="nowrap">{{ row.dueDate ? (row.dueDate | date: 'yyyy-MM-dd') : '—' }}</td>
+        @if (showCompleted) {
+          <td class="nowrap">{{ row.startedAt ? (row.startedAt | date: 'yyyy-MM-dd HH:mm:ss') : '—' }}</td>
+          <td class="nowrap">{{ row.completedAt | date: 'yyyy-MM-dd HH:mm:ss' }}</td>
+          <td class="nowrap report-duration">
+            @if (row.durationMs !== null) {
+              {{ formatDuration(row.durationMs) }}
+            } @else {
+              <span class="secondary">{{ 'reports.notStarted' | translate }}</span>
+            }
+          </td>
+        }
+        <td class="nowrap">
+          @if (row.delayDays === null) {
+            <span class="secondary">{{ 'reports.noDueDate' | translate }}</span>
+          } @else if (row.delayDays > 0) {
+            <span class="chip tone-red">{{ 'reports.delayedBy' | translate: { days: row.delayDays } }}</span>
+          } @else {
+            <span class="chip tone-green">{{ 'reports.onTime' | translate }}</span>
+          }
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template #emptymessage>
+      <tr>
+        <td colspan="8" class="secondary">{{ 'reports.empty' | translate }}</td>
+      </tr>
+    </ng-template>
+  </p-table>
+</ng-template>
+
+<section class="report-section">
+  <div class="report-section__header">
+    <h2><i class="pi pi-check-circle"></i>{{ 'reports.completedTasks' | translate }} · {{ completedTasks().length }}</h2>
+    <p-button
+      [label]="'reports.exportCsv' | translate"
+      icon="pi pi-download"
+      size="small"
+      severity="secondary"
+      [outlined]="true"
+      [disabled]="completedTasks().length === 0"
+      (onClick)="exportTasksCsv(completedTasks(), 'taskhub-completed-tasks.csv')"
+    />
+  </div>
+  <ng-container *ngTemplateOutlet="taskTable; context: { $implicit: completedTasks(), showCompleted: true }" />
+</section>
+
+<section class="report-section">
+  <div class="report-section__header">
+    <h2><i class="pi pi-hourglass"></i>{{ 'reports.openTasks' | translate }} · {{ openTasks().length }}</h2>
+    <p-button
+      [label]="'reports.exportCsv' | translate"
+      icon="pi pi-download"
+      size="small"
+      severity="secondary"
+      [outlined]="true"
+      [disabled]="openTasks().length === 0"
+      (onClick)="exportTasksCsv(openTasks(), 'taskhub-open-tasks.csv')"
+    />
+  </div>
+  <ng-container *ngTemplateOutlet="taskTable; context: { $implicit: openTasks(), showCompleted: false }" />
+</section>
+
+<section class="report-section">
+  <div class="report-section__header">
+    <h2><i class="pi pi-calendar"></i>{{ 'reports.byMonth' | translate }}</h2>
+    <p-button
+      [label]="'reports.exportCsv' | translate"
+      icon="pi pi-download"
+      size="small"
+      severity="secondary"
+      [outlined]="true"
+      [disabled]="byMonth().length === 0"
+      (onClick)="exportCsv(byMonth(), 'reports.month', 'taskhub-months.csv')"
+    />
+  </div>
+  <ng-container *ngTemplateOutlet="reportTable; context: { $implicit: byMonth(), labelKey: 'reports.month' }" />
+</section>
+
+<section class="report-section">
+  <div class="report-section__header">
+    <h2><i class="pi pi-folder"></i>{{ 'reports.byProject' | translate }}</h2>
+    <p-button
+      [label]="'reports.exportCsv' | translate"
+      icon="pi pi-download"
+      size="small"
+      severity="secondary"
+      [outlined]="true"
+      [disabled]="byProject().length === 0"
+      (onClick)="exportCsv(byProject(), 'reports.project', 'taskhub-projects.csv')"
+    />
+  </div>
+  <ng-container *ngTemplateOutlet="reportTable; context: { $implicit: byProject(), labelKey: 'reports.project' }" />
+</section>
+
+<section class="report-section">
+  <div class="report-section__header">
+    <h2><i class="pi pi-user"></i>{{ 'reports.byAssignee' | translate }}</h2>
+    <p-button
+      [label]="'reports.exportCsv' | translate"
+      icon="pi pi-download"
+      size="small"
+      severity="secondary"
+      [outlined]="true"
+      [disabled]="byAssignee().length === 0"
+      (onClick)="exportCsv(byAssignee(), 'reports.assignee', 'taskhub-assignees.csv')"
+    />
+  </div>
+  <ng-container *ngTemplateOutlet="reportTable; context: { $implicit: byAssignee(), labelKey: 'reports.assignee' }" />
+</section>

@@ -1,0 +1,43 @@
+.group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: 1;
+  padding-right: 0.5rem;
+
+  &__name {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    i {
+      color: var(--tone-teal-solid);
+    }
+  }
+}
+
+.description {
+  color: var(--p-text-muted-color);
+  font-size: 0.875rem;
+  margin: 0 0 0.75rem;
+}
+
+.members-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0.75rem 0;
+}
+
+.member-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.35rem 0;
+  font-size: 0.9rem;
+}
+
+.member-row__icon {
+  margin-right: 0.5rem;
+  color: var(--p-text-muted-color);
+}

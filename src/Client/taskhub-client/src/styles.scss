@@ -1,0 +1,560 @@
+@use 'sass:map';
+@import 'primeicons/primeicons.css';
+
+// Colour tones shared by statuses, priorities, roles and section accents.
+// solid = icons, dots and accent bars; fg/bg = text on a tinted background.
+$tones: (
+  'slate': (solid: #64748b, fg: #334155, fg-dark: #cbd5e1),
+  'blue': (solid: #3b82f6, fg: #1d4ed8, fg-dark: #93c5fd),
+  'green': (solid: #22c55e, fg: #15803d, fg-dark: #86efac),
+  'rose': (solid: #ec4899, fg: #be185d, fg-dark: #f9a8d4),
+  'amber': (solid: #f59e0b, fg: #b45309, fg-dark: #fcd34d),
+  'orange': (solid: #f97316, fg: #c2410c, fg-dark: #fdba74),
+  'red': (solid: #ef4444, fg: #b91c1c, fg-dark: #fca5a5),
+  'teal': (solid: #14b8a6, fg: #0f766e, fg-dark: #5eead4),
+  'violet': (solid: #8b5cf6, fg: #6d28d9, fg-dark: #c4b5fd)
+);
+
+:root {
+  --app-bg: #ffffff;
+  --app-subtle: #f6f8fc;
+  --app-surface: var(--p-surface-0);
+  --app-hover: var(--p-surface-100);
+  --app-border: #e6eaf2;
+  --app-highlight: var(--p-primary-100);
+  --app-shadow: 0 1px 2px rgba(30, 41, 59, 0.04), 0 8px 24px rgba(30, 41, 59, 0.06);
+  --app-bar-bg: var(--p-surface-0);
+  --app-bar-shadow: 0 1px 0 var(--app-border), 0 4px 16px rgba(30, 41, 59, 0.05);
+  --app-hero-bg: linear-gradient(135deg, #4c94f8 0%, #6eaefa 60%, #a3d0fd 100%);
+  --app-accent: var(--p-primary-color);
+  --app-radius: 16px;
+  // Tasks are light green wherever they are drawn as a tile or a calendar entry; projects are blue.
+  --task-color: #4ade80;
+  --app-font-condensed: 'Inter', 'Segoe UI', sans-serif;
+
+  @each $name, $tone in $tones {
+    --tone-#{$name}-solid: #{map.get($tone, solid)};
+    --tone-#{$name}-fg: #{map.get($tone, fg)};
+    --tone-#{$name}-bg: color-mix(in srgb, #{map.get($tone, solid)} 14%, white);
+  }
+}
+
+:root[data-theme='dark'] {
+  --app-bg: var(--p-surface-950);
+  --app-subtle: var(--p-surface-950);
+  --app-surface: var(--p-surface-900);
+  --app-hover: var(--p-surface-800);
+  --app-border: var(--p-surface-700);
+  --app-highlight: color-mix(in srgb, var(--p-primary-400), transparent 80%);
+  --app-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 6px 16px rgba(0, 0, 0, 0.25);
+  --app-bar-bg: var(--p-surface-900);
+  --app-bar-shadow: 0 1px 0 var(--app-border), 0 4px 16px rgba(0, 0, 0, 0.3);
+  --app-hero-bg: linear-gradient(135deg, #111a2e 0%, #1e2f7a 60%, #2550e0 100%);
+
+  @each $name, $tone in $tones {
+    --tone-#{$name}-fg: #{map.get($tone, fg-dark)};
+    --tone-#{$name}-bg: color-mix(in srgb, #{map.get($tone, solid)} 22%, transparent);
+  }
+}
+
+@each $name, $tone in $tones {
+  .tone-#{$name} {
+    --tone-solid: var(--tone-#{$name}-solid);
+    --tone-fg: var(--tone-#{$name}-fg);
+    --tone-bg: var(--tone-#{$name}-bg);
+  }
+}
+
+// Domain values mapped to tones, so templates only expose the value itself.
+$status-tones: (ToDo: 'slate', InProgress: 'blue', Done: 'green', Cancelled: 'rose');
+$priority-tones: (Low: 'slate', Medium: 'amber', High: 'orange', Critical: 'red');
+$role-tones: (Owner: 'violet', Editor: 'teal', Viewer: 'slate', Admin: 'rose', User: 'blue');
+
+@each $attribute, $mapping in (status: $status-tones, priority: $priority-tones, role: $role-tones) {
+  @each $value, $tone in $mapping {
+    [data-#{$attribute}='#{$value}'] {
+      --tone-solid: var(--tone-#{$tone}-solid);
+      --tone-fg: var(--tone-#{$tone}-fg);
+      --tone-bg: var(--tone-#{$tone}-bg);
+    }
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--app-bg);
+  color: var(--p-text-color);
+}
+
+.full-width,
+.w-full {
+  width: 100%;
+}
+
+.page-title {
+  margin: 0 0 1.5rem;
+  font-size: 1.4rem;
+  font-weight: 700;
+
+  i {
+    margin-right: 0.5rem;
+    color: var(--p-primary-color);
+  }
+}
+
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.page-header h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.page-header__subtitle {
+  margin: 0.25rem 0 0;
+  color: var(--p-text-muted-color);
+  font-size: 0.9rem;
+}
+
+.panel {
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius);
+  background: var(--app-surface);
+  box-shadow: var(--app-shadow);
+}
+
+// Gradient tile behind an icon or initial; --tile-color tints it.
+.stat-card__icon,
+.project-avatar {
+  color: #ffffff;
+  background: linear-gradient(145deg, color-mix(in srgb, var(--tile-color) 68%, white), var(--tile-color));
+  box-shadow: 0 8px 14px -6px color-mix(in srgb, var(--tile-color) 65%, transparent);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  label {
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+}
+
+.form-error {
+  color: var(--tone-red-fg);
+  font-size: 0.8rem;
+  margin: 0.25rem 0 0;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--p-text-muted-color);
+
+  i {
+    font-size: 2.5rem;
+    display: block;
+    margin-bottom: 0.75rem;
+    color: var(--p-primary-300, var(--p-text-muted-color));
+  }
+}
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.stat-card {
+  --tile-color: var(--tone-solid, var(--p-primary-color));
+
+  position: relative;
+  overflow: hidden;
+  padding: 1.1rem 1.2rem;
+  border-radius: var(--app-radius);
+  border: 1px solid var(--app-border);
+  background: var(--app-surface);
+  box-shadow: var(--app-shadow);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+
+  // Tinted quarter circle in the corner.
+  &::after {
+    content: '';
+    position: absolute;
+    right: -2rem;
+    bottom: -2rem;
+    width: 5.5rem;
+    height: 5.5rem;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--tile-color) 12%, transparent);
+    pointer-events: none;
+  }
+
+  &__icon {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    min-width: 0;
+  }
+
+  &__label {
+    font-size: 0.8rem;
+    color: var(--p-text-muted-color);
+    font-weight: 500;
+  }
+
+  &__value {
+    font-size: 1.6rem;
+    font-weight: 800;
+    line-height: 1.1;
+    color: var(--tone-fg, var(--p-text-color));
+  }
+}
+
+.dialog-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding-top: 0.25rem;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+// Neutral label, tinted when a tone is set on it (class tone-* or data-role).
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  border-radius: 20px;
+  padding: 0.2rem 0.65rem;
+  border: 1px solid var(--tone-bg, var(--app-border));
+  background: var(--tone-bg, var(--app-hover));
+  color: var(--tone-fg, var(--p-text-muted-color));
+  white-space: nowrap;
+}
+
+// Status pill: dot + label on a tinted background.
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  border-radius: 20px;
+  padding: 0.22rem 0.7rem;
+  background: var(--tone-bg);
+  color: var(--tone-fg);
+  white-space: nowrap;
+
+  &::before {
+    content: '';
+    width: 0.45rem;
+    height: 0.45rem;
+    border-radius: 50%;
+    background: var(--tone-solid);
+  }
+}
+
+// Priority: outlined pill with a coloured flag, so it reads differently from the filled status pill.
+.priority {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.15rem 0.6rem;
+  border: 1px solid color-mix(in srgb, var(--tone-solid) 45%, transparent);
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--tone-fg);
+  white-space: nowrap;
+
+  i {
+    font-size: 0.8rem;
+    color: var(--tone-solid);
+  }
+}
+
+// Square initial used for projects; the colour comes from --project-color.
+.project-avatar {
+  --tile-color: var(--project-color, var(--p-primary-color));
+
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 0.8rem;
+  font-weight: 800;
+
+  &--lg {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 12px;
+    font-size: 1.3rem;
+  }
+}
+
+.project-dot {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--project-color, var(--p-primary-color));
+}
+
+.icon-btn {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--p-text-muted-color);
+  padding: 0.35rem;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.12s, color 0.12s;
+
+  &:hover {
+    background: var(--app-hover);
+    color: var(--p-text-color);
+  }
+
+  &--lg {
+    font-size: 1.1rem;
+  }
+
+  &--primary,
+  &--success,
+  &--danger {
+    color: var(--tone-solid);
+
+    &:hover {
+      background: var(--tone-bg);
+      color: var(--tone-fg);
+    }
+  }
+
+  &--primary {
+    --tone-solid: var(--tone-blue-solid);
+    --tone-fg: var(--tone-blue-fg);
+    --tone-bg: var(--tone-blue-bg);
+  }
+
+  &--success {
+    --tone-solid: var(--tone-green-solid);
+    --tone-fg: var(--tone-green-fg);
+    --tone-bg: var(--tone-green-bg);
+  }
+
+  &--danger {
+    --tone-solid: var(--tone-red-solid);
+    --tone-fg: var(--tone-red-fg);
+    --tone-bg: var(--tone-red-bg);
+  }
+}
+
+// Login, registration and 2FA share one centred card.
+.auth-page {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4.5rem 1rem 2rem;
+  background: var(--app-bg);
+
+  &__theme {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+  }
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 460px;
+  padding: 2.5rem 2.75rem;
+  border: 1px solid var(--app-border);
+  border-radius: 24px;
+  background: var(--app-surface);
+  box-shadow: 0 32px 64px -24px rgba(30, 41, 59, 0.28);
+
+  &__brand {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    margin-bottom: 1.5rem;
+    font-size: 1.15rem;
+    font-weight: 800;
+  }
+
+  &__logo {
+    width: 2.6rem;
+    height: 2.6rem;
+    border-radius: 11px;
+    box-shadow: 0 8px 14px -6px color-mix(in srgb, var(--p-primary-color) 70%, transparent);
+  }
+
+  &__title {
+    margin: 0;
+    text-align: center;
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--p-primary-color);
+  }
+
+  &__subtitle {
+    margin: 0.35rem 0 1.5rem;
+    text-align: center;
+    font-size: 0.9rem;
+    color: var(--p-text-muted-color);
+  }
+
+  .field label {
+    font-weight: 700;
+  }
+
+  .p-iconfield,
+  .p-password {
+    display: block;
+    width: 100%;
+  }
+
+  .p-inputtext {
+    padding-block: 0.8rem;
+    padding-inline-start: 2.75rem;
+    border-color: var(--app-border);
+    border-radius: 12px;
+    background: var(--app-subtle);
+  }
+
+  .p-iconfield > .p-inputicon {
+    z-index: 1;
+  }
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.p-button.auth-submit {
+  margin-top: 0.4rem;
+  padding-block: 0.85rem;
+  border: none;
+  border-radius: 12px;
+  font-weight: 700;
+  background: linear-gradient(90deg, #4c94f8 0%, #6eaefa 100%);
+  box-shadow: 0 12px 20px -10px color-mix(in srgb, var(--p-primary-color) 80%, transparent);
+
+  &:not(:disabled):hover {
+    background: linear-gradient(90deg, #232ea0 0%, #2f5be0 100%);
+  }
+}
+
+.auth-switch {
+  margin: 1.25rem 0 0;
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--p-text-muted-color);
+
+  a {
+    font-weight: 700;
+    color: var(--p-primary-color);
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+@media (max-width: 520px) {
+  .auth-card {
+    padding: 2rem 1.25rem;
+  }
+}
+
+// Pill-shaped option group; global so content projected into a component can join the same group.
+.segmented {
+  display: inline-flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: var(--app-hover);
+}
+
+.segmented__option {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.9rem;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--p-text-muted-color);
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--p-text-color);
+  }
+}
+
+.segmented__option--active {
+  background: var(--app-surface);
+  color: var(--p-primary-color);
+  box-shadow: 0 1px 3px rgba(30, 41, 59, 0.18);
+
+  &:hover {
+    color: var(--p-primary-color);
+  }
+}

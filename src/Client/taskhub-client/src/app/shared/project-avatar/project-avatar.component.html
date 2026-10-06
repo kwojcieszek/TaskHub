@@ -1,0 +1,9 @@
+<span class="project-avatar" [class.project-avatar--lg]="large" [style.--project-color]="color">
+  @if (image) {
+    <img class="project-avatar__image" [src]="image" alt="" />
+  } @else if (icon) {
+    <i [class]="'pi ' + icon"></i>
+  } @else {
+    {{ name.charAt(0).toUpperCase() }}
+  }
+</span>

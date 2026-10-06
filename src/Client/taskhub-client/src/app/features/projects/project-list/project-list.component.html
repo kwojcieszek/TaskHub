@@ -1,0 +1,88 @@
+<p-confirmdialog key="projectList" />
+
+<div class="page-header">
+  <div>
+    <h1>{{ 'projects.title' | translate }}</h1>
+    <div class="projects-summary">
+      @for (stat of stats(); track stat.labelKey) {
+        <span [class]="'chip tone-' + stat.tone"><i [class]="stat.icon"></i>{{ stat.labelKey | translate }} · {{ stat.value }}</span>
+      }
+    </div>
+  </div>
+  <div class="page-header__actions">
+    <p-button [label]="'projectGroups.newGroup' | translate" icon="pi pi-folder-plus" severity="secondary" [outlined]="true" (onClick)="openCreateGroupDialog()" />
+    <p-button [label]="'projects.newProject' | translate" icon="pi pi-plus" (onClick)="openCreateDialog()" />
+  </div>
+</div>
+
+<div class="projects-layout">
+  <aside class="projects-sidebar panel">
+    @if (loadError()) {
+      <div class="empty-state empty-state--compact">
+        <i class="pi pi-exclamation-triangle"></i>
+        <p>{{ 'projects.loadError' | translate }}</p>
+        <p-button [label]="'common.retry' | translate" icon="pi pi-refresh" size="small" [outlined]="true" (onClick)="load()" />
+      </div>
+    } @else if (!loading() && projects().length === 0 && groups().length === 0) {
+      <div class="empty-state empty-state--compact">
+        <i class="pi pi-folder-open"></i>
+        <p>{{ 'projects.noProjects' | translate }}</p>
+      </div>
+    }
+
+    @for (section of sections(); track section.group?.id ?? 'ungrouped') {
+      <div class="project-section">
+        @if (section.group; as group) {
+          <div class="project-section__header" [title]="group.description ?? ''">
+            <span class="project-section__name"><i class="pi pi-folder project-section__icon"></i>{{ group.name }}</span>
+            @if (canManageGroup(group)) {
+              <span class="project-section__actions">
+                <button type="button" class="icon-btn icon-btn--primary" [title]="'common.edit' | translate" (click)="editGroup(group)">
+                  <i class="pi pi-pencil"></i>
+                </button>
+                <button type="button" class="icon-btn icon-btn--danger" [title]="'common.delete' | translate" (click)="deleteGroup(group)">
+                  <i class="pi pi-trash"></i>
+                </button>
+              </span>
+            }
+          </div>
+        } @else if (groups().length > 0) {
+          <div class="project-section__header">
+            <span class="project-section__name">{{ 'projectGroups.ungrouped' | translate }}</span>
+          </div>
+        }
+
+        <div class="project-nav">
+          @for (project of section.projects; track project.id) {
+            <button
+              type="button"
+              class="project-nav-item"
+              [class.project-nav-item--active]="project.id === selectedProjectId()"
+              [class.project-nav-item--inactive]="project.isActive === false"
+              [attr.title]="project.isActive === false ? ('projects.inactive' | translate) : null"
+              [style.--project-color]="colorOf(project)"
+              (click)="select(project)"
+            >
+              <app-project-avatar [name]="project.name" [icon]="project.icon" [color]="colorOf(project)" />
+              <span class="project-nav-item__name">{{ project.name }}</span>
+              <span class="project-nav-item__meta">{{ project.taskCount }}</span>
+            </button>
+          } @empty {
+            <span class="project-section__empty">{{ 'projectGroups.empty' | translate }}</span>
+          }
+        </div>
+      </div>
+    }
+  </aside>
+
+  <section class="projects-content panel">
+    @if (selectedProjectId(); as id) {
+      <app-project-detail [projectId]="id" [groups]="manageableGroups()" (deleted)="onDetailDeleted()" (changed)="onDetailChanged()" />
+    } @else {
+      <div class="empty-state">
+        <i class="pi pi-arrow-left"></i>
+        <p>{{ 'projects.selectPrompt' | translate }}</p>
+      </div>
+    }
+  </section>
+</div>

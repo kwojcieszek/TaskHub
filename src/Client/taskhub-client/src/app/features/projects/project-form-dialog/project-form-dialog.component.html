@@ -1,0 +1,86 @@
+<form [formGroup]="form" (ngSubmit)="submit()" class="dialog-form">
+  <div class="field">
+    <label for="name">{{ 'projects.name' | translate }}</label>
+    <input pInputText id="name" formControlName="name" class="w-full" />
+  </div>
+
+  <div class="field">
+    <label for="description">{{ 'projects.description' | translate }}</label>
+    <textarea pTextarea id="description" formControlName="description" rows="3" class="w-full"></textarea>
+  </div>
+
+  <div class="field">
+    <label>{{ 'projects.icon' | translate }}</label>
+    <div class="icon-picker">
+      <button
+        type="button"
+        class="icon-picker__option"
+        [class.icon-picker__option--active]="form.controls.icon.value === null"
+        [title]="'projects.noIcon' | translate"
+        (click)="selectIcon(null)"
+      >
+        {{ (form.controls.name.value || '?').charAt(0).toUpperCase() }}
+      </button>
+      @for (icon of icons; track icon) {
+        <button
+          type="button"
+          class="icon-picker__option"
+          [class.icon-picker__option--active]="form.controls.icon.value === icon"
+          [title]="icon"
+          (click)="selectIcon(icon)"
+        >
+          <i [class]="'pi ' + icon"></i>
+        </button>
+      }
+    </div>
+    <div class="icon-upload">
+      @if (customIcon; as image) {
+        <img class="icon-upload__preview" [src]="image" alt="" />
+      }
+      <p-button
+        [label]="(customIcon ? 'projects.changeOwnIcon' : 'projects.uploadIcon') | translate"
+        icon="pi pi-upload"
+        size="small"
+        severity="secondary"
+        [outlined]="true"
+        type="button"
+        (onClick)="iconFile.click()"
+      />
+      <span class="icon-upload__hint">{{ 'projects.uploadIconHint' | translate }}</span>
+      <input #iconFile type="file" accept="image/png,image/jpeg,image/webp" hidden (change)="onIconFile($event)" />
+    </div>
+    @if (iconError()) {
+      <p class="form-error">{{ 'projects.iconInvalid' | translate }}</p>
+    }
+  </div>
+
+  <div class="field">
+    <label for="gitUrl">{{ 'projects.gitUrl' | translate }}</label>
+    <input pInputText id="gitUrl" type="url" formControlName="gitUrl" placeholder="https://github.com/user/repo" class="w-full" />
+    @if (form.controls.gitUrl.invalid) {
+      <p class="form-error">{{ 'projects.gitUrlInvalid' | translate }}</p>
+    }
+  </div>
+
+  @if (groupOptions.length > 0) {
+    <div class="field">
+      <label for="projectGroup">{{ 'projectGroups.group' | translate }}</label>
+      <p-select appendTo="body" inputId="projectGroup" formControlName="projectGroupId" [options]="groupOptions" optionLabel="label" optionValue="value" styleClass="w-full" />
+    </div>
+  }
+
+  @if (data.project) {
+    <div class="field">
+      <label class="project-active">
+        <p-toggleswitch formControlName="isActive" />
+        {{ 'projects.active' | translate }}
+      </label>
+      <small class="secondary">{{ 'projects.activeHint' | translate }}</small>
+    </div>
+  }
+
+  <div class="dialog-actions">
+    <p-button [label]="'common.cancel' | translate" severity="secondary" [outlined]="true" type="button" (onClick)="cancel()" />
+    <p-button [label]="'common.save' | translate" icon="pi pi-check" type="submit" [disabled]="form.invalid" />
+  </div>
+</form>

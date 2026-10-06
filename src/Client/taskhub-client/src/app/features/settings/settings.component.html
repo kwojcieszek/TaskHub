@@ -1,0 +1,61 @@
+<div class="page-header">
+  <div>
+    <h1>{{ 'settings.title' | translate }}</h1>
+    <p class="page-header__subtitle">{{ 'settings.subtitle' | translate }}</p>
+  </div>
+</div>
+
+<div class="settings panel">
+  <div class="setting-row tone-blue">
+    <span class="setting-row__icon"><i class="pi pi-globe"></i></span>
+    <div class="setting-row__body">
+      <span class="setting-row__title">{{ 'settings.language' | translate }}</span>
+      <span class="setting-row__hint">{{ 'settings.languageHint' | translate }}</span>
+    </div>
+    <div class="segmented" role="group" [attr.aria-label]="'settings.language' | translate">
+      @for (lang of languages; track lang.code) {
+        <button
+          type="button"
+          class="segmented__option"
+          [class.segmented__option--active]="language.current() === lang.code"
+          [attr.aria-pressed]="language.current() === lang.code"
+          (click)="language.setLanguage(lang.code)"
+        >
+          {{ lang.label }}
+        </button>
+      }
+    </div>
+  </div>
+
+  <div class="setting-row tone-violet">
+    <span class="setting-row__icon"><i class="pi pi-palette"></i></span>
+    <div class="setting-row__body">
+      <span class="setting-row__title">{{ 'settings.theme' | translate }}</span>
+      <span class="setting-row__hint">{{ 'settings.themeHint' | translate }}</span>
+    </div>
+    <div class="segmented" role="group" [attr.aria-label]="'settings.theme' | translate">
+      @for (option of themeModes; track option.mode) {
+        <button
+          type="button"
+          class="segmented__option"
+          [class.segmented__option--active]="theme.mode() === option.mode"
+          [attr.aria-pressed]="theme.mode() === option.mode"
+          (click)="theme.setMode(option.mode)"
+        >
+          <i [class]="option.icon"></i>{{ 'theme.' + option.mode | translate }}
+        </button>
+      }
+    </div>
+  </div>
+
+  <div class="setting-row tone-green">
+    <span class="setting-row__icon"><i class="pi pi-shield"></i></span>
+    <div class="setting-row__body">
+      <span class="setting-row__title">{{ 'settings.security' | translate }}</span>
+      <span class="setting-row__hint">
+        {{ (auth.currentUser()?.twoFactorEnabled ? 'profile.twoFactorEnabled' : 'profile.twoFactorDisabled') | translate }}
+      </span>
+    </div>
+    <a class="setting-row__link" routerLink="/app/profile">{{ 'settings.openProfile' | translate }}<i class="pi pi-arrow-right"></i></a>
+  </div>
+</div>

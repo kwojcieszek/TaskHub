@@ -1,0 +1,63 @@
+.icon-picker {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(2.4rem, 1fr));
+  gap: 0.35rem;
+}
+
+.icon-picker__option {
+  height: 2.4rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--app-border);
+  border-radius: 10px;
+  background: var(--app-subtle);
+  color: var(--p-text-muted-color);
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--app-hover);
+    color: var(--p-text-color);
+  }
+}
+
+.icon-picker__option--active {
+  border-color: var(--p-primary-color);
+  background: var(--app-highlight);
+  color: var(--p-primary-color);
+
+  &:hover {
+    background: var(--app-highlight);
+    color: var(--p-primary-color);
+  }
+}
+
+.icon-upload {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 0.25rem;
+}
+
+.icon-upload__preview {
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 10px;
+  object-fit: cover;
+  box-shadow: 0 0 0 2px var(--p-primary-color);
+}
+
+.icon-upload__hint {
+  font-size: 0.78rem;
+  color: var(--p-text-muted-color);
+}
+
+.project-active {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-weight: 600;
+}

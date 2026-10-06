@@ -1,0 +1,54 @@
+@if (settings(); as current) {
+  <div class="security-form">
+    <h3 class="security-form__title">{{ 'admin.lockoutTitle' | translate }}</h3>
+    <p class="security-form__hint">{{ 'admin.lockoutHint' | translate }}</p>
+
+    <label class="security-form__toggle">
+      <p-toggleswitch [ngModel]="current.lockoutEnabled" (ngModelChange)="update({ lockoutEnabled: $event })" />
+      {{ 'admin.lockoutEnabled' | translate }}
+    </label>
+
+    <div class="field">
+      <label for="maxFailedAccessAttempts">{{ 'admin.maxFailedAttempts' | translate }}</label>
+      <p-inputnumber
+        inputId="maxFailedAccessAttempts"
+        [ngModel]="current.maxFailedAccessAttempts"
+        (ngModelChange)="update({ maxFailedAccessAttempts: $event ?? 0 })"
+        [min]="1"
+        [max]="maxAttempts"
+        [showButtons]="true"
+        [disabled]="!current.lockoutEnabled"
+      />
+    </div>
+
+    <div class="field">
+      <label for="lockoutMinutes">{{ 'admin.lockoutMinutes' | translate }}</label>
+      <p-inputnumber
+        inputId="lockoutMinutes"
+        [ngModel]="current.lockoutMinutes"
+        (ngModelChange)="update({ lockoutMinutes: $event ?? 0 })"
+        [min]="1"
+        [max]="maxLockoutMinutes"
+        [showButtons]="true"
+        [disabled]="!current.lockoutEnabled"
+      />
+    </div>
+
+    <div class="security-form__actions">
+      <p-button
+        [label]="'common.save' | translate"
+        icon="pi pi-check"
+        [loading]="saving()"
+        [disabled]="!isValid()"
+        (onClick)="save()"
+      />
+      @if (saved()) {
+        <span class="chip tone-green"><i class="pi pi-check"></i>{{ 'admin.securitySaved' | translate }}</span>
+      }
+    </div>
+  </div>
+}
+
+@if (errorKey(); as key) {
+  <p class="error-text">{{ key | translate }}</p>
+}

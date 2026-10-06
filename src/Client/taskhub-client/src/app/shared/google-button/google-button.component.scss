@@ -1,0 +1,10 @@
+:host {
+  display: flex;
+  justify-content: center;
+}
+
+.google-button {
+  // Google renders the button in an iframe; this keeps the page from jumping while it loads.
+  min-height: 44px;
+  color-scheme: light;
+}

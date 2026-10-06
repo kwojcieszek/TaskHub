@@ -1,0 +1,92 @@
+<div class="page-header">
+  <div>
+    <h1>{{ 'calendar.title' | translate }}</h1>
+    <div class="calendar-legend">
+      @for (status of statuses; track status) {
+        <span class="badge" [attr.data-status]="status">{{ 'tasks.status.' + status | translate }}</span>
+      }
+    </div>
+  </div>
+  <div class="calendar-nav">
+    <button type="button" class="icon-btn icon-btn--lg" (click)="previousMonth()">
+      <i class="pi pi-chevron-left"></i>
+    </button>
+    <span class="calendar-month">{{ viewDate() | date: 'LLLL yyyy' }}</span>
+    <button type="button" class="icon-btn icon-btn--lg" (click)="nextMonth()">
+      <i class="pi pi-chevron-right"></i>
+    </button>
+    <p-button [label]="'calendar.today' | translate" icon="pi pi-calendar" size="small" [outlined]="true" (onClick)="today()" />
+  </div>
+</div>
+
+<div class="calendar panel">
+  <div class="calendar-weekdays">
+    @for (weekday of weekdays(); track $index) {
+      <span class="calendar-weekday" [class.calendar-weekday--weekend]="$index > 4">{{ weekday }}</span>
+    }
+  </div>
+
+  <div class="calendar-grid">
+    @for (week of weeks(); track $index) {
+      @for (day of week; track day.date.toISOString()) {
+        <div
+          class="calendar-day"
+          [class.calendar-day--muted]="!day.inCurrentMonth"
+          [class.calendar-day--today]="day.isToday"
+          [class.calendar-day--weekend]="isWeekend(day.date)"
+          [class.calendar-day--selected]="isSelected(day.date)"
+          role="button"
+          tabindex="0"
+          [attr.aria-pressed]="isSelected(day.date)"
+          (click)="selectDay(day.date)"
+          (keydown.enter)="selectDay(day.date)"
+        >
+          <div class="calendar-day__number">{{ day.date.getDate() }}</div>
+          <div class="calendar-day__tasks">
+            @for (task of day.tasks; track task.id) {
+              <div
+                class="calendar-task"
+                [attr.data-status]="task.status"
+                [attr.title]="task.title + ' · ' + projectName(task)"
+              >
+                <span class="calendar-task__status"></span>
+                <span class="calendar-task__title">{{ task.title }}</span>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    }
+  </div>
+</div>
+
+<p-dialog
+  [visible]="selectedDate() !== null"
+  (visibleChange)="closeDetails()"
+  [modal]="true"
+  [dismissableMask]="true"
+  [draggable]="false"
+  [style]="{ width: '720px' }"
+  [breakpoints]="{ '768px': '95vw' }"
+>
+  <ng-template #header>
+    <span class="calendar-details__title">
+      <i class="pi pi-calendar"></i>{{ selectedDateLabel() }} · {{ selectedTasks().length }}
+    </span>
+  </ng-template>
+
+  <div class="calendar-details__tasks">
+    @for (entry of selectedTasks(); track entry.task.id) {
+      @let task = entry.task;
+      <app-task-row
+        [task]="task"
+        [projectName]="projectName(task)"
+        [projectColor]="projectColor(task)"
+        [canEdit]="false"
+        [flat]="!entry.nested"
+      />
+    } @empty {
+      <p class="secondary">{{ 'calendar.noTasks' | translate }}</p>
+    }
+  </div>
+</p-dialog>

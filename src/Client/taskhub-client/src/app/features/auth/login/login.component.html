@@ -1,0 +1,60 @@
+<div class="auth-page">
+  <app-theme-switch class="auth-page__theme" />
+
+  <div class="auth-card">
+    <div class="auth-card__brand">
+      <img class="auth-card__logo" src="logo.svg" alt="" />
+      <span>{{ 'app.name' | translate }}</span>
+    </div>
+    <p class="auth-card__subtitle">{{ 'auth.loginHint' | translate }}</p>
+
+    <form class="auth-form" [formGroup]="form" (ngSubmit)="submit()">
+      <div class="field">
+        <label for="userName">{{ 'auth.userName' | translate }}</label>
+        <p-iconfield>
+          <p-inputicon styleClass="pi pi-user" />
+          <input pInputText id="userName" type="text" formControlName="userName" autocomplete="username" class="w-full" />
+        </p-iconfield>
+      </div>
+
+      <div class="field">
+        <label for="password">{{ 'auth.password' | translate }}</label>
+        <p-iconfield>
+          <p-inputicon styleClass="pi pi-lock" />
+          <p-password
+            inputId="password"
+            formControlName="password"
+            [feedback]="false"
+            [toggleMask]="true"
+            inputStyleClass="w-full"
+            styleClass="w-full"
+          />
+        </p-iconfield>
+      </div>
+
+      @if (errorMessage()) {
+        <p-message severity="error" [text]="errorMessage()! | translate" styleClass="w-full" />
+      }
+
+      <p-button
+        [label]="'auth.login' | translate"
+        icon="pi pi-arrow-right"
+        iconPos="right"
+        type="submit"
+        [loading]="loading()"
+        [disabled]="form.invalid"
+        styleClass="w-full auth-submit"
+      />
+    </form>
+
+    <div class="google-login" [class.google-login--hidden]="!google.clientId()">
+      <span class="google-login__divider">{{ 'auth.or' | translate }}</span>
+      <app-google-button text="signin_with" (credential)="loginWithGoogle($event)" />
+    </div>
+
+    <p class="auth-switch">
+      {{ 'auth.noAccount' | translate }}
+      <a routerLink="/register">{{ 'auth.register' | translate }}</a>
+    </p>
+  </div>
+</div>

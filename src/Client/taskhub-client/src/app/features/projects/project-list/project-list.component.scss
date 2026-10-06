@@ -1,0 +1,158 @@
+.page-header__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.projects-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+}
+
+.projects-layout {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.25rem;
+}
+
+.projects-sidebar {
+  width: 290px;
+  flex: 0 0 290px;
+  padding: 0.6rem;
+}
+
+.project-section + .project-section {
+  margin-top: 0.9rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--app-border);
+}
+
+.project-section__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  min-height: 2rem;
+  padding: 0.15rem 0.5rem 0.15rem 0.6rem;
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--p-text-muted-color);
+}
+
+.project-section__name {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.project-section__icon {
+  color: var(--tone-amber-solid);
+}
+
+.project-section__actions {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.project-section__empty {
+  padding: 0.4rem 0.6rem;
+  font-size: 0.85rem;
+  color: var(--p-text-muted-color);
+}
+
+.project-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.project-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.45rem 0.6rem;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: var(--p-text-color);
+}
+
+.project-nav-item:hover {
+  background: var(--app-hover);
+}
+
+.project-nav-item--active {
+  background: color-mix(in srgb, var(--project-color) 12%, transparent);
+  font-weight: 600;
+}
+
+// A deactivated project stays in the list, visibly switched off.
+.project-nav-item--inactive {
+  opacity: 0.5;
+
+  .project-nav-item__name {
+    text-decoration: line-through;
+  }
+}
+
+.project-nav-item__name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.project-nav-item__meta {
+  flex-shrink: 0;
+  min-width: 1.5rem;
+  padding: 0.05rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  text-align: center;
+  background: var(--app-hover);
+  color: var(--p-text-muted-color);
+}
+
+.projects-content {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 1.25rem;
+  min-height: 400px;
+}
+
+.empty-state--compact {
+  padding: 1.5rem 0.5rem;
+}
+
+@media (max-width: 900px) {
+  .projects-layout {
+    flex-direction: column;
+  }
+
+  .projects-sidebar {
+    width: 100%;
+    flex-basis: auto;
+  }
+
+  .project-nav {
+    flex-direction: row;
+    overflow-x: auto;
+  }
+
+  .project-nav-item {
+    flex-shrink: 0;
+  }
+}

@@ -1,0 +1,33 @@
+<div class="page-header admin-header">
+  <h1>{{ 'admin.title' | translate }}</h1>
+</div>
+
+<p-tabs [value]="activeTab()" (valueChange)="activeTab.set($event)" [scrollable]="true">
+  <p-tablist>
+    <p-tab value="users"><i class="pi pi-users"></i>{{ 'admin.users' | translate }}</p-tab>
+    <p-tab value="groups"><i class="pi pi-sitemap"></i>{{ 'nav.userGroups' | translate }}</p-tab>
+    <p-tab value="logins"><i class="pi pi-sign-in"></i>{{ 'admin.loginLogs' | translate }}</p-tab>
+    <p-tab value="activity"><i class="pi pi-history"></i>{{ 'admin.activityLogs' | translate }}</p-tab>
+    <p-tab value="security"><i class="pi pi-lock"></i>{{ 'admin.security' | translate }}</p-tab>
+  </p-tablist>
+</p-tabs>
+
+<div class="admin-tab-content">
+  @switch (activeTab()) {
+    @case ('groups') {
+      <app-user-groups />
+    }
+    @case ('logins') {
+      <app-login-logs />
+    }
+    @case ('activity') {
+      <app-activity-logs />
+    }
+    @case ('security') {
+      <app-security-settings />
+    }
+    @default {
+      <app-admin-users />
+    }
+  }
+</div>

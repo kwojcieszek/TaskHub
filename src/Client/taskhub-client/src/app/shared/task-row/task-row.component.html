@@ -1,0 +1,98 @@
+<div
+  class="task-row"
+  [attr.data-status]="task.status"
+  [class.task-row--sub]="isNested"
+  [class.task-row--closed]="isClosed"
+  [class.task-row--clickable]="isClickable"
+  (click)="onRowClick()"
+>
+  @if (isNested) {
+    <span class="task-row__dot"></span>
+  } @else {
+    <span class="task-row__tile"><i [class]="statusIcon"></i></span>
+  }
+
+  <span class="task-row__main">
+    <span class="task-row__title">{{ task.title }}</span>
+    @if (projectName) {
+      <span class="task-row__project">
+        <span class="project-dot" [style.--project-color]="projectColor"></span>{{ projectName }}
+      </span>
+    }
+  </span>
+
+  <span class="task-row__info">
+    @if (task.startedAt && task.status !== 'ToDo') {
+      <span class="task-row__meta task-row__meta--started">
+        <i class="pi pi-play"></i>{{ 'tasks.startedOn' | translate }} {{ task.startedAt | date: 'mediumDate' }}
+      </span>
+    }
+    @if (task.status === 'Done' && task.completedAt) {
+      <span class="task-row__meta task-row__meta--done">
+        <i class="pi pi-check-circle"></i>{{ 'tasks.completedOn' | translate }} {{ task.completedAt | date: 'mediumDate' }}
+      </span>
+    } @else if (task.dueDate) {
+      <span class="task-row__meta" [class.task-row__meta--overdue]="isOverdue">
+        <i class="pi pi-calendar"></i>{{ task.dueDate | date: 'mediumDate' }}
+      </span>
+    }
+    @if (task.assignedUserDisplayName) {
+      <span class="task-row__meta task-row__meta--assignee">
+        <span class="task-row__avatar">{{ task.assignedUserDisplayName.charAt(0).toUpperCase() }}</span>{{ task.assignedUserDisplayName }}
+      </span>
+    }
+    @if (task.subTasks.length > 0) {
+      <span class="task-row__meta" [title]="'tasks.subTaskProgress' | translate">
+        <i class="pi pi-sitemap"></i>{{ doneSubTaskCount }}/{{ activeSubTaskCount }}
+      </span>
+    }
+    @if (task.attachmentCount > 0) {
+      <span class="task-row__meta" [title]="'attachments.title' | translate">
+        <i class="pi pi-paperclip"></i>{{ task.attachmentCount }}
+      </span>
+    }
+    <span class="priority" [attr.data-priority]="task.priority">
+      <i class="pi pi-flag-fill"></i>{{ 'tasks.priority.' + task.priority | translate }}
+    </span>
+    <span
+      class="badge"
+      [attr.data-status]="task.status"
+      [attr.title]="isStatusDerived ? ('tasks.statusFromSubTasks' | translate) : null"
+    >
+      @if (isStatusDerived) {
+        <i class="pi pi-lock"></i>
+      }
+      {{ 'tasks.status.' + task.status | translate }}
+    </span>
+  </span>
+
+  @if (canEdit) {
+    <span class="task-row__actions">
+      @if (allowSubTasks && !isSubTask && !progressOnly) {
+        <button type="button" class="icon-btn icon-btn--primary" [title]="'tasks.newSubTask' | translate" (click)="emit(addSubTask, $event)">
+          <i class="pi pi-plus"></i>
+        </button>
+      }
+      @if (!progressOnly) {
+        <button type="button" class="icon-btn icon-btn--danger" [title]="'common.delete' | translate" (click)="emit(remove, $event)">
+          <i class="pi pi-trash"></i>
+        </button>
+      }
+      @if (!isStatusDerived && task.status === 'ToDo') {
+        <button type="button" class="icon-btn icon-btn--primary" [title]="'tasks.start' | translate" (click)="emit(start, $event)">
+          <i class="pi pi-play"></i>
+        </button>
+      }
+      @if (!isStatusDerived && task.status !== 'Done') {
+        <button type="button" class="icon-btn icon-btn--success" [title]="'tasks.markDone' | translate" (click)="emit(complete, $event)">
+          <i class="pi pi-check"></i>
+        </button>
+      }
+      @if (!isStatusDerived && task.status === 'Done') {
+        <button type="button" class="icon-btn icon-btn--primary" [title]="'tasks.reopen' | translate" (click)="emit(reopen, $event)">
+          <i class="pi pi-undo"></i>
+        </button>
+      }
+    </span>
+  }
+</div>

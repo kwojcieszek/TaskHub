@@ -1,0 +1,129 @@
+<p-confirmdialog />
+
+@if (project(); as project) {
+  <div class="project-header">
+    <app-project-avatar [name]="project.name" [icon]="project.icon" [color]="color()" [large]="true" />
+
+    <div class="project-header__body">
+      <h1>{{ project.name }}</h1>
+      <div class="project-header__meta">
+        @if (project.isActive === false) {
+          <span class="chip tone-slate"><i class="pi pi-ban"></i>{{ 'projects.inactive' | translate }}</span>
+        }
+        @if (project.projectGroupName) {
+          <span class="chip tone-amber"><i class="pi pi-folder"></i>{{ project.projectGroupName }}</span>
+        }
+        <span class="project-header__owner"><i class="pi pi-user"></i>{{ project.ownerDisplayName }}</span>
+        @if (gitLink(); as git) {
+          <a class="project-header__git" [href]="git.url" target="_blank" rel="noopener noreferrer" [title]="'projects.openRepository' | translate">
+            <i [class]="git.icon"></i>{{ git.label }}
+          </a>
+        }
+      </div>
+      @if (project.description) {
+        <p class="description">{{ project.description }}</p>
+      }
+    </div>
+
+    <div class="header-actions">
+      @if (canEdit()) {
+        <p-button [label]="'tasks.newTask' | translate" icon="pi pi-plus" size="small" (onClick)="addTask(null)" />
+      }
+      @if (canManage()) {
+        <button type="button" class="icon-btn icon-btn--lg" (click)="projectMenu.toggle($event)">
+          <i class="pi pi-ellipsis-v"></i>
+        </button>
+        <p-menu #projectMenu [model]="projectMenuItems" [popup]="true" />
+      }
+    </div>
+  </div>
+
+  <div class="progress">
+    @if (progress(); as progress) {
+      <span class="progress__percent">{{ progress.percentDone }}%</span>
+      <span class="progress__bar" role="progressbar" [attr.aria-valuenow]="progress.percentDone" aria-valuemin="0" aria-valuemax="100">
+        <span class="progress__fill" [style.width.%]="progress.percentDone"></span>
+      </span>
+      @for (part of progress.parts; track part.status) {
+        <span class="badge" [attr.data-status]="part.status">{{ 'tasks.status.' + part.status | translate }} · {{ part.count }}</span>
+      }
+    }
+    <button
+      type="button"
+      class="members-toggle"
+      [class.members-toggle--active]="view() === 'members'"
+      [attr.aria-pressed]="view() === 'members'"
+      (click)="toggleMembers()"
+    >
+      <i class="pi pi-users"></i>{{ 'projects.members' | translate }} · {{ members().length }}
+    </button>
+  </div>
+
+  @if (view() === 'tasks' && tasks().length > 0) {
+    <app-status-filter [value]="statusFilter()" (valueChange)="statusFilter.set($event)" />
+  }
+
+  @if (view() === 'tasks') {
+    <div class="task-list">
+      @for (entry of visibleTasks(); track entry.task.id) {
+        @let task = entry.task;
+        <app-task-row
+          [task]="task"
+          [canEdit]="canEdit()"
+          [allowSubTasks]="true"
+          (edit)="editTask(task)"
+          (start)="startTask(task)"
+          (complete)="completeTask(task)"
+          (reopen)="reopenTask(task)"
+          (remove)="deleteTask(task)"
+          (addSubTask)="addTask(task)"
+        />
+        @for (subTask of entry.subTasks; track subTask.id) {
+          <app-task-row
+            [task]="subTask"
+            [canEdit]="canEdit()"
+            (edit)="editTask(subTask)"
+            (start)="startTask(subTask)"
+            (complete)="completeTask(subTask)"
+            (reopen)="reopenTask(subTask)"
+            (remove)="deleteTask(subTask)"
+          />
+        }
+      } @empty {
+        @if (tasksLoadError()) {
+          <p class="form-error">{{ 'tasks.loadError' | translate }}</p>
+          <p-button [label]="'common.retry' | translate" icon="pi pi-refresh" size="small" [outlined]="true" (onClick)="loadAll()" />
+        } @else {
+          <div class="empty-state">
+            <i class="pi pi-inbox"></i>
+            <p>{{ (tasks().length > 0 ? 'tasks.noTasksForFilter' : 'tasks.noTasks') | translate }}</p>
+          </div>
+        }
+      }
+    </div>
+  } @else {
+    <div class="members-panel">
+      @if (canManage()) {
+        <p-button [label]="'projects.addMember' | translate" icon="pi pi-user-plus" size="small" [outlined]="true" (onClick)="addMember()" />
+      }
+
+      <div class="members-list">
+        @for (member of members(); track member.userId) {
+          <div class="member-row">
+            <span class="member-row__avatar" [style.--project-color]="memberColor(member)">{{ member.displayName.charAt(0).toUpperCase() }}</span>
+            <span class="member-row__name">
+              {{ member.displayName }}
+              <span class="member-row__login">{{ member.userName }}</span>
+            </span>
+            <span class="chip" [attr.data-role]="member.role">{{ member.role }}</span>
+            @if (canManage() && member.role !== 'Owner') {
+              <button type="button" class="icon-btn icon-btn--danger" (click)="removeMember(member)">
+                <i class="pi pi-times"></i>
+              </button>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  }
+}

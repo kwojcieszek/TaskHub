@@ -1,0 +1,53 @@
+<p-confirmdialog />
+
+<div class="page-header">
+  <div>
+    <h1>{{ 'tasksOverview.title' | translate }}</h1>
+    <div class="task-summary">
+      @for (section of sections(); track section.key) {
+        <span [class]="'chip tone-' + section.tone">
+          <i [class]="section.icon"></i>{{ 'tasksOverview.' + section.key | translate }} · {{ section.tasks.length }}
+        </span>
+      }
+    </div>
+  </div>
+  <app-status-filter [value]="statusFilter()" (valueChange)="statusFilter.set($event)" />
+</div>
+
+@if (loadError()) {
+  <div class="task-error">
+    <i class="pi pi-exclamation-triangle"></i>
+    <p>{{ 'tasksOverview.loadError' | translate }}</p>
+    <button type="button" class="task-error__retry" (click)="load()">{{ 'tasksOverview.retry' | translate }}</button>
+  </div>
+}
+
+<div class="task-sections">
+  @for (section of sections(); track section.key) {
+    <section [class]="'task-section tone-' + section.tone">
+      <h2 class="task-section__title">
+        <span class="task-section__icon"><i [class]="section.icon"></i></span>
+        {{ 'tasksOverview.' + section.key | translate }}
+        <span class="task-section__count">{{ section.tasks.length }}</span>
+      </h2>
+
+      <div class="task-rows">
+        @for (task of section.tasks; track task.id) {
+          <app-task-row
+            [task]="task"
+            [projectName]="projectName(task)"
+            [projectColor]="projectColor(task)"
+            [hasSubTasks]="parentTaskIds().has(task.id)"
+            (edit)="edit(task)"
+            (start)="start(task)"
+            (complete)="complete(task)"
+            (reopen)="reopen(task)"
+            (remove)="delete(task)"
+          />
+        } @empty {
+          <p class="task-section__empty">{{ 'tasksOverview.' + section.key + 'Empty' | translate }}</p>
+        }
+      </div>
+    </section>
+  }
+</div>

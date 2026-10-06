@@ -1,0 +1,209 @@
+::ng-deep .app-menubar.p-menubar {
+  --p-menubar-background: var(--app-bar-bg);
+  --p-menubar-border-color: transparent;
+  --p-menubar-color: var(--p-text-color);
+  --p-menubar-item-color: var(--p-text-color);
+  --p-menubar-item-icon-color: var(--p-text-muted-color);
+  --p-menubar-item-focus-color: var(--p-text-color);
+  --p-menubar-item-focus-background: var(--app-hover);
+  --p-menubar-item-icon-focus-color: var(--p-text-color);
+  --p-menubar-item-active-color: var(--p-primary-color);
+  --p-menubar-item-active-background: var(--app-highlight);
+  --p-menubar-item-icon-active-color: var(--p-primary-color);
+  --p-menubar-item-border-radius: 10px;
+  --p-menubar-mobile-button-color: var(--p-text-color);
+  --p-menubar-mobile-button-hover-color: var(--p-text-color);
+  --p-menubar-mobile-button-hover-background: var(--app-hover);
+
+  background: var(--app-bar-bg);
+  border: 0;
+  border-radius: 0;
+  font-family: var(--app-font-condensed);
+  font-size: 0.9rem;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  padding: 0.55rem 1.25rem;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  box-shadow: var(--app-bar-shadow);
+}
+
+::ng-deep .app-menubar .p-menubar-item-link-active {
+  background: var(--app-highlight);
+  border-radius: 10px;
+  font-weight: 500;
+
+  .p-menubar-item-icon,
+  .p-menubar-item-label {
+    color: var(--p-primary-color);
+  }
+}
+
+::ng-deep .app-menubar .p-menubar-item.p-disabled .p-menubar-item-content {
+  opacity: 0.55;
+}
+
+::ng-deep .app-menubar.p-menubar-mobile .p-menubar-root-list {
+  background: var(--app-surface);
+  border-color: var(--app-border);
+}
+
+.app-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-right: 0.75rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--p-text-color);
+
+  &__icon {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 9px;
+    box-shadow: 0 6px 12px -5px color-mix(in srgb, var(--p-primary-color) 70%, transparent);
+    flex-shrink: 0;
+  }
+}
+
+.app-bar-end {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.app-user {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0.6rem;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  color: var(--p-text-color);
+  cursor: pointer;
+  font: inherit;
+
+  &:hover {
+    background: var(--app-hover);
+  }
+
+  &__avatar {
+    width: 1.8rem;
+    height: 1.8rem;
+    border-radius: 50%;
+    background: var(--app-hero-bg);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  &__name {
+    font-size: 0.9rem;
+    font-weight: 400;
+
+    @media (max-width: 640px) {
+      display: none;
+    }
+  }
+}
+
+.user-menu {
+  position: relative;
+}
+
+.user-menu__panel {
+  position: absolute;
+  top: calc(100% + 0.6rem);
+  right: 0;
+  z-index: 1100;
+  width: 17rem;
+  max-width: calc(100vw - 1.5rem);
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius);
+  background: var(--app-surface);
+  color: var(--p-text-color);
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.16);
+}
+
+.user-menu__header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.6rem 0.75rem;
+  border-bottom: 1px solid var(--app-border);
+  margin-bottom: 0.25rem;
+}
+
+.user-menu__identity {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.user-menu__name {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-menu__login {
+  font-size: 0.8rem;
+  color: var(--p-text-muted-color);
+}
+
+.user-menu__item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.55rem 0.6rem;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+
+  i {
+    color: var(--p-primary-color);
+  }
+
+  &:hover {
+    background: var(--app-hover);
+  }
+}
+
+.user-menu__item--logout {
+  margin-top: 0.25rem;
+  border-top: 1px solid var(--app-border);
+  border-radius: 0 0 8px 8px;
+  padding-top: 0.7rem;
+  color: var(--tone-red-fg);
+
+  i {
+    color: var(--tone-red-solid);
+  }
+
+  &:hover {
+    background: var(--tone-red-bg);
+  }
+}
+
+.app-content {
+  padding: 1.75rem 1.25rem;
+  max-width: 1280px;
+  margin: 0 auto;
+}

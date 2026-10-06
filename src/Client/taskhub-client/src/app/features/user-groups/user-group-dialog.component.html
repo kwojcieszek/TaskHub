@@ -1,0 +1,16 @@
+<form [formGroup]="form" (ngSubmit)="submit()" class="dialog-form">
+  <div class="field">
+    <label for="groupName">{{ 'userGroups.name' | translate }}</label>
+    <input pInputText id="groupName" formControlName="name" class="w-full" />
+  </div>
+
+  <div class="field">
+    <label for="groupDescription">{{ 'userGroups.description' | translate }}</label>
+    <textarea pTextarea id="groupDescription" formControlName="description" rows="3" class="w-full"></textarea>
+  </div>
+
+  <div class="dialog-actions">
+    <p-button [label]="'common.cancel' | translate" severity="secondary" [outlined]="true" type="button" (onClick)="cancel()" />
+    <p-button [label]="'common.save' | translate" icon="pi pi-check" type="submit" [disabled]="form.invalid" />
+  </div>
+</form>

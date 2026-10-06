@@ -1,0 +1,33 @@
+.log-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.log-toolbar__search {
+  flex: 1 1 16rem;
+  max-width: 24rem;
+}
+
+.secondary {
+  font-size: 0.8rem;
+  color: var(--p-text-muted-color);
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+.user-agent {
+  max-width: 22rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+::ng-deep .log-table {
+  min-width: 720px;
+  display: block;
+  overflow-x: auto;
+}

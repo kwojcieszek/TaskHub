@@ -1,0 +1,38 @@
+<p-confirmdialog key="taskAttachments" appendTo="body" />
+
+<div class="attachments">
+  <div class="attachments__header">
+    <span class="attachments__title"><i class="pi pi-paperclip"></i>{{ 'attachments.title' | translate }}</span>
+    <input #fileInput type="file" multiple hidden (change)="onFilesSelected($event)" />
+    <p-button
+      [label]="'attachments.add' | translate"
+      icon="pi pi-upload"
+      size="small"
+      severity="secondary"
+      [outlined]="true"
+      type="button"
+      [loading]="uploading()"
+      (onClick)="fileInput.click()"
+    />
+  </div>
+
+  @if (errorKey(); as key) {
+    <p class="form-error">{{ key | translate }}</p>
+  }
+
+  @for (attachment of attachments(); track attachment.id) {
+    <div class="attachment-row">
+      <button type="button" class="attachment-row__name" [title]="'attachments.download' | translate" (click)="download(attachment)">
+        <i class="pi pi-file"></i>{{ attachment.fileName }}
+      </button>
+      <span class="attachment-row__meta">
+        {{ formatSize(attachment.size) }} · {{ attachment.uploadedByDisplayName }} · {{ attachment.createdAt | date: 'mediumDate' }}
+      </span>
+      <button type="button" class="icon-btn icon-btn--danger" [title]="'common.delete' | translate" (click)="remove(attachment)">
+        <i class="pi pi-trash"></i>
+      </button>
+    </div>
+  } @empty {
+    <p class="attachments__empty">{{ 'attachments.empty' | translate }}</p>
+  }
+</div>

@@ -1,0 +1,24 @@
+<div class="dialog-form">
+  <div class="field">
+    <label for="userSearch">{{ 'common.search' | translate }}</label>
+    <input pInputText id="userSearch" [formControl]="searchControl" class="w-full" />
+  </div>
+
+  <p-listbox
+    [options]="results()"
+    [ngModel]="selectedUser()"
+    (ngModelChange)="selectedUser.set($event)"
+    optionLabel="displayName"
+    [ngModelOptions]="{ standalone: true }"
+    styleClass="w-full member-listbox"
+  >
+    <ng-template #item let-user>
+      <span>{{ user.displayName }} ({{ user.userName }})</span>
+    </ng-template>
+  </p-listbox>
+
+  <div class="dialog-actions">
+    <p-button [label]="'common.cancel' | translate" severity="secondary" [outlined]="true" type="button" (onClick)="cancel()" />
+    <p-button [label]="'common.save' | translate" icon="pi pi-check" type="button" [disabled]="!selectedUser()" (onClick)="submit()" />
+  </div>
+</div>

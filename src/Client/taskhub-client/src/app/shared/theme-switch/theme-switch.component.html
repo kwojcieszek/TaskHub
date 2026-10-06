@@ -1,0 +1,15 @@
+<div class="theme-switch" role="group" [attr.aria-label]="'nav.theme' | translate">
+  @for (mode of themeModes; track mode) {
+    <button
+      type="button"
+      class="theme-switch__option"
+      [class.theme-switch__option--active]="theme.mode() === mode"
+      [title]="'theme.' + mode | translate"
+      [attr.aria-label]="'theme.' + mode | translate"
+      [attr.aria-pressed]="theme.mode() === mode"
+      (click)="theme.setMode(mode)"
+    >
+      <i [class]="themeIcons[mode]"></i>
+    </button>
+  }
+</div>

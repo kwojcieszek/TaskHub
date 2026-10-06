@@ -1,0 +1,57 @@
+<p-table [value]="users()" styleClass="admin-table">
+  <ng-template #header>
+    <tr>
+      <th>{{ 'auth.userName' | translate }}</th>
+      <th>{{ 'admin.roles' | translate }}</th>
+      <th>2FA</th>
+      <th>{{ 'admin.lastLogin' | translate }}</th>
+      <th>{{ 'admin.lockedOut' | translate }}</th>
+      <th></th>
+    </tr>
+  </ng-template>
+  <ng-template #body let-user>
+    <tr>
+      <td>
+        <div class="user-name">{{ user.displayName }}</div>
+        <div class="secondary">{{ user.userName }} &middot; {{ user.email }}</div>
+      </td>
+      <td>
+        <div class="role-checks">
+          @for (role of availableRoles; track role) {
+            <label class="role-check chip" [attr.data-role]="role">
+              <p-checkbox [binary]="true" [ngModel]="hasRole(user, role)" (onChange)="toggleRole(user, role)" />
+              {{ role }}
+            </label>
+          }
+        </div>
+      </td>
+      <td>
+        @if (user.twoFactorEnabled) {
+          <span class="chip tone-green"><i class="pi pi-verified"></i>2FA</span>
+        }
+      </td>
+      <td class="nowrap">
+        @if (user.lastLoginAt) {
+          {{ user.lastLoginAt | date: 'yyyy-MM-dd HH:mm' }}
+        } @else {
+          <span class="secondary">{{ 'admin.neverLoggedIn' | translate }}</span>
+        }
+      </td>
+      <td>
+        <p-button
+          [label]="(user.lockedOut ? 'admin.unlock' : 'admin.lock') | translate"
+          [icon]="user.lockedOut ? 'pi pi-lock-open' : 'pi pi-lock'"
+          [severity]="user.lockedOut ? 'success' : 'warn'"
+          [outlined]="true"
+          size="small"
+          (onClick)="toggleLockout(user)"
+        />
+      </td>
+      <td>
+        <button type="button" class="icon-btn icon-btn--danger" (click)="deleteUser(user)">
+          <i class="pi pi-trash"></i>
+        </button>
+      </td>
+    </tr>
+  </ng-template>
+</p-table>

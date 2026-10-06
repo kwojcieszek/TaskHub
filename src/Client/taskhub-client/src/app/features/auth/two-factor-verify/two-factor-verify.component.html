@@ -1,0 +1,36 @@
+<div class="auth-page">
+  <app-theme-switch class="auth-page__theme" />
+
+  <div class="auth-card">
+    <div class="auth-card__brand">
+      <img class="auth-card__logo" src="logo.svg" alt="" />
+      <span>{{ 'app.name' | translate }}</span>
+    </div>
+    <h1 class="auth-card__title">{{ 'auth.twoFactorTitle' | translate }}</h1>
+    <p class="auth-card__subtitle">{{ 'auth.twoFactorHint' | translate }}</p>
+
+    <form class="auth-form" [formGroup]="form" (ngSubmit)="submit()">
+      <div class="field">
+        <label for="code">{{ 'auth.twoFactorCode' | translate }}</label>
+        <p-iconfield>
+          <p-inputicon styleClass="pi pi-shield" />
+          <input pInputText id="code" formControlName="code" inputmode="numeric" maxlength="6" class="w-full" />
+        </p-iconfield>
+      </div>
+
+      @if (errorMessage()) {
+        <p-message severity="error" [text]="errorMessage()!" styleClass="w-full" />
+      }
+
+      <p-button
+        [label]="'auth.verify' | translate"
+        icon="pi pi-check"
+        iconPos="right"
+        type="submit"
+        [loading]="loading()"
+        [disabled]="form.invalid"
+        styleClass="w-full auth-submit"
+      />
+    </form>
+  </div>
+</div>

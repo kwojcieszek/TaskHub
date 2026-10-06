@@ -1,0 +1,76 @@
+<p-confirmdialog />
+
+<div class="page-header">
+  <div>
+    <h1>{{ 'dashboard.greeting' | translate: { name: auth.currentUser()?.displayName } }}</h1>
+    <p class="page-header__subtitle">{{ todayLabel() }}</p>
+  </div>
+  <div class="segmented" role="group" [attr.aria-label]="'dashboard.scope' | translate">
+    @for (option of scopes; track option) {
+      <button
+        type="button"
+        class="segmented__option"
+        [class.segmented__option--active]="scope() === option"
+        [attr.aria-pressed]="scope() === option"
+        (click)="scope.set(option)"
+      >
+        {{ 'dashboard.scope.' + option | translate }}
+      </button>
+    }
+  </div>
+</div>
+
+@if (loadError()) {
+  <div class="dashboard-error">
+    <i class="pi pi-exclamation-triangle"></i>
+    <p>{{ 'tasksOverview.loadError' | translate }}</p>
+    <button type="button" class="dashboard-error__retry" (click)="load()">{{ 'tasksOverview.retry' | translate }}</button>
+  </div>
+}
+
+<div class="stat-grid">
+  @for (stat of stats(); track stat.key) {
+    <div [class]="'stat-card tone-' + stat.tone">
+      <span class="stat-card__icon"><i [class]="stat.icon"></i></span>
+      <span class="stat-card__body">
+        <span class="stat-card__value">{{ stat.value }}</span>
+        <span class="stat-card__label">{{ 'dashboard.' + stat.key | translate }}</span>
+      </span>
+    </div>
+  }
+</div>
+
+<div class="dashboard-sections">
+  @for (section of sections(); track section.key) {
+    <section [class]="'dashboard-section panel tone-' + section.tone">
+      <h2 class="dashboard-section__title">
+        <span class="dashboard-section__icon"><i [class]="section.icon"></i></span>
+        {{ 'dashboard.' + section.key | translate }}
+        <span class="dashboard-section__count">{{ section.tasks.length }}</span>
+      </h2>
+
+      <div class="dashboard-section__rows">
+        @for (task of section.tasks.slice(0, sectionLimit); track task.id) {
+          <app-task-row
+            [task]="task"
+            [projectName]="projectName(task)"
+            [projectColor]="projectColor(task)"
+            [progressOnly]="true"
+            [hasSubTasks]="parentTaskIds().has(task.id)"
+            [flat]="true"
+            (start)="start(task)"
+            (complete)="complete(task)"
+          />
+        } @empty {
+          <p class="dashboard-section__empty">{{ 'dashboard.' + section.key + 'Empty' | translate }}</p>
+        }
+      </div>
+
+      @if (section.tasks.length > sectionLimit) {
+        <a class="dashboard-section__more" routerLink="/app/tasks">
+          {{ 'dashboard.showAll' | translate: { count: section.tasks.length } }}<i class="pi pi-arrow-right"></i>
+        </a>
+      }
+    </section>
+  }
+</div>
