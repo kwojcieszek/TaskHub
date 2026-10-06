@@ -5,5 +5,6 @@ namespace TaskHub.Application.Dtos.Auth;
 public class GoogleTokenRequest
 {
     [Required]
+    [StringLength(8192)]
     public string IdToken { get; set; } = string.Empty;
 }

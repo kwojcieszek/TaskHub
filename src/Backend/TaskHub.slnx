@@ -3,4 +3,6 @@
   <Project Path="TaskHub.Application/TaskHub.Application.csproj" />
   <Project Path="TaskHub.Domain/TaskHub.Domain.csproj" />
   <Project Path="TaskHub.Infrastructure/TaskHub.Infrastructure.csproj" />
+  <Project Path="TaskHub.IntegrationTests/TaskHub.IntegrationTests.csproj" />
+  <Project Path="TaskHub.Tests/TaskHub.Tests.csproj" />
 </Solution>

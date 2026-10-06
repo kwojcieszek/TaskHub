@@ -27,6 +27,13 @@ public class ExceptionHandlingMiddleware
         }
     }
 
+    private const string RequestTooLargeMessage = "The request is too large.";
+
+    private static string DescribeBadRequest(BadHttpRequestException exception)
+    {
+        return exception.StatusCode == StatusCodes.Status413PayloadTooLarge ? RequestTooLargeMessage : "The request is invalid.";
+    }
+
     private async Task HandleAsync(HttpContext context, Exception exception)
     {
         var (statusCode, errors) = exception switch
@@ -34,8 +41,11 @@ public class ExceptionHandlingMiddleware
             NotFoundException => (HttpStatusCode.NotFound, new[] { exception.Message }),
             ForbiddenAccessException => (HttpStatusCode.Forbidden, new[] { exception.Message }),
             ConflictException => (HttpStatusCode.Conflict, new[] { exception.Message }),
-            UnauthorizedAccessException => (HttpStatusCode.Unauthorized, new[] { exception.Message }),
+            AuthenticationFailedException => (HttpStatusCode.Unauthorized, new[] { exception.Message }),
             ValidationFailedException validationFailedException => (HttpStatusCode.BadRequest, validationFailedException.Errors.ToArray()),
+            // Raised by the server itself, for example when a request body is larger than the upload limit.
+            BadHttpRequestException badHttpRequestException => ((HttpStatusCode)badHttpRequestException.StatusCode, new[] { DescribeBadRequest(badHttpRequestException) }),
+            InvalidDataException => (HttpStatusCode.RequestEntityTooLarge, new[] { RequestTooLargeMessage }),
             _ => (HttpStatusCode.InternalServerError, new[] { "An unexpected error occurred." })
         };
 

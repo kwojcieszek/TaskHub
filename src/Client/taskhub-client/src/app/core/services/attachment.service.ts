@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { Attachment } from '../models/attachment.model';
+import { Attachment, AttachmentLimits } from '../models/attachment.model';
 
 @Injectable({ providedIn: 'root' })
 export class AttachmentService {
@@ -10,6 +10,10 @@ export class AttachmentService {
 
   private attachmentsUrl(projectId: string, taskId: string): string {
     return `${environment.apiUrl}/projects/${projectId}/tasks/${taskId}/attachments`;
+  }
+
+  getLimits(): Observable<AttachmentLimits> {
+    return this.http.get<AttachmentLimits>(`${environment.apiUrl}/attachments/limits`);
   }
 
   getByTask(projectId: string, taskId: string): Observable<Attachment[]> {

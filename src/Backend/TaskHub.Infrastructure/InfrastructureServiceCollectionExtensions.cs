@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using TaskHub.Application.Interfaces;
 using TaskHub.Application.Options;
+using TaskHub.Application.Services;
 using TaskHub.Domain.Entities;
 using TaskHub.Infrastructure.Persistence;
 using TaskHub.Infrastructure.Seed;
@@ -31,7 +32,10 @@ public static class InfrastructureServiceCollectionExtensions
 
         services.AddIdentityCore<ApplicationUser>(options =>
             {
-                options.Password.RequiredLength = 5;
+                // The rules live in the security settings and are applied by ConfigurablePasswordValidator;
+                // the built-in checks are switched off so the two cannot disagree.
+                options.Password.RequiredLength = 1;
+                options.Password.RequiredUniqueChars = 1;
                 options.Password.RequireDigit = false;
                 options.Password.RequireUppercase = false;
                 options.Password.RequireNonAlphanumeric = false;
@@ -41,6 +45,7 @@ public static class InfrastructureServiceCollectionExtensions
             })
             .AddRoles<ApplicationRole>()
             .AddEntityFrameworkStores<ApplicationDbContext>()
+            .AddPasswordValidator<ConfigurablePasswordValidator>()
             .AddDefaultTokenProviders();
 
         services.AddHttpContextAccessor();

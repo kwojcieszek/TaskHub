@@ -1,11 +1,7 @@
 <div class="page-header">
   <div>
     <h1>{{ 'calendar.title' | translate }}</h1>
-    <div class="calendar-legend">
-      @for (status of statuses; track status) {
-        <span class="badge" [attr.data-status]="status">{{ 'tasks.status.' + status | translate }}</span>
-      }
-    </div>
+    <app-status-filter class="calendar-filter" [value]="statusFilter()" (valueChange)="statusFilter.set($event)" />
   </div>
   <div class="calendar-nav">
     <button type="button" class="icon-btn icon-btn--lg" (click)="previousMonth()">
@@ -47,9 +43,9 @@
               <div
                 class="calendar-task"
                 [attr.data-status]="task.status"
+                [class.calendar-task--overdue]="isOverdue(task)"
                 [attr.title]="task.title + ' · ' + projectName(task)"
               >
-                <span class="calendar-task__status"></span>
                 <span class="calendar-task__title">{{ task.title }}</span>
               </div>
             }

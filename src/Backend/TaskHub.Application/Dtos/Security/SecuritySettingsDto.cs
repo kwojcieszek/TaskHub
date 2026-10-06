@@ -7,4 +7,8 @@ public class SecuritySettingsDto
     public int MaxFailedAccessAttempts { get; set; }
 
     public int LockoutMinutes { get; set; }
+
+    public bool RegistrationEnabled { get; set; }
+
+    public PasswordPolicyDto PasswordPolicy { get; set; } = new();
 }

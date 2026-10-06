@@ -9,6 +9,13 @@ export interface AdminUser {
   roles: string[];
 }
 
+export interface CreateUserRequest {
+  userName: string;
+  email: string;
+  displayName: string;
+  password: string;
+}
+
 export interface UpdateUserRolesRequest {
   roles: string[];
 }

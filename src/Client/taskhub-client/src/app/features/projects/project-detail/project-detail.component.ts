@@ -143,7 +143,7 @@ export class ProjectDetailComponent implements OnChanges {
       width: '480px',
       data: { project, groups: this.groups }
     });
-    ref.onClose.subscribe((result) => {
+    ref?.onClose.subscribe((result) => {
       if (!result) {
         return;
       }
@@ -176,7 +176,7 @@ export class ProjectDetailComponent implements OnChanges {
       width: '480px',
       data: { members: this.members() }
     });
-    ref.onClose.subscribe((result) => {
+    ref?.onClose.subscribe((result) => {
       if (!result) {
         return;
       }
@@ -193,7 +193,7 @@ export class ProjectDetailComponent implements OnChanges {
       width: '480px',
       data: { task, members: this.members(), statusDerived: task.subTasks.length > 0 }
     });
-    ref.onClose.subscribe((result) => {
+    ref?.onClose.subscribe((result) => {
       if (!result) {
         // Attachments are saved straight from the dialog, so the row may have changed even on cancel.
         this.loadAll();
@@ -261,7 +261,7 @@ export class ProjectDetailComponent implements OnChanges {
       header: this.translate.instant('projects.addMember'),
       width: '420px'
     });
-    ref.onClose.subscribe((result) => {
+    ref?.onClose.subscribe((result) => {
       if (!result) {
         return;
       }

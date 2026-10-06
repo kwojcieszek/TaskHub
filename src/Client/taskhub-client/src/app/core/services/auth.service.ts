@@ -3,13 +3,16 @@ import { Injectable, computed, signal } from '@angular/core';
 import { Observable, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
+  AuthProviders,
   LoginRequest,
   LoginResponse,
   RegisterRequest,
   TwoFactorSetupResponse,
   TwoFactorVerifyRequest
 } from '../models/auth.model';
+import { PasswordPolicy } from '../models/password-policy.model';
 import { User } from '../models/user.model';
+import { DEFAULT_PASSWORD_POLICY } from '../utils/password-policy';
 
 const STORAGE_TOKEN_KEY = 'taskhub.accessToken';
 const STORAGE_USER_KEY = 'taskhub.user';
@@ -25,7 +28,26 @@ export class AuthService {
   readonly isAuthenticated = computed(() => this.currentUserSignal() !== null && this.accessTokenSignal() !== null);
   readonly isAdmin = computed(() => this.currentUserSignal()?.roles.includes('Admin') ?? false);
 
+  // Whether the server lets visitors create their own account; false until the server says otherwise.
+  readonly registrationEnabled = signal(false);
+
+  // The rules a new password must meet; the server is the one that enforces them.
+  readonly passwordPolicy = signal<PasswordPolicy>(DEFAULT_PASSWORD_POLICY);
+
   constructor(private readonly http: HttpClient) {}
+
+  loadProviders(): void {
+    this.http.get<AuthProviders>(`${this.baseUrl}/providers`).subscribe({
+      next: (providers) => {
+        this.registrationEnabled.set(providers.registrationEnabled === true);
+
+        if (providers.passwordPolicy) {
+          this.passwordPolicy.set(providers.passwordPolicy);
+        }
+      },
+      error: () => this.registrationEnabled.set(false)
+    });
+  }
 
   get accessToken(): string | null {
     return this.accessTokenSignal();
@@ -71,9 +93,16 @@ export class AuthService {
     );
   }
 
-  disableTwoFactor(): Observable<void> {
-    return this.http.post<void>(`${this.baseUrl}/2fa/disable`, {}).pipe(
+  disableTwoFactor(password: string): Observable<void> {
+    return this.http.post<void>(`${this.baseUrl}/2fa/disable`, { password }).pipe(
       tap(() => this.refreshCurrentUser().subscribe())
+    );
+  }
+
+  // The server ends every other session and answers with a fresh token for this one.
+  changePassword(currentPassword: string, newPassword: string): Observable<LoginResponse> {
+    return this.http.post<LoginResponse>(`${this.baseUrl}/password`, { currentPassword, newPassword }).pipe(
+      tap((response) => this.applyLoginResponse(response))
     );
   }
 

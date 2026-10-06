@@ -199,6 +199,12 @@ public class ProjectService : IProjectService
     {
         await _accessGuard.EnsureCanManageAsync(projectId, cancellationToken);
 
+        // A number outside the enum would be stored as a role none of the access checks knows.
+        if (!Enum.IsDefined(request.Role))
+        {
+            throw new ValidationFailedException(new[] { "The role must be Owner, Editor or Viewer." });
+        }
+
         var exists = await _dbContext.ProjectMembers
             .AsNoTracking()
             .AnyAsync(m => m.ProjectId == projectId && m.UserId == request.UserId, cancellationToken);

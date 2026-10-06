@@ -125,7 +125,7 @@ export class DashboardComponent implements OnInit {
     this.loadError.set(false);
 
     forkJoin({
-      tasks: this.taskItemService.getMyTasks(),
+      tasks: this.taskItemService.getAcrossProjects(),
       projects: this.projectService.getAll()
     }).subscribe({
       next: ({ tasks, projects }) => {

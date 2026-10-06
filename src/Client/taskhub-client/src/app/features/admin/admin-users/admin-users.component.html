@@ -1,3 +1,10 @@
+<div class="admin-users-toolbar">
+  <p-button [label]="'admin.newUser' | translate" icon="pi pi-user-plus" (onClick)="createUser()" />
+  @if (errorKey(); as key) {
+    <span class="error-text">{{ key | translate }}</span>
+  }
+</div>
+
 <p-table [value]="users()" styleClass="admin-table">
   <ng-template #header>
     <tr>
@@ -47,8 +54,11 @@
           (onClick)="toggleLockout(user)"
         />
       </td>
-      <td>
-        <button type="button" class="icon-btn icon-btn--danger" (click)="deleteUser(user)">
+      <td class="nowrap">
+        <button type="button" class="icon-btn icon-btn--primary" [title]="'admin.resetPassword' | translate" (click)="resetPassword(user)">
+          <i class="pi pi-key"></i>
+        </button>
+        <button type="button" class="icon-btn icon-btn--danger" [title]="'common.delete' | translate" (click)="deleteUser(user)">
           <i class="pi pi-trash"></i>
         </button>
       </td>

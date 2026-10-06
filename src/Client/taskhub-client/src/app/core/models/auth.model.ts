@@ -1,3 +1,4 @@
+import { PasswordPolicy } from './password-policy.model';
 import { User } from './user.model';
 
 export interface RegisterRequest {
@@ -22,6 +23,8 @@ export interface LoginResponse {
 
 export interface AuthProviders {
   googleClientId: string | null;
+  registrationEnabled: boolean;
+  passwordPolicy: PasswordPolicy;
 }
 
 export interface TwoFactorVerifyRequest {

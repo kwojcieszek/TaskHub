@@ -44,6 +44,16 @@ public class AttachmentService : IAttachmentService
         _options = options.Value;
     }
 
+    public async Task<AttachmentLimitsDto> GetLimitsAsync(CancellationToken cancellationToken = default)
+    {
+        return new AttachmentLimitsDto
+        {
+            MaxFileSizeBytes = _options.MaxFileSizeBytes,
+            MaxTotalBytesPerUser = _options.MaxTotalBytesPerUser,
+            UsedBytes = await GetUsedBytesAsync(cancellationToken)
+        };
+    }
+
     public async Task<IReadOnlyCollection<AttachmentDto>> GetByTaskAsync(Guid projectId, Guid taskId, CancellationToken cancellationToken = default)
     {
         await _accessGuard.EnsureCanViewAsync(projectId, cancellationToken);
@@ -57,10 +67,21 @@ public class AttachmentService : IAttachmentService
         return _mapper.Map<List<AttachmentDto>>(attachments);
     }
 
-    public async Task<AttachmentDto> UploadAsync(Guid projectId, Guid taskId, Stream content, string fileName, string? contentType, CancellationToken cancellationToken = default)
+    public async Task<AttachmentDto> UploadAsync(Guid projectId, Guid taskId, Stream content, string fileName, string? contentType, long? declaredSize = null, CancellationToken cancellationToken = default)
     {
         await _accessGuard.EnsureCanEditAsync(projectId, cancellationToken);
         await EnsureTaskExistsAsync(projectId, taskId, cancellationToken);
+
+        // The size the client declared is checked first, so an oversized file is refused before any of it is read or hashed.
+        // The content is still counted while it is buffered, because a declared size cannot be trusted.
+        if (declaredSize > _options.MaxFileSizeBytes)
+        {
+            throw new ValidationFailedException(new[] { TooLargeMessage() });
+        }
+
+        // Same idea for the user's total: a declared size that cannot fit is refused before the content is read.
+        var usedBytes = await GetUsedBytesAsync(cancellationToken);
+        EnsureWithinQuota(usedBytes, declaredSize ?? 0);
 
         var safeFileName = Path.GetFileName(fileName ?? string.Empty).Trim();
 
@@ -79,6 +100,8 @@ public class AttachmentService : IAttachmentService
             FileOptions.DeleteOnClose | FileOptions.Asynchronous);
 
         var sha256 = await BufferAndHashAsync(content, buffer, cancellationToken);
+
+        EnsureWithinQuota(usedBytes, buffer.Length);
 
         if (!await _storage.ExistsAsync(sha256, cancellationToken))
         {
@@ -187,7 +210,7 @@ public class AttachmentService : IAttachmentService
 
             if (total > _options.MaxFileSizeBytes)
             {
-                throw new ValidationFailedException(new[] { $"File cannot exceed {_options.MaxFileSizeBytes} bytes." });
+                throw new ValidationFailedException(new[] { TooLargeMessage() });
             }
 
             hash.AppendData(chunk, 0, read);
@@ -202,6 +225,38 @@ public class AttachmentService : IAttachmentService
         await buffer.FlushAsync(cancellationToken);
 
         return Convert.ToHexString(hash.GetHashAndReset()).ToLowerInvariant();
+    }
+
+    // Every attachment the user uploaded counts with its full size, also when the same content is stored only once.
+    private async Task<long> GetUsedBytesAsync(CancellationToken cancellationToken)
+    {
+        return await _dbContext.Attachments
+            .AsNoTracking()
+            .Where(a => a.UploadedById == _currentUser.UserId)
+            .SumAsync(a => (long?)a.Size, cancellationToken) ?? 0;
+    }
+
+    private void EnsureWithinQuota(long usedBytes, long newBytes)
+    {
+        if (_options.MaxTotalBytesPerUser <= 0 || usedBytes + newBytes <= _options.MaxTotalBytesPerUser)
+        {
+            return;
+        }
+
+        var limit = FormatMegabytes(_options.MaxTotalBytesPerUser);
+        var used = FormatMegabytes(usedBytes);
+
+        throw new ValidationFailedException(new[] { $"Your attachment quota of {limit} MB would be exceeded ({used} MB used). Delete some of your attachments first." });
+    }
+
+    private static string FormatMegabytes(long bytes)
+    {
+        return FormattableString.Invariant($"{bytes / (1024d * 1024d):0.##}");
+    }
+
+    private string TooLargeMessage()
+    {
+        return $"The file is too large. The maximum size is {FormatMegabytes(_options.MaxFileSizeBytes)} MB.";
     }
 
     private async Task<AttachmentContentDto> OpenContentAsync(Attachment attachment, CancellationToken cancellationToken)

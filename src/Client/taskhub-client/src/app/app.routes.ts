@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { adminGuard } from './core/guards/admin.guard';
 import { authGuard } from './core/guards/auth.guard';
 import { guestGuard } from './core/guards/guest.guard';
+import { passwordChangeGuard } from './core/guards/password-change.guard';
 
 export const routes: Routes = [
   {
@@ -23,6 +24,7 @@ export const routes: Routes = [
   {
     path: 'app',
     canActivate: [authGuard],
+    canActivateChild: [passwordChangeGuard],
     loadComponent: () => import('./shared/layout/shell.component').then((m) => m.ShellComponent),
     children: [
       { path: '', pathMatch: 'full', redirectTo: 'dashboard' },

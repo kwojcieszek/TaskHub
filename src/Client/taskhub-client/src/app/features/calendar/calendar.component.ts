@@ -5,7 +5,9 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ProjectService } from '../../core/services/project.service';
 import { TaskItemService } from '../../core/services/task-item.service';
 import { TaskItem, TaskItemPriority, TaskItemStatus } from '../../core/models/task.model';
+import { TaskStatusFilter } from '../../core/models/task-status-filter.model';
 import { projectColor } from '../../core/utils/project-color';
+import { StatusFilterComponent } from '../../shared/status-filter/status-filter.component';
 import { TaskRowComponent } from '../../shared/task-row/task-row.component';
 import { LocalizedDatePipe } from '../../shared/pipes/localized-date.pipe';
 
@@ -28,7 +30,7 @@ interface CalendarDay {
 @Component({
   selector: 'app-calendar',
   standalone: true,
-  imports: [LocalizedDatePipe, Button, Dialog, TranslateModule, TaskRowComponent],
+  imports: [LocalizedDatePipe, Button, Dialog, TranslateModule, TaskRowComponent, StatusFilterComponent],
   templateUrl: './calendar.component.html',
   styleUrl: './calendar.component.scss'
 })
@@ -37,12 +39,18 @@ export class CalendarComponent implements OnInit {
   private readonly projectService = inject(ProjectService);
   private readonly translate = inject(TranslateService);
 
-  readonly statuses: TaskItemStatus[] = ['ToDo', 'InProgress', 'Done', 'Cancelled'];
-
   readonly viewDate = signal(new Date());
   readonly tasks = signal<TaskItem[]>([]);
   readonly selectedDate = signal<Date | null>(null);
+  readonly statusFilter = signal<TaskStatusFilter>('All');
   private readonly projectNames = signal<Record<string, string>>({});
+
+  // The status filter narrows both the month grid and the details of a day.
+  private readonly filteredTasks = computed(() => {
+    const filter = this.statusFilter();
+
+    return filter === 'All' ? this.tasks() : this.tasks().filter((task) => task.status === filter);
+  });
 
   // Details of the tasks due on the clicked day, shown in a modal window.
   readonly selectedTasks = computed<CalendarDayTask[]>(() => {
@@ -53,7 +61,7 @@ export class CalendarComponent implements OnInit {
     }
 
     const key = selected.toDateString();
-    const dayTasks = this.tasks()
+    const dayTasks = this.filteredTasks()
       .filter((task) => task.dueDate && new Date(task.dueDate).toDateString() === key)
       .sort((a, b) => this.compareTasks(a, b));
     const dayTaskIds = new Set(dayTasks.map((task) => task.id));
@@ -87,7 +95,7 @@ export class CalendarComponent implements OnInit {
     const gridStart = new Date(year, month, 1 - startOffset);
 
     const tasksByDay = new Map<string, TaskItem[]>();
-    for (const task of this.tasks()) {
+    for (const task of this.filteredTasks()) {
       if (!task.dueDate) {
         continue;
       }
@@ -129,6 +137,18 @@ export class CalendarComponent implements OnInit {
 
   isSelected(date: Date): boolean {
     return this.selectedDate()?.toDateString() === date.toDateString();
+  }
+
+  // Past its due date and still open, the same rule the task rows use.
+  isOverdue(task: TaskItem): boolean {
+    if (!task.dueDate || task.status === 'Done' || task.status === 'Cancelled') {
+      return false;
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    return new Date(task.dueDate) < today;
   }
 
   selectDay(date: Date): void {
@@ -184,6 +204,8 @@ export class CalendarComponent implements OnInit {
     const view = this.viewDate();
     const from = new Date(view.getFullYear(), view.getMonth() - 1, 1);
     const to = new Date(view.getFullYear(), view.getMonth() + 2, 0);
-    this.taskItemService.getCalendar(from.toISOString(), to.toISOString()).subscribe((tasks) => this.tasks.set(tasks));
+    this.taskItemService
+      .getAcrossProjects({ from: from.toISOString(), to: to.toISOString() })
+      .subscribe((tasks) => this.tasks.set(tasks));
   }
 }

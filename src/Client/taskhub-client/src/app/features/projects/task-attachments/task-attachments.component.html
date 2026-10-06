@@ -16,8 +16,15 @@
     />
   </div>
 
+  <p class="attachments__limit">
+    {{ 'attachments.maxSize' | translate: { size: maxFileSizeLabel() } }}
+    @if (maxTotalBytes() > 0) {
+      · {{ 'attachments.quotaUsage' | translate: { used: usedLabel(), total: maxTotalLabel() } }}
+    }
+  </p>
+
   @if (errorKey(); as key) {
-    <p class="form-error">{{ key | translate }}</p>
+    <p class="form-error">{{ key | translate: { size: maxFileSizeLabel(), files: rejectedFiles(), used: usedLabel(), total: maxTotalLabel() } }}</p>
   }
 
   @for (attachment of attachments(); track attachment.id) {

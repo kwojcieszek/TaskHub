@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace TaskHub.Application.Dtos.Audit;
 
 public class AuditLogQuery
@@ -6,5 +8,6 @@ public class AuditLogQuery
 
     public int PageSize { get; set; } = 25;
 
+    [StringLength(200)]
     public string? Search { get; set; }
 }

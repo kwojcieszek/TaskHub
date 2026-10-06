@@ -2,7 +2,7 @@
   <h1>{{ 'admin.title' | translate }}</h1>
 </div>
 
-<p-tabs [value]="activeTab()" (valueChange)="activeTab.set($event)" [scrollable]="true">
+<p-tabs [value]="activeTab()" (valueChange)="activeTab.set($event ?? 'users')" [scrollable]="true">
   <p-tablist>
     <p-tab value="users"><i class="pi pi-users"></i>{{ 'admin.users' | translate }}</p-tab>
     <p-tab value="groups"><i class="pi pi-sitemap"></i>{{ 'nav.userGroups' | translate }}</p-tab>

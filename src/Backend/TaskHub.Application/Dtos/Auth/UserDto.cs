@@ -12,6 +12,8 @@ public class UserDto
 
     public bool TwoFactorEnabled { get; set; }
 
+    public bool MustChangePassword { get; set; }
+
     public bool GoogleLinked { get; set; }
 
     public string? GoogleEmail { get; set; }

@@ -1,6 +1,7 @@
 using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using TaskHub.Application.Common;
 using TaskHub.Application.Dtos.Tasks;
 using TaskHub.Application.Interfaces;
 
@@ -16,6 +17,26 @@ public class TasksController : ApiControllerBase
     public TasksController(ITaskItemService taskItemService)
     {
         _taskItemService = taskItemService;
+    }
+
+    // Tasks across every project the caller can see, outside the per-project route of this controller.
+    // With a date range it returns the tasks due in that range (the calendar); without one, all of them.
+    [HttpGet("~/api/v{version:apiVersion}/tasks")]
+    public async Task<ActionResult<IReadOnlyCollection<TaskItemDto>>> GetAcrossProjects(
+        [FromQuery] DateTime? from,
+        [FromQuery] DateTime? to,
+        CancellationToken cancellationToken)
+    {
+        if (from.HasValue != to.HasValue)
+        {
+            throw new ValidationFailedException(new[] { "Provide both 'from' and 'to', or neither." });
+        }
+
+        var tasks = from.HasValue && to.HasValue
+            ? await _taskItemService.GetCalendarAsync(from.Value, to.Value, cancellationToken)
+            : await _taskItemService.GetMyTasksAsync(cancellationToken);
+
+        return Ok(tasks);
     }
 
     [HttpGet]

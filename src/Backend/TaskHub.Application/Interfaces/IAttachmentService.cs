@@ -4,9 +4,11 @@ namespace TaskHub.Application.Interfaces;
 
 public interface IAttachmentService
 {
+    Task<AttachmentLimitsDto> GetLimitsAsync(CancellationToken cancellationToken = default);
+
     Task<IReadOnlyCollection<AttachmentDto>> GetByTaskAsync(Guid projectId, Guid taskId, CancellationToken cancellationToken = default);
 
-    Task<AttachmentDto> UploadAsync(Guid projectId, Guid taskId, Stream content, string fileName, string? contentType, CancellationToken cancellationToken = default);
+    Task<AttachmentDto> UploadAsync(Guid projectId, Guid taskId, Stream content, string fileName, string? contentType, long? declaredSize = null, CancellationToken cancellationToken = default);
 
     Task<AttachmentContentDto> DownloadAsync(Guid projectId, Guid taskId, Guid attachmentId, CancellationToken cancellationToken = default);
 

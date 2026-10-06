@@ -76,6 +76,11 @@ public class TaskItemService : ITaskItemService
             await EnsureCanBeParentAsync(projectId, request.ParentTaskId.Value, cancellationToken);
         }
 
+        if (request.AssignedUserId.HasValue)
+        {
+            await EnsureCanBeAssignedAsync(projectId, request.AssignedUserId.Value, cancellationToken);
+        }
+
         var task = new TaskItem
         {
             Id = Guid.NewGuid(),
@@ -122,6 +127,12 @@ public class TaskItemService : ITaskItemService
             }
 
             await EnsureCanBeParentAsync(projectId, request.ParentTaskId.Value, cancellationToken);
+        }
+
+        // Only a new assignee is checked, so a task stays editable after its assignee left the project.
+        if (request.AssignedUserId.HasValue && request.AssignedUserId != task.AssignedUserId)
+        {
+            await EnsureCanBeAssignedAsync(projectId, request.AssignedUserId.Value, cancellationToken);
         }
 
         task.ParentTaskId = request.ParentTaskId;
@@ -387,6 +398,19 @@ public class TaskItemService : ITaskItemService
         parent.UpdatedAt = DateTime.UtcNow;
 
         await _dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    // The assignee is shown to everyone in the project, so it has to be someone who can open it.
+    private async Task EnsureCanBeAssignedAsync(Guid projectId, Guid userId, CancellationToken cancellationToken)
+    {
+        var isMember = await _dbContext.ProjectMembers
+            .AsNoTracking()
+            .AnyAsync(m => m.ProjectId == projectId && m.UserId == userId, cancellationToken);
+
+        if (!isMember)
+        {
+            throw new ValidationFailedException(new[] { "A task can only be assigned to a member of the project." });
+        }
     }
 
     private async Task EnsureCanBeParentAsync(Guid projectId, Guid parentTaskId, CancellationToken cancellationToken)

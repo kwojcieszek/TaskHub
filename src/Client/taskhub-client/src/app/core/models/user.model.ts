@@ -4,6 +4,7 @@ export interface User {
   email: string;
   displayName: string;
   twoFactorEnabled: boolean;
+  mustChangePassword: boolean;
   googleLinked: boolean;
   googleEmail: string | null;
   roles: string[];

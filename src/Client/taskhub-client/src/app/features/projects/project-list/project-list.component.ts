@@ -123,7 +123,7 @@ export class ProjectListComponent implements OnInit {
       width: '480px',
       data: { groups: this.manageableGroups() }
     });
-    ref.onClose.subscribe((result) => {
+    ref?.onClose.subscribe((result) => {
       if (!result) {
         return;
       }
@@ -140,7 +140,7 @@ export class ProjectListComponent implements OnInit {
       width: '480px',
       data: {}
     });
-    ref.onClose.subscribe((result) => {
+    ref?.onClose.subscribe((result) => {
       if (!result) {
         return;
       }
@@ -154,7 +154,7 @@ export class ProjectListComponent implements OnInit {
       width: '480px',
       data: { group }
     });
-    ref.onClose.subscribe((result) => {
+    ref?.onClose.subscribe((result) => {
       if (!result) {
         return;
       }

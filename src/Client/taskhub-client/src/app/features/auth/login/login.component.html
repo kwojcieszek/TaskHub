@@ -52,9 +52,11 @@
       <app-google-button text="signin_with" (credential)="loginWithGoogle($event)" />
     </div>
 
-    <p class="auth-switch">
-      {{ 'auth.noAccount' | translate }}
-      <a routerLink="/register">{{ 'auth.register' | translate }}</a>
-    </p>
+    @if (authService.registrationEnabled()) {
+      <p class="auth-switch">
+        {{ 'auth.noAccount' | translate }}
+        <a routerLink="/register">{{ 'auth.register' | translate }}</a>
+      </p>
+    }
   </div>
 </div>

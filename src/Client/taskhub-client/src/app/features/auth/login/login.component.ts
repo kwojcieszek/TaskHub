@@ -26,7 +26,7 @@ const TOO_MANY_REQUESTS = 429;
 })
 export class LoginComponent {
   private readonly fb = inject(FormBuilder);
-  private readonly authService = inject(AuthService);
+  readonly authService = inject(AuthService);
   private readonly router = inject(Router);
 
   readonly google = inject(GoogleIdentityService);
@@ -38,6 +38,10 @@ export class LoginComponent {
     userName: ['', Validators.required],
     password: ['', Validators.required]
   });
+
+  constructor() {
+    this.authService.loadProviders();
+  }
 
   submit(): void {
     if (this.form.invalid) {

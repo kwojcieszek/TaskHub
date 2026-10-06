@@ -8,6 +8,9 @@ public class AttachmentStorageOptions
 
     public long MaxFileSizeBytes { get; set; } = 25 * 1024 * 1024;
 
+    // Total size of the attachments one user may keep; 0 turns the limit off.
+    public long MaxTotalBytesPerUser { get; set; } = 1024L * 1024 * 1024;
+
     public FileSystemStorageOptions FileSystem { get; set; } = new();
 
     public FtpStorageOptions Ftp { get; set; } = new();

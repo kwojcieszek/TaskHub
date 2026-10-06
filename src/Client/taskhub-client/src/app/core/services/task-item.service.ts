@@ -32,13 +32,11 @@ export class TaskItemService {
     return this.http.delete<void>(`${this.tasksUrl(projectId)}/${taskId}`);
   }
 
-  getCalendar(from: string, to: string): Observable<TaskItem[]> {
-    const params = new HttpParams().set('from', from).set('to', to);
-    return this.http.get<TaskItem[]>(`${environment.apiUrl}/calendar/tasks`, { params });
-  }
+  // Tasks from every project the user can see; with a date range, only the ones due within it.
+  getAcrossProjects(range?: { from: string; to: string }): Observable<TaskItem[]> {
+    const params = range ? new HttpParams().set('from', range.from).set('to', range.to) : undefined;
 
-  getMyTasks(): Observable<TaskItem[]> {
-    return this.http.get<TaskItem[]>(`${environment.apiUrl}/calendar/my-tasks`);
+    return this.http.get<TaskItem[]>(`${environment.apiUrl}/tasks`, { params });
   }
 
   start(projectId: string, taskId: string): Observable<TaskItem> {

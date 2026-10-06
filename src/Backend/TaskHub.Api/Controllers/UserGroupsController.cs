@@ -1,12 +1,13 @@
 using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using TaskHub.Application.Common;
 using TaskHub.Application.Dtos.UserGroups;
 using TaskHub.Application.Interfaces;
 
 namespace TaskHub.Api.Controllers;
 
-[Authorize]
+[Authorize(Roles = Roles.Admin)]
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/user-groups")]
 public class UserGroupsController : ApiControllerBase

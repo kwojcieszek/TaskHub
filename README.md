@@ -12,6 +12,8 @@ src/
     TaskHub.Application/     DTOs, service interfaces/implementations, AutoMapper profile
     TaskHub.Infrastructure/  EF Core DbContext, Identity, JWT, DB-provider selection, seeding
     TaskHub.Api/              controllers, Program.cs, appsettings
+    TaskHub.Tests/            service tests
+    TaskHub.IntegrationTests/ integration and security tests of the running API
   Client/
     taskhub-client/           Angular 19 standalone app
 ```
@@ -24,9 +26,18 @@ cd src/Backend
 dotnet run --project TaskHub.Api
 ```
 
+**Tests:**
+```
+cd src/Backend
+dotnet test
+```
+`TaskHub.Tests` runs the real application services against a private in-memory SQLite database; only the HTTP user, file storage and Google are replaced with test doubles.
+
+`TaskHub.IntegrationTests` runs the whole API in memory (the real pipeline, authentication, middleware and file storage) against a private SQLite database in a temporary folder, and calls it over HTTP. `Integration/` covers the flows of users, projects, tasks and attachments; `Security/` covers who may do what: every project operation tried by every kind of caller, forged and revoked tokens, login, lockout and 2FA, isolation between users, hostile input, rate limiting and CORS. Tests that prove a defect which is not fixed yet are skipped with a reason from `Support/KnownDefects.cs`, so every run lists what is still open.
+
 On first run, if the configured database doesn't exist yet, it is created automatically and seeded with:
 - roles `Admin`, `User`
-- default admin user `admin` / `admin` (Identity password policy is relaxed so this works out of the box — change it after first login)
+- default admin user `admin` / `admin` (the starting password is exempt from the password policy and must be replaced at the first sign-in)
 
 **Database provider** — set in `TaskHub.Api/appsettings.json`:
 ```json
@@ -48,9 +59,11 @@ Example connection strings:
 
 **Domain model** — ProjectGroup → Project → Task → Subtask (project groups and subtasks are optional, subtasks one level deep; a task with subtasks cannot be started or completed directly — its status follows the subtasks and it is done once all of them are done), with per-project membership (Owner/Editor/Viewer) and separate cross-project UserGroups. An Admin role bypasses membership checks. A project can be deactivated from its edit form (owner or admin): it stays on the Projects page, marked as inactive, but its tasks no longer appear in the cross-project task list, dashboard, calendar or reports.
 
-**Attachments** — tasks can carry file attachments. Metadata lives in the database; the files go to the storage chosen in `AttachmentStorage` in `appsettings.json` (`FileSystem` or `Ftp`) and are stored once under their SHA-256 hash, which is also the lookup key (`GET /api/v1/attachments/{sha256}?taskId={taskId}`). The lookup requires the id of a task the file is attached to, and access is checked through that task's project.
+**Attachments** — tasks can carry file attachments. Metadata lives in the database; the files go to the storage chosen in `AttachmentStorage` in `appsettings.json` (`FileSystem` or `Ftp`) and are stored once under their SHA-256 hash, which is also the lookup key (`GET /api/v1/attachments/{sha256}?taskId={taskId}`). The lookup requires the id of a task the file is attached to, and access is checked through that task's project. One file can be at most `AttachmentStorage:MaxFileSizeBytes`, and all attachments uploaded by one user together at most `AttachmentStorage:MaxTotalBytesPerUser` (1 GB by default, `0` for no limit); deleting an attachment frees its share.
 
-**Audit and security** — every login attempt is stored in `LoginLogs` (user name, IP address, browser, result) and every modifying request of a signed-in user in `UserActivityLogs` (action, path, status code, IP address). Administrators read both under `GET /api/v1/admin/logs/logins` and `GET /api/v1/admin/logs/activity`, and in the admin panel. Accounts are locked for a set time after a set number of failed logins; the defaults come from `Security` in `appsettings.json` and can be changed in the admin panel (`/api/v1/admin/security`, stored in `SystemSettings`). Requests are rate limited per user or IP address (`RateLimiting` in `appsettings.json`), with a tighter limit on login, registration and 2FA; exceeding it returns `429`. Behind a reverse proxy, configure forwarded headers, otherwise the proxy's address is logged and limited instead of the client's.
+**Audit and security** — every login attempt is stored in `LoginLogs` (user name, IP address, browser, result) and every modifying request of a signed-in user in `UserActivityLogs` (action, path, status code, IP address). Administrators read both under `GET /api/v1/admin/logs/logins` and `GET /api/v1/admin/logs/activity`, and in the admin panel. Accounts are locked for a set time after a set number of failed logins; the defaults come from `Security` in `appsettings.json` and can be changed in the admin panel (`/api/v1/admin/security`, stored in `SystemSettings`). Requests are rate limited per user or IP address (`RateLimiting` in `appsettings.json`), with a tighter limit on login, registration and 2FA; exceeding it returns `429`. Behind a reverse proxy, set `ReverseProxy:Enabled` to `true` in `appsettings.json` (and list the proxy in `KnownProxies` or `KnownNetworks` unless it runs on the same machine), otherwise the proxy's address is logged and limited instead of the client's.
+
+**Accounts** - self-registration is off by default (`Security:RegistrationEnabled`, or the Security tab of the admin panel); an administrator creates users and can set a new password for them. New passwords must meet the password policy (minimum length, uppercase and lowercase letter, digit, special character): the defaults come from `Security:PasswordPolicy` in `appsettings.json` and can be changed in the Security tab; existing passwords keep working until they are changed. A password assigned by someone else (the default administrator's, a created user's, a reset one) must be changed at the next sign-in, and until then the API serves only the account endpoints. Every access token is checked against the user on each request, so deleting or locking a user, changing roles or changing a password ends the affected sessions at once. Turning two-factor authentication off requires the password. User groups are managed by administrators only.
 
 **Google sign-in** — set `GoogleAuth:ClientId` in `appsettings.json` to an OAuth 2.0 *Web application* client ID from Google Cloud Console and add the address the Angular app is served from (for example `http://localhost:4200`) to its *Authorized JavaScript origins*. A user first links a Google account in their profile; after that the login page accepts that Google account. An unlinked Google account cannot log in, even if its e-mail matches a user. With an empty client ID the Google buttons are hidden.
 

@@ -46,7 +46,7 @@ export class UserGroupsComponent implements OnInit {
       header: this.translate.instant('userGroups.newGroup'),
       width: '440px'
     });
-    ref.onClose.subscribe((result) => {
+    ref?.onClose.subscribe((result) => {
       if (!result) {
         return;
       }
@@ -65,7 +65,7 @@ export class UserGroupsComponent implements OnInit {
       header: this.translate.instant('userGroups.addMember'),
       width: '420px'
     });
-    ref.onClose.subscribe((result) => {
+    ref?.onClose.subscribe((result) => {
       if (!result) {
         return;
       }

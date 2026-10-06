@@ -72,7 +72,7 @@ export class TasksOverviewComponent implements OnInit {
     this.loadError.set(false);
 
     forkJoin({
-      tasks: this.taskItemService.getMyTasks(),
+      tasks: this.taskItemService.getAcrossProjects(),
       projects: this.projectService.getAll()
     }).subscribe({
       next: ({ tasks, projects }) => {
@@ -102,7 +102,7 @@ export class TasksOverviewComponent implements OnInit {
         width: '480px',
         data: { task, members, statusDerived: this.parentTaskIds().has(task.id) }
       });
-      ref.onClose.subscribe((result) => {
+      ref?.onClose.subscribe((result) => {
         if (!result) {
           // Attachments are saved straight from the dialog, so the row may have changed even on cancel.
           this.load();

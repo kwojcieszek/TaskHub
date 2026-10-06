@@ -201,19 +201,6 @@ body {
   align-items: center;
   gap: 1rem;
 
-  // Tinted quarter circle in the corner.
-  &::after {
-    content: '';
-    position: absolute;
-    right: -2rem;
-    bottom: -2rem;
-    width: 5.5rem;
-    height: 5.5rem;
-    border-radius: 50%;
-    background: color-mix(in srgb, var(--tile-color) 12%, transparent);
-    pointer-events: none;
-  }
-
   &__icon {
     width: 3rem;
     height: 3rem;
@@ -482,6 +469,20 @@ body {
   display: flex;
   flex-direction: column;
   gap: 1.1rem;
+}
+
+// Soft orange button for secondary "create" actions that should stand apart from the primary blue one.
+.p-button.btn-soft-orange {
+  background: var(--tone-orange-bg);
+  border-color: color-mix(in srgb, var(--tone-orange-solid) 35%, transparent);
+  color: var(--tone-orange-fg);
+
+  &:not(:disabled):hover,
+  &:not(:disabled):active {
+    background: color-mix(in srgb, var(--tone-orange-solid) 24%, var(--app-surface));
+    border-color: color-mix(in srgb, var(--tone-orange-solid) 55%, transparent);
+    color: var(--tone-orange-fg);
+  }
 }
 
 .p-button.auth-submit {

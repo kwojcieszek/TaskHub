@@ -1,7 +1,4 @@
-.calendar-legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
+.calendar-filter {
   margin-top: 0.5rem;
 }
 
@@ -128,19 +125,21 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  // The fill is the task colour; the dot in front carries the status colour from the legend.
-  background: color-mix(in srgb, var(--task-color) 22%, var(--app-surface));
+  // The fill follows the status, as everywhere else: grey to do, blue in progress, green done.
+  background: color-mix(in srgb, var(--tone-solid) 24%, var(--app-surface));
   color: var(--p-text-color);
   border-radius: 4px;
   padding: 2px 5px;
 }
 
-.calendar-task__status {
-  width: 0.5rem;
-  height: 0.5rem;
-  border-radius: 50%;
-  flex-shrink: 0;
-  background: var(--tone-solid);
+// Overdue wins over the status colour; a closed task is never overdue.
+.calendar-task--overdue {
+  --tone-solid: var(--tone-red-solid);
+}
+
+// Grey instead of the usual rose, so a cancelled task is not mistaken for an overdue one.
+.calendar-task[data-status='Cancelled'] {
+  --tone-solid: var(--tone-slate-solid);
 }
 
 .calendar-task__title {
@@ -179,10 +178,6 @@
     font-size: 0;
     height: 5px;
     padding: 0;
-    background: var(--task-color);
-  }
-
-  .calendar-task__status {
-    display: none;
+    background: var(--tone-solid);
   }
 }

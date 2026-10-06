@@ -35,6 +35,13 @@ public class AuthService : IAuthService
 
     public async Task<UserDto> RegisterAsync(RegisterRequest request, CancellationToken cancellationToken = default)
     {
+        var settings = await _securitySettingsService.GetAsync(cancellationToken);
+
+        if (!settings.RegistrationEnabled)
+        {
+            throw new ForbiddenAccessException("Registration is turned off. Ask an administrator for an account.");
+        }
+
         var user = new ApplicationUser
         {
             Id = Guid.NewGuid(),
@@ -62,7 +69,7 @@ public class AuthService : IAuthService
         if (user is null)
         {
             await _auditLogService.RecordLoginAsync(null, request.UserName ?? string.Empty, LoginFailureReason.UserNotFound, cancellationToken);
-            throw new UnauthorizedAccessException("Invalid username or password.");
+            throw new AuthenticationFailedException("Invalid username or password.");
         }
 
         var userName = user.UserName ?? string.Empty;
@@ -70,7 +77,7 @@ public class AuthService : IAuthService
         if (await _userManager.IsLockedOutAsync(user))
         {
             await _auditLogService.RecordLoginAsync(user.Id, userName, LoginFailureReason.LockedOut, cancellationToken);
-            throw new UnauthorizedAccessException("This account is locked out.");
+            throw new AuthenticationFailedException("This account is locked out.");
         }
 
         var passwordValid = await _userManager.CheckPasswordAsync(user, request.Password);
@@ -79,7 +86,7 @@ public class AuthService : IAuthService
         {
             await RegisterFailedAttemptAsync(user, cancellationToken);
             await _auditLogService.RecordLoginAsync(user.Id, userName, LoginFailureReason.InvalidPassword, cancellationToken);
-            throw new UnauthorizedAccessException("Invalid username or password.");
+            throw new AuthenticationFailedException("Invalid username or password.");
         }
 
         if (await _userManager.GetTwoFactorEnabledAsync(user))
@@ -100,17 +107,17 @@ public class AuthService : IAuthService
     public async Task<LoginResponse> VerifyTwoFactorAsync(TwoFactorVerifyRequest request, CancellationToken cancellationToken = default)
     {
         var userId = _tokenService.ValidateTwoFactorToken(request.TwoFactorToken)
-            ?? throw new UnauthorizedAccessException("Two-factor session expired, please log in again.");
+            ?? throw new AuthenticationFailedException("Two-factor session expired, please log in again.");
 
         var user = await _userManager.FindByIdAsync(userId.ToString()!)
-            ?? throw new UnauthorizedAccessException("Invalid session.");
+            ?? throw new AuthenticationFailedException("Invalid session.");
 
         var userName = user.UserName ?? string.Empty;
 
         if (await _userManager.IsLockedOutAsync(user))
         {
             await _auditLogService.RecordLoginAsync(user.Id, userName, LoginFailureReason.LockedOut, cancellationToken);
-            throw new UnauthorizedAccessException("This account is locked out.");
+            throw new AuthenticationFailedException("This account is locked out.");
         }
 
         var codeValid = await _userManager.VerifyTwoFactorTokenAsync(user, AuthenticatorTokenProvider, request.Code);
@@ -119,7 +126,7 @@ public class AuthService : IAuthService
         {
             await RegisterFailedAttemptAsync(user, cancellationToken);
             await _auditLogService.RecordLoginAsync(user.Id, userName, LoginFailureReason.InvalidTwoFactorCode, cancellationToken);
-            throw new UnauthorizedAccessException("Invalid authenticator code.");
+            throw new AuthenticationFailedException("Invalid authenticator code.");
         }
 
         await _userManager.ResetAccessFailedCountAsync(user);
@@ -131,6 +138,12 @@ public class AuthService : IAuthService
     public async Task<TwoFactorSetupResponse> BeginTwoFactorSetupAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         var user = await GetUserOrThrowAsync(userId);
+
+        // Starting a new setup replaces the authenticator key, so it must not be possible while 2FA protects the account.
+        if (user.TwoFactorEnabled)
+        {
+            throw new ConflictException("Two-factor authentication is already enabled. Disable it first to set it up again.");
+        }
 
         await _userManager.ResetAuthenticatorKeyAsync(user);
         var key = await _userManager.GetAuthenticatorKeyAsync(user)
@@ -159,11 +172,41 @@ public class AuthService : IAuthService
         await _userManager.SetTwoFactorEnabledAsync(user, true);
     }
 
-    public async Task DisableTwoFactorAsync(Guid userId, CancellationToken cancellationToken = default)
+    public async Task DisableTwoFactorAsync(Guid userId, TwoFactorDisableRequest request, CancellationToken cancellationToken = default)
     {
         var user = await GetUserOrThrowAsync(userId);
 
+        // A signed-in session alone is not enough to remove the second factor.
+        if (!await _userManager.CheckPasswordAsync(user, request.Password))
+        {
+            throw new ValidationFailedException(new[] { "Invalid password." });
+        }
+
         await _userManager.SetTwoFactorEnabledAsync(user, false);
+    }
+
+    public async Task<LoginResponse> ChangePasswordAsync(Guid userId, ChangePasswordRequest request, CancellationToken cancellationToken = default)
+    {
+        var user = await GetUserOrThrowAsync(userId);
+
+        if (request.NewPassword == request.CurrentPassword)
+        {
+            throw new ValidationFailedException(new[] { "The new password must differ from the current one." });
+        }
+
+        var result = await _userManager.ChangePasswordAsync(user, request.CurrentPassword, request.NewPassword);
+
+        if (!result.Succeeded)
+        {
+            throw new ValidationFailedException(result.Errors.Select(e => e.Description));
+        }
+
+        // Every other session of the user ends here; the caller continues with the token returned below.
+        user.MustChangePassword = false;
+        user.TokenVersion++;
+        await _userManager.UpdateAsync(user);
+
+        return await BuildLoginResponseAsync(user);
     }
 
     public async Task<UserDto> GetCurrentUserAsync(Guid userId, CancellationToken cancellationToken = default)
@@ -176,15 +219,22 @@ public class AuthService : IAuthService
         return await MapToUserDtoAsync(user);
     }
 
-    public AuthProvidersDto GetProviders()
+    public async Task<AuthProvidersDto> GetProvidersAsync(CancellationToken cancellationToken = default)
     {
-        return new AuthProvidersDto { GoogleClientId = _googleTokenValidator.ClientId };
+        var settings = await _securitySettingsService.GetAsync(cancellationToken);
+
+        return new AuthProvidersDto
+        {
+            GoogleClientId = _googleTokenValidator.ClientId,
+            RegistrationEnabled = settings.RegistrationEnabled,
+            PasswordPolicy = settings.PasswordPolicy
+        };
     }
 
     public async Task<LoginResponse> LoginWithGoogleAsync(GoogleTokenRequest request, CancellationToken cancellationToken = default)
     {
         var googleUser = await _googleTokenValidator.ValidateAsync(request.IdToken, cancellationToken)
-            ?? throw new UnauthorizedAccessException("Google sign-in failed.");
+            ?? throw new AuthenticationFailedException("Google sign-in failed.");
 
         // Only an account linked beforehand from the profile can sign in; a matching e-mail alone is not enough.
         var user = await _userManager.FindByLoginAsync(GoogleProvider, googleUser.Subject);
@@ -192,7 +242,7 @@ public class AuthService : IAuthService
         if (user is null)
         {
             await _auditLogService.RecordLoginAsync(null, googleUser.Email, LoginFailureReason.GoogleAccountNotLinked, cancellationToken);
-            throw new UnauthorizedAccessException("This Google account is not linked to any user.");
+            throw new AuthenticationFailedException("This Google account is not linked to any user.");
         }
 
         var userName = user.UserName ?? string.Empty;
@@ -200,7 +250,7 @@ public class AuthService : IAuthService
         if (await _userManager.IsLockedOutAsync(user))
         {
             await _auditLogService.RecordLoginAsync(user.Id, userName, LoginFailureReason.LockedOut, cancellationToken);
-            throw new UnauthorizedAccessException("This account is locked out.");
+            throw new AuthenticationFailedException("This account is locked out.");
         }
 
         if (await _userManager.GetTwoFactorEnabledAsync(user))
@@ -325,6 +375,7 @@ public class AuthService : IAuthService
             Email = user.Email ?? string.Empty,
             DisplayName = user.DisplayName,
             TwoFactorEnabled = user.TwoFactorEnabled,
+            MustChangePassword = user.MustChangePassword,
             Roles = roles.ToList()
         };
     }

@@ -8,8 +8,16 @@
   width: 100%;
 }
 
-::ng-deep .profile-card--google.p-card {
+::ng-deep .profile-card--google.p-card,
+::ng-deep .profile-card--section.p-card {
   margin-top: 1.25rem;
+}
+
+::ng-deep .profile-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
 }
 
 .profile-section-title {

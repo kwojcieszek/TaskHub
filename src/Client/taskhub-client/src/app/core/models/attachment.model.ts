@@ -1,3 +1,10 @@
+export interface AttachmentLimits {
+  maxFileSizeBytes: number;
+  // 0 means there is no total limit.
+  maxTotalBytesPerUser: number;
+  usedBytes: number;
+}
+
 export interface Attachment {
   id: string;
   projectId: string;

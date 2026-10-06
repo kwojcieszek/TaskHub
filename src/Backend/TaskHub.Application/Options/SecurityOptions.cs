@@ -9,4 +9,9 @@ public class SecurityOptions
     public int MaxFailedAccessAttempts { get; set; } = 5;
 
     public int LockoutMinutes { get; set; } = 15;
+
+    // Closed by default: accounts are created by an administrator unless self-registration is switched on.
+    public bool RegistrationEnabled { get; set; }
+
+    public PasswordPolicyOptions PasswordPolicy { get; set; } = new();
 }

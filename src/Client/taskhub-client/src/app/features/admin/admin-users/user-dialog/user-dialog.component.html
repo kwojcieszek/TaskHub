@@ -1,0 +1,28 @@
+<form [formGroup]="form" (ngSubmit)="submit()" class="dialog-form">
+  <div class="field">
+    <label for="newUserName">{{ 'auth.userName' | translate }}</label>
+    <input pInputText id="newUserName" formControlName="userName" autocomplete="off" class="w-full" />
+  </div>
+
+  <div class="field">
+    <label for="newUserEmail">{{ 'auth.email' | translate }}</label>
+    <input pInputText id="newUserEmail" type="email" formControlName="email" autocomplete="off" class="w-full" />
+  </div>
+
+  <div class="field">
+    <label for="newUserDisplayName">{{ 'auth.displayName' | translate }}</label>
+    <input pInputText id="newUserDisplayName" formControlName="displayName" autocomplete="off" class="w-full" />
+  </div>
+
+  <div class="field">
+    <label for="newUserPassword">{{ 'admin.initialPassword' | translate }}</label>
+    <p-password inputId="newUserPassword" formControlName="password" [feedback]="false" [toggleMask]="true" autocomplete="new-password" styleClass="w-full" inputStyleClass="w-full" />
+    <app-password-rules [password]="form.controls.password.value" />
+    <small class="secondary">{{ 'admin.assignedPasswordHint' | translate }}</small>
+  </div>
+
+  <div class="dialog-actions">
+    <p-button [label]="'common.cancel' | translate" severity="secondary" [outlined]="true" type="button" (onClick)="cancel()" />
+    <p-button [label]="'common.save' | translate" icon="pi pi-check" type="submit" [disabled]="form.invalid" />
+  </div>
+</form>

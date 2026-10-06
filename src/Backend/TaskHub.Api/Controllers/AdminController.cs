@@ -26,6 +26,20 @@ public class AdminController : ApiControllerBase
         return Ok(users);
     }
 
+    [HttpPost]
+    public async Task<ActionResult<AdminUserDto>> Create(CreateUserRequest request, CancellationToken cancellationToken)
+    {
+        var user = await _adminUserService.CreateUserAsync(request, cancellationToken);
+        return StatusCode(StatusCodes.Status201Created, user);
+    }
+
+    [HttpPut("{userId:guid}/password")]
+    public async Task<ActionResult<AdminUserDto>> ResetPassword(Guid userId, ResetUserPasswordRequest request, CancellationToken cancellationToken)
+    {
+        var user = await _adminUserService.ResetPasswordAsync(userId, request, cancellationToken);
+        return Ok(user);
+    }
+
     [HttpPut("{userId:guid}/roles")]
     public async Task<ActionResult<AdminUserDto>> UpdateRoles(Guid userId, UpdateUserRolesRequest request, CancellationToken cancellationToken)
     {

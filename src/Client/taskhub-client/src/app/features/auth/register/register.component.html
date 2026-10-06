@@ -47,6 +47,7 @@
             styleClass="w-full"
           />
         </p-iconfield>
+        <app-password-rules [password]="form.controls.password.value" />
       </div>
 
       @if (errorMessage()) {

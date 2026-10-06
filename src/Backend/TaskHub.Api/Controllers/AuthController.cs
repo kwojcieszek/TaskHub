@@ -65,10 +65,19 @@ public class AuthController : ApiControllerBase
 
     [Authorize]
     [HttpPost("2fa/disable")]
-    public async Task<IActionResult> DisableTwoFactor(CancellationToken cancellationToken)
+    public async Task<IActionResult> DisableTwoFactor(TwoFactorDisableRequest request, CancellationToken cancellationToken)
     {
-        await _authService.DisableTwoFactorAsync(CurrentUserId, cancellationToken);
+        await _authService.DisableTwoFactorAsync(CurrentUserId, request, cancellationToken);
         return NoContent();
+    }
+
+    [Authorize]
+    [EnableRateLimiting(RateLimitPolicies.Auth)]
+    [HttpPost("password")]
+    public async Task<ActionResult<LoginResponse>> ChangePassword(ChangePasswordRequest request, CancellationToken cancellationToken)
+    {
+        var response = await _authService.ChangePasswordAsync(CurrentUserId, request, cancellationToken);
+        return Ok(response);
     }
 
     [Authorize]
@@ -80,9 +89,10 @@ public class AuthController : ApiControllerBase
     }
 
     [HttpGet("providers")]
-    public ActionResult<AuthProvidersDto> Providers()
+    public async Task<ActionResult<AuthProvidersDto>> Providers(CancellationToken cancellationToken)
     {
-        return Ok(_authService.GetProviders());
+        var providers = await _authService.GetProvidersAsync(cancellationToken);
+        return Ok(providers);
     }
 
     [EnableRateLimiting(RateLimitPolicies.Auth)]

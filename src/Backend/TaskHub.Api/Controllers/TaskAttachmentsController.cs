@@ -29,7 +29,7 @@ public class TaskAttachmentsController : ApiControllerBase
     public async Task<ActionResult<AttachmentDto>> Upload(Guid projectId, Guid taskId, IFormFile file, CancellationToken cancellationToken)
     {
         await using var content = file.OpenReadStream();
-        var attachment = await _attachmentService.UploadAsync(projectId, taskId, content, file.FileName, file.ContentType, cancellationToken);
+        var attachment = await _attachmentService.UploadAsync(projectId, taskId, content, file.FileName, file.ContentType, file.Length, cancellationToken);
         return Ok(attachment);
     }
 

@@ -42,15 +42,39 @@ public class DbSeeder
                 UserName = _defaultAdmin.UserName,
                 Email = _defaultAdmin.Email,
                 EmailConfirmed = true,
-                DisplayName = "Administrator"
+                DisplayName = "Administrator",
+                MustChangePassword = true
             };
 
-            var result = await _userManager.CreateAsync(admin, _defaultAdmin.Password);
+            // The starting password is exempt from the password policy: it only lets the administrator in
+            // to set a real one, which the policy then applies to.
+            admin.PasswordHash = _userManager.PasswordHasher.HashPassword(admin, _defaultAdmin.Password);
+
+            var result = await _userManager.CreateAsync(admin);
 
             if (result.Succeeded)
             {
                 await _userManager.AddToRoleAsync(admin, Roles.Admin);
             }
+        }
+
+        await RequireDefaultPasswordChangeAsync();
+    }
+
+    // A database created before password changes existed may still have the administrator on the published default password.
+    private async Task RequireDefaultPasswordChangeAsync()
+    {
+        var admin = await _userManager.FindByNameAsync(_defaultAdmin.UserName);
+
+        if (admin is null || admin.MustChangePassword)
+        {
+            return;
+        }
+
+        if (await _userManager.CheckPasswordAsync(admin, _defaultAdmin.Password))
+        {
+            admin.MustChangePassword = true;
+            await _userManager.UpdateAsync(admin);
         }
     }
 

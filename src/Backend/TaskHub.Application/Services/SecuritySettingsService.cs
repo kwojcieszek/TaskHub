@@ -15,9 +15,17 @@ public class SecuritySettingsService : ISecuritySettingsService
     private const string LockoutEnabledKey = KeyPrefix + "LockoutEnabled";
     private const string MaxFailedAccessAttemptsKey = KeyPrefix + "MaxFailedAccessAttempts";
     private const string LockoutMinutesKey = KeyPrefix + "LockoutMinutes";
+    private const string RegistrationEnabledKey = KeyPrefix + "RegistrationEnabled";
+    private const string PasswordMinLengthKey = KeyPrefix + "Password.MinLength";
+    private const string PasswordRequireUppercaseKey = KeyPrefix + "Password.RequireUppercase";
+    private const string PasswordRequireLowercaseKey = KeyPrefix + "Password.RequireLowercase";
+    private const string PasswordRequireDigitKey = KeyPrefix + "Password.RequireDigit";
+    private const string PasswordRequireNonAlphanumericKey = KeyPrefix + "Password.RequireNonAlphanumeric";
 
     private const int MaxAllowedAttempts = 100;
     private const int MaxAllowedLockoutMinutes = 525_600;
+    private const int MinAllowedPasswordLength = 4;
+    private const int MaxAllowedPasswordLength = 64;
 
     private readonly IApplicationDbContext _dbContext;
     private readonly SecurityOptions _defaults;
@@ -38,11 +46,18 @@ public class SecuritySettingsService : ISecuritySettingsService
         // Values saved by an administrator win; anything not saved yet falls back to appsettings.
         return new SecuritySettingsDto
         {
-            LockoutEnabled = stored.TryGetValue(LockoutEnabledKey, out var enabled) && bool.TryParse(enabled, out var parsedEnabled)
-                ? parsedEnabled
-                : _defaults.LockoutEnabled,
+            LockoutEnabled = ReadBool(stored, LockoutEnabledKey, _defaults.LockoutEnabled),
             MaxFailedAccessAttempts = ReadInt(stored, MaxFailedAccessAttemptsKey, _defaults.MaxFailedAccessAttempts),
-            LockoutMinutes = ReadInt(stored, LockoutMinutesKey, _defaults.LockoutMinutes)
+            LockoutMinutes = ReadInt(stored, LockoutMinutesKey, _defaults.LockoutMinutes),
+            RegistrationEnabled = ReadBool(stored, RegistrationEnabledKey, _defaults.RegistrationEnabled),
+            PasswordPolicy = new PasswordPolicyDto
+            {
+                MinLength = ReadInt(stored, PasswordMinLengthKey, _defaults.PasswordPolicy.MinLength),
+                RequireUppercase = ReadBool(stored, PasswordRequireUppercaseKey, _defaults.PasswordPolicy.RequireUppercase),
+                RequireLowercase = ReadBool(stored, PasswordRequireLowercaseKey, _defaults.PasswordPolicy.RequireLowercase),
+                RequireDigit = ReadBool(stored, PasswordRequireDigitKey, _defaults.PasswordPolicy.RequireDigit),
+                RequireNonAlphanumeric = ReadBool(stored, PasswordRequireNonAlphanumericKey, _defaults.PasswordPolicy.RequireNonAlphanumeric)
+            }
         };
     }
 
@@ -58,11 +73,24 @@ public class SecuritySettingsService : ISecuritySettingsService
             throw new ValidationFailedException(new[] { $"The lockout time must be between 1 and {MaxAllowedLockoutMinutes} minutes." });
         }
 
+        var passwordPolicy = request.PasswordPolicy ?? new PasswordPolicyDto();
+
+        if (passwordPolicy.MinLength < MinAllowedPasswordLength || passwordPolicy.MinLength > MaxAllowedPasswordLength)
+        {
+            throw new ValidationFailedException(new[] { $"The minimum password length must be between {MinAllowedPasswordLength} and {MaxAllowedPasswordLength}." });
+        }
+
         var values = new Dictionary<string, string>
         {
             [LockoutEnabledKey] = request.LockoutEnabled.ToString(),
             [MaxFailedAccessAttemptsKey] = request.MaxFailedAccessAttempts.ToString(CultureInfo.InvariantCulture),
-            [LockoutMinutesKey] = request.LockoutMinutes.ToString(CultureInfo.InvariantCulture)
+            [LockoutMinutesKey] = request.LockoutMinutes.ToString(CultureInfo.InvariantCulture),
+            [RegistrationEnabledKey] = request.RegistrationEnabled.ToString(),
+            [PasswordMinLengthKey] = passwordPolicy.MinLength.ToString(CultureInfo.InvariantCulture),
+            [PasswordRequireUppercaseKey] = passwordPolicy.RequireUppercase.ToString(),
+            [PasswordRequireLowercaseKey] = passwordPolicy.RequireLowercase.ToString(),
+            [PasswordRequireDigitKey] = passwordPolicy.RequireDigit.ToString(),
+            [PasswordRequireNonAlphanumericKey] = passwordPolicy.RequireNonAlphanumeric.ToString()
         };
 
         var stored = await _dbContext.SystemSettings
@@ -86,6 +114,11 @@ public class SecuritySettingsService : ISecuritySettingsService
         await _dbContext.SaveChangesAsync(cancellationToken);
 
         return await GetAsync(cancellationToken);
+    }
+
+    private static bool ReadBool(IReadOnlyDictionary<string, string> stored, string key, bool fallback)
+    {
+        return stored.TryGetValue(key, out var value) && bool.TryParse(value, out var parsed) ? parsed : fallback;
     }
 
     private static int ReadInt(IReadOnlyDictionary<string, string> stored, string key, int fallback)

@@ -5,11 +5,13 @@ import { Card } from 'primeng/card';
 import { Button } from 'primeng/button';
 import { InputText } from 'primeng/inputtext';
 import { Message } from 'primeng/message';
+import { Password } from 'primeng/password';
 import { TranslateModule } from '@ngx-translate/core';
 import { AuthService } from '../../../core/services/auth.service';
 import { TwoFactorSetupResponse } from '../../../core/models/auth.model';
 import { GoogleIdentityService } from '../../../core/services/google-identity.service';
 import { GoogleButtonComponent } from '../../../shared/google-button/google-button.component';
+import { ChangePasswordComponent } from './change-password/change-password.component';
 import { LoginHistoryComponent } from './login-history/login-history.component';
 
 const CONFLICT = 409;
@@ -17,7 +19,18 @@ const CONFLICT = 409;
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [ReactiveFormsModule, Card, Button, InputText, Message, TranslateModule, LoginHistoryComponent, GoogleButtonComponent],
+  imports: [
+    ReactiveFormsModule,
+    Card,
+    Button,
+    InputText,
+    Password,
+    Message,
+    TranslateModule,
+    ChangePasswordComponent,
+    LoginHistoryComponent,
+    GoogleButtonComponent
+  ],
   templateUrl: './profile.component.html',
   styleUrl: './profile.component.scss'
 })
@@ -34,6 +47,12 @@ export class ProfileComponent implements OnInit {
   readonly confirmForm = this.fb.nonNullable.group({
     code: ['', [Validators.required, Validators.minLength(6), Validators.maxLength(6)]]
   });
+
+  // Removing the second factor needs the password again, so a stolen session cannot do it.
+  readonly disableForm = this.fb.nonNullable.group({
+    password: ['', Validators.required]
+  });
+  readonly disableErrorKey = signal<string | null>(null);
 
   ngOnInit(): void {
     this.google.loadConfig();
@@ -61,7 +80,16 @@ export class ProfileComponent implements OnInit {
   }
 
   disable(): void {
-    this.auth.disableTwoFactor().subscribe();
+    if (this.disableForm.invalid) {
+      return;
+    }
+
+    this.disableErrorKey.set(null);
+
+    this.auth.disableTwoFactor(this.disableForm.getRawValue().password).subscribe({
+      next: () => this.disableForm.reset(),
+      error: () => this.disableErrorKey.set('profile.invalidPassword')
+    });
   }
 
   linkGoogle(idToken: string): void {

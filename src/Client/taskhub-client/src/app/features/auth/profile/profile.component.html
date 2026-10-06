@@ -10,7 +10,26 @@
       <i class="pi pi-verified"></i>
       {{ 'profile.twoFactorEnabled' | translate }}
     </p>
-    <p-button [label]="'profile.disableTwoFactor' | translate" severity="danger" [outlined]="true" (onClick)="disable()" />
+    <form [formGroup]="disableForm" (ngSubmit)="disable()" class="dialog-form">
+      <div class="field">
+        <label for="disablePassword">{{ 'profile.disableTwoFactorPassword' | translate }}</label>
+        <p-password inputId="disablePassword" formControlName="password" [feedback]="false" [toggleMask]="true" styleClass="w-full" inputStyleClass="w-full" />
+      </div>
+
+      @if (disableErrorKey(); as key) {
+        <p class="error-text">{{ key | translate }}</p>
+      }
+
+      <div class="profile-actions">
+        <p-button
+          [label]="'profile.disableTwoFactor' | translate"
+          severity="danger"
+          [outlined]="true"
+          type="submit"
+          [disabled]="disableForm.invalid"
+        />
+      </div>
+    </form>
   } @else {
     <p class="profile-2fa">{{ 'profile.twoFactorDisabled' | translate }}</p>
 
@@ -38,6 +57,8 @@
     }
   }
 </p-card>
+
+<app-change-password />
 
 <p-card styleClass="profile-card profile-card--google">
   <h3 class="profile-section-title"><i class="pi pi-google"></i>{{ 'profile.googleTitle' | translate }}</h3>

@@ -34,6 +34,49 @@
       />
     </div>
 
+    <h3 class="security-form__title">{{ 'admin.registrationTitle' | translate }}</h3>
+    <p class="security-form__hint">{{ 'admin.registrationHint' | translate }}</p>
+
+    <label class="security-form__toggle">
+      <p-toggleswitch [ngModel]="current.registrationEnabled" (ngModelChange)="update({ registrationEnabled: $event })" />
+      {{ 'admin.registrationEnabled' | translate }}
+    </label>
+
+    <h3 class="security-form__title">{{ 'admin.passwordPolicyTitle' | translate }}</h3>
+    <p class="security-form__hint">{{ 'admin.passwordPolicyHint' | translate }}</p>
+
+    <div class="field">
+      <label for="passwordMinLength">{{ 'admin.passwordMinLength' | translate }}</label>
+      <p-inputnumber
+        inputId="passwordMinLength"
+        [ngModel]="current.passwordPolicy.minLength"
+        (ngModelChange)="updatePasswordPolicy({ minLength: $event ?? 0 })"
+        [min]="minPolicyLength"
+        [max]="maxPolicyLength"
+        [showButtons]="true"
+      />
+    </div>
+
+    <label class="security-form__toggle">
+      <p-toggleswitch [ngModel]="current.passwordPolicy.requireUppercase" (ngModelChange)="updatePasswordPolicy({ requireUppercase: $event })" />
+      {{ 'admin.passwordRequireUppercase' | translate }}
+    </label>
+
+    <label class="security-form__toggle">
+      <p-toggleswitch [ngModel]="current.passwordPolicy.requireLowercase" (ngModelChange)="updatePasswordPolicy({ requireLowercase: $event })" />
+      {{ 'admin.passwordRequireLowercase' | translate }}
+    </label>
+
+    <label class="security-form__toggle">
+      <p-toggleswitch [ngModel]="current.passwordPolicy.requireDigit" (ngModelChange)="updatePasswordPolicy({ requireDigit: $event })" />
+      {{ 'admin.passwordRequireDigit' | translate }}
+    </label>
+
+    <label class="security-form__toggle">
+      <p-toggleswitch [ngModel]="current.passwordPolicy.requireNonAlphanumeric" (ngModelChange)="updatePasswordPolicy({ requireNonAlphanumeric: $event })" />
+      {{ 'admin.passwordRequireNonAlphanumeric' | translate }}
+    </label>
+
     <div class="security-form__actions">
       <p-button
         [label]="'common.save' | translate"

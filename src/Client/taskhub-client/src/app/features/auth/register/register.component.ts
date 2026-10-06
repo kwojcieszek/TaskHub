@@ -9,12 +9,14 @@ import { Button } from 'primeng/button';
 import { Message } from 'primeng/message';
 import { TranslateModule } from '@ngx-translate/core';
 import { AuthService } from '../../../core/services/auth.service';
+import { MAX_PASSWORD_LENGTH, passwordPolicyValidator } from '../../../core/utils/password-policy';
+import { PasswordRulesComponent } from '../../../shared/password-rules/password-rules.component';
 import { ThemeSwitchComponent } from '../../../shared/theme-switch/theme-switch.component';
 
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, IconField, InputIcon, InputText, Password, Button, Message, TranslateModule, ThemeSwitchComponent],
+  imports: [ReactiveFormsModule, RouterLink, IconField, InputIcon, InputText, Password, Button, Message, TranslateModule, ThemeSwitchComponent, PasswordRulesComponent],
   templateUrl: './register.component.html',
   styleUrl: './register.component.scss'
 })
@@ -31,7 +33,7 @@ export class RegisterComponent {
     displayName: ['', Validators.required],
     userName: ['', Validators.required],
     email: ['', [Validators.required, Validators.email]],
-    password: ['', [Validators.required, Validators.minLength(5)]]
+    password: ['', [Validators.required, passwordPolicyValidator(() => this.authService.passwordPolicy()), Validators.maxLength(MAX_PASSWORD_LENGTH)]]
   });
 
   submit(): void {

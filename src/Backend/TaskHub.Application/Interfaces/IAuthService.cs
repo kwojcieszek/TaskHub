@@ -14,11 +14,13 @@ public interface IAuthService
 
     Task EnableTwoFactorAsync(Guid userId, string code, CancellationToken cancellationToken = default);
 
-    Task DisableTwoFactorAsync(Guid userId, CancellationToken cancellationToken = default);
+    Task DisableTwoFactorAsync(Guid userId, TwoFactorDisableRequest request, CancellationToken cancellationToken = default);
+
+    Task<LoginResponse> ChangePasswordAsync(Guid userId, ChangePasswordRequest request, CancellationToken cancellationToken = default);
 
     Task<UserDto> GetCurrentUserAsync(Guid userId, CancellationToken cancellationToken = default);
 
-    AuthProvidersDto GetProviders();
+    Task<AuthProvidersDto> GetProvidersAsync(CancellationToken cancellationToken = default);
 
     Task<LoginResponse> LoginWithGoogleAsync(GoogleTokenRequest request, CancellationToken cancellationToken = default);
 

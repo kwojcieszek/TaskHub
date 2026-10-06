@@ -79,13 +79,13 @@
   box-shadow: 0 8px 14px -6px color-mix(in srgb, var(--tile-color) 65%, transparent);
 }
 
+// Identical to the project dot (.project-dot); the status is shown by the badge on the right.
 .task-row__dot {
-  width: 0.6rem;
-  height: 0.6rem;
+  width: 0.55rem;
+  height: 0.55rem;
   border-radius: 50%;
   flex-shrink: 0;
-  background: var(--tone-solid);
-  box-shadow: 0 0 0 3px var(--tone-bg);
+  background: var(--project-color, var(--p-primary-color));
 }
 
 .task-row__main {

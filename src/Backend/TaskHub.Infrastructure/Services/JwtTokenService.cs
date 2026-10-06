@@ -1,8 +1,10 @@
+using System.Globalization;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using TaskHub.Application.Common;
 using TaskHub.Application.Interfaces;
 using TaskHub.Application.Options;
 using TaskHub.Domain.Entities;
@@ -11,7 +13,7 @@ namespace TaskHub.Infrastructure.Services;
 
 public class JwtTokenService : IJwtTokenService
 {
-    private const string TwoFactorPurposeClaim = "purpose";
+    private const string TwoFactorPurposeClaim = AppClaimTypes.Purpose;
     private const string TwoFactorPurposeValue = "2fa";
 
     private readonly JwtOptions _options;
@@ -30,7 +32,8 @@ public class JwtTokenService : IJwtTokenService
             new(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new(ClaimTypes.Name, user.UserName ?? string.Empty),
             new(ClaimTypes.Email, user.Email ?? string.Empty),
-            new("displayName", user.DisplayName)
+            new("displayName", user.DisplayName),
+            new(AppClaimTypes.TokenVersion, user.TokenVersion.ToString(CultureInfo.InvariantCulture))
         };
 
         claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
@@ -83,8 +86,9 @@ public class JwtTokenService : IJwtTokenService
 
             return Guid.TryParse(userId, out var id) ? id : null;
         }
-        catch (SecurityTokenException)
+        catch (Exception exception) when (exception is SecurityTokenException or ArgumentException)
         {
+            // Text that is not a token at all is reported as an argument error rather than a token error.
             return null;
         }
     }
