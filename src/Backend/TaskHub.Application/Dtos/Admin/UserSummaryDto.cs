@@ -4,7 +4,8 @@ public class UserSummaryDto
 {
     public Guid Id { get; set; }
 
-    public string UserName { get; set; } = string.Empty;
+    // Filled in for administrators only.
+    public string? UserName { get; set; }
 
     public string DisplayName { get; set; } = string.Empty;
 }

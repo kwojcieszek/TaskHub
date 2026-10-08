@@ -17,4 +17,7 @@ public static class KnownDefects
 
     public const string MissingUserGroupIsNotReported =
         Prefix + "listing the members of a user group that does not exist returns an empty list instead of 404.";
+
+    public const string RemovedMemberStaysAssigned =
+        Prefix + "a member removed from a project stays the assignee of its tasks, although a task can only be assigned to a member.";
 }

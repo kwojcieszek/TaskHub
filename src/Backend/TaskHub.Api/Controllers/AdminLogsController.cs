@@ -21,7 +21,7 @@ public class AdminLogsController : ApiControllerBase
     }
 
     [HttpGet("logins")]
-    public async Task<ActionResult<PagedResultDto<LoginLogDto>>> GetLogins([FromQuery] AuditLogQuery query, CancellationToken cancellationToken)
+    public async Task<ActionResult<PagedResultDto<UserActivityLogDto>>> GetLogins([FromQuery] AuditLogQuery query, CancellationToken cancellationToken)
     {
         var logs = await _auditLogService.GetLoginLogsAsync(query, cancellationToken);
         return Ok(logs);

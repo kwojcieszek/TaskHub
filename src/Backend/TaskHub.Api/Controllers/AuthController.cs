@@ -2,6 +2,7 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using TaskHub.Api.Authentication;
 using TaskHub.Api.RateLimiting;
 using TaskHub.Application.Dtos.Audit;
 using TaskHub.Application.Dtos.Auth;
@@ -47,7 +48,7 @@ public class AuthController : ApiControllerBase
         return Ok(response);
     }
 
-    [Authorize]
+    [Authorize(Policy = AuthorizationPolicies.InteractiveSession)]
     [HttpPost("2fa/setup")]
     public async Task<ActionResult<TwoFactorSetupResponse>> BeginTwoFactorSetup(CancellationToken cancellationToken)
     {
@@ -55,7 +56,7 @@ public class AuthController : ApiControllerBase
         return Ok(response);
     }
 
-    [Authorize]
+    [Authorize(Policy = AuthorizationPolicies.InteractiveSession)]
     [HttpPost("2fa/enable")]
     public async Task<IActionResult> EnableTwoFactor(TwoFactorEnableRequest request, CancellationToken cancellationToken)
     {
@@ -63,7 +64,7 @@ public class AuthController : ApiControllerBase
         return NoContent();
     }
 
-    [Authorize]
+    [Authorize(Policy = AuthorizationPolicies.InteractiveSession)]
     [HttpPost("2fa/disable")]
     public async Task<IActionResult> DisableTwoFactor(TwoFactorDisableRequest request, CancellationToken cancellationToken)
     {
@@ -71,7 +72,7 @@ public class AuthController : ApiControllerBase
         return NoContent();
     }
 
-    [Authorize]
+    [Authorize(Policy = AuthorizationPolicies.InteractiveSession)]
     [EnableRateLimiting(RateLimitPolicies.Auth)]
     [HttpPost("password")]
     public async Task<ActionResult<LoginResponse>> ChangePassword(ChangePasswordRequest request, CancellationToken cancellationToken)
@@ -103,7 +104,7 @@ public class AuthController : ApiControllerBase
         return Ok(response);
     }
 
-    [Authorize]
+    [Authorize(Policy = AuthorizationPolicies.InteractiveSession)]
     [HttpPost("google/link")]
     public async Task<ActionResult<UserDto>> LinkGoogle(GoogleTokenRequest request, CancellationToken cancellationToken)
     {
@@ -111,7 +112,7 @@ public class AuthController : ApiControllerBase
         return Ok(user);
     }
 
-    [Authorize]
+    [Authorize(Policy = AuthorizationPolicies.InteractiveSession)]
     [HttpDelete("google/link")]
     public async Task<ActionResult<UserDto>> UnlinkGoogle(CancellationToken cancellationToken)
     {
@@ -121,7 +122,7 @@ public class AuthController : ApiControllerBase
 
     [Authorize]
     [HttpGet("logins")]
-    public async Task<ActionResult<PagedResultDto<LoginLogDto>>> MyLogins([FromQuery] AuditLogQuery query, CancellationToken cancellationToken)
+    public async Task<ActionResult<PagedResultDto<UserActivityLogDto>>> MyLogins([FromQuery] AuditLogQuery query, CancellationToken cancellationToken)
     {
         var logs = await _auditLogService.GetLoginLogsForUserAsync(CurrentUserId, query, cancellationToken);
         return Ok(logs);

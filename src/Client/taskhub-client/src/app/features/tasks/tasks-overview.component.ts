@@ -3,15 +3,22 @@ import { DialogService } from 'primeng/dynamicdialog';
 import { ConfirmationService } from 'primeng/api';
 import { ConfirmDialog } from 'primeng/confirmdialog';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { forkJoin } from 'rxjs';
+import { catchError, forkJoin, of } from 'rxjs';
 import { TaskItemService } from '../../core/services/task-item.service';
 import { ProjectService } from '../../core/services/project.service';
+import { DEFAULT_TASK_BOARD_STATUSES, TASK_BOARD_STATUSES, TaskBoardMove, TaskBoardStatus } from '../../core/models/task-board.model';
 import { TaskItem } from '../../core/models/task.model';
 import { TaskStatusFilter } from '../../core/models/task-status-filter.model';
 import { projectColor } from '../../core/utils/project-color';
 import { StatusFilterComponent } from '../../shared/status-filter/status-filter.component';
+import { TaskBoardComponent } from '../../shared/task-board/task-board.component';
 import { TaskRowComponent } from '../../shared/task-row/task-row.component';
 import { TaskDialogComponent } from '../projects/task-dialog/task-dialog.component';
+
+type TasksView = 'list' | 'board';
+
+const VIEW_STORAGE_KEY = 'taskhub.tasksView';
+const BOARD_STATUSES_STORAGE_KEY = 'taskhub.boardStatuses';
 
 interface TaskSection {
   key: string;
@@ -23,7 +30,7 @@ interface TaskSection {
 @Component({
   selector: 'app-tasks-overview',
   standalone: true,
-  imports: [ConfirmDialog, TranslateModule, TaskRowComponent, StatusFilterComponent],
+  imports: [ConfirmDialog, TranslateModule, TaskRowComponent, TaskBoardComponent, StatusFilterComponent],
   providers: [DialogService, ConfirmationService],
   templateUrl: './tasks-overview.component.html',
   styleUrl: './tasks-overview.component.scss'
@@ -36,10 +43,21 @@ export class TasksOverviewComponent implements OnInit {
   private readonly translate = inject(TranslateService);
 
   private readonly tasks = signal<TaskItem[]>([]);
-  private readonly projectNames = signal<Record<string, string>>({});
+  readonly projectNames = signal<Record<string, string>>({});
   readonly loading = signal(false);
   readonly loadError = signal(false);
   readonly statusFilter = signal<TaskStatusFilter>('ToDo');
+  readonly moveError = signal(false);
+
+  // The list groups tasks by due date; the board groups them by status. The choice is remembered.
+  readonly view = signal<TasksView>(localStorage.getItem(VIEW_STORAGE_KEY) === 'board' ? 'board' : 'list');
+
+  // The board decides by its columns which tasks it shows, so it gets all of them.
+  readonly boardTasks = computed(() => this.tasks());
+
+  // The statuses that have a column on the board; any combination with at least one. The choice is remembered.
+  readonly boardStatusOptions = TASK_BOARD_STATUSES;
+  readonly boardStatuses = signal<TaskBoardStatus[]>(this.readBoardStatuses());
 
   // The list is flat, so tasks that have subtasks are recognised by the subtasks pointing at them.
   readonly parentTaskIds = computed(
@@ -58,7 +76,7 @@ export class TasksOverviewComponent implements OnInit {
 
   readonly sections = computed<TaskSection[]>(() => [
     { key: 'overdue', icon: 'pi pi-exclamation-circle', tone: 'red', tasks: this.overdue() },
-    { key: 'today', icon: 'pi pi-sun', tone: 'amber', tasks: this.today() },
+    { key: 'today', icon: 'pi pi-sun', tone: 'green', tasks: this.today() },
     { key: 'upcoming', icon: 'pi pi-calendar', tone: 'blue', tasks: this.upcoming() },
     { key: 'noDueDate', icon: 'pi pi-inbox', tone: 'slate', tasks: this.noDueDate() }
   ]);
@@ -87,6 +105,61 @@ export class TasksOverviewComponent implements OnInit {
     });
   }
 
+  setView(view: TasksView): void {
+    this.view.set(view);
+    localStorage.setItem(VIEW_STORAGE_KEY, view);
+  }
+
+  showsBoardStatus(status: TaskBoardStatus): boolean {
+    return this.boardStatuses().includes(status);
+  }
+
+  toggleBoardStatus(status: TaskBoardStatus): void {
+    const chosen = this.boardStatuses();
+    const next = chosen.includes(status) ? chosen.filter((item) => item !== status) : [...chosen, status];
+
+    // A board without columns shows nothing, so the last status stays on.
+    if (next.length === 0) {
+      return;
+    }
+
+    // Kept in the order of the workflow, whatever the order of the clicks.
+    const ordered = TASK_BOARD_STATUSES.filter((item) => next.includes(item));
+
+    this.boardStatuses.set(ordered);
+    localStorage.setItem(BOARD_STATUSES_STORAGE_KEY, JSON.stringify(ordered));
+  }
+
+  // A card was dropped into another column of the board.
+  moveTask(move: TaskBoardMove): void {
+    this.moveError.set(false);
+
+    // A slip of the hand while dragging must not change a task; until confirmed the card stays where it was.
+    this.confirmationService.confirm({
+      message: this.translate.instant('tasksOverview.moveConfirm', {
+        title: move.task.title,
+        status: this.translate.instant('tasks.status.' + move.status)
+      }),
+      header: this.translate.instant('tasksOverview.moveConfirmHeader'),
+      icon: 'pi pi-arrows-h',
+      acceptLabel: this.translate.instant('common.yes'),
+      rejectLabel: this.translate.instant('common.no'),
+      rejectButtonProps: { severity: 'secondary', outlined: true },
+      accept: () => this.applyMove(move)
+    });
+  }
+
+  private applyMove(move: TaskBoardMove): void {
+    this.taskItemService.setStatus(move.task, move.status).subscribe({
+      next: () => this.load(),
+      error: () => {
+        // Refused, for example for a viewer of the project: the card goes back where it was.
+        this.moveError.set(true);
+        this.load();
+      }
+    });
+  }
+
   projectName(task: TaskItem): string {
     return this.projectNames()[task.projectId] ?? '';
   }
@@ -96,10 +169,13 @@ export class TasksOverviewComponent implements OnInit {
   }
 
   edit(task: TaskItem): void {
-    this.projectService.getMembers(task.projectId).subscribe((members) => {
+    // The task must open even when the list of people to assign it to cannot be loaded.
+    const members$ = this.projectService.getMembers(task.projectId).pipe(catchError(() => of([])));
+
+    members$.subscribe((members) => {
       const ref = this.dialogService.open(TaskDialogComponent, {
         header: this.translate.instant('common.edit'),
-        width: '480px',
+        width: 'min(1040px, 96vw)',
         data: { task, members, statusDerived: this.parentTaskIds().has(task.id) }
       });
       ref?.onClose.subscribe((result) => {
@@ -147,6 +223,18 @@ export class TasksOverviewComponent implements OnInit {
     this.confirmDelete('tasks.deleteConfirm', () => {
       this.taskItemService.delete(task.projectId, task.id).subscribe(() => this.load());
     });
+  }
+
+  private readBoardStatuses(): TaskBoardStatus[] {
+    try {
+      const stored: unknown = JSON.parse(localStorage.getItem(BOARD_STATUSES_STORAGE_KEY) ?? 'null');
+      const chosen = Array.isArray(stored) ? TASK_BOARD_STATUSES.filter((status) => stored.includes(status)) : [];
+
+      return chosen.length > 0 ? chosen : DEFAULT_TASK_BOARD_STATUSES;
+    } catch {
+      // Whatever is stored there is not a list of statuses; the usual columns are shown.
+      return DEFAULT_TASK_BOARD_STATUSES;
+    }
   }
 
   // With no filter the sections keep their usual rules; a chosen status shows exactly the tasks in that status.

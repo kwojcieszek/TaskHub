@@ -1,0 +1,96 @@
+<p-confirmdialog key="apiTokens" appendTo="body" />
+
+<p-card styleClass="api-tokens-card">
+  <h3 class="api-tokens__title"><i class="pi pi-key"></i>{{ 'profile.tokens.title' | translate }}</h3>
+  <p class="api-tokens__hint">{{ 'profile.tokens.hint' | translate }}</p>
+
+  @if (created(); as token) {
+    <div class="api-tokens__created">
+      <p class="api-tokens__created-title"><i class="pi pi-check-circle"></i>{{ 'profile.tokens.createdTitle' | translate: { name: token.name } }}</p>
+      <p class="api-tokens__created-hint">{{ 'profile.tokens.createdHint' | translate }}</p>
+      <div class="api-tokens__secret">
+        <code>{{ token.token }}</code>
+        <p-button
+          [label]="(copied() ? 'profile.tokens.copied' : 'reports.copy') | translate"
+          [icon]="copied() ? 'pi pi-check' : 'pi pi-copy'"
+          size="small"
+          severity="secondary"
+          (onClick)="copy(token.token)"
+        />
+      </div>
+      <p-button [label]="'common.close' | translate" size="small" severity="secondary" [outlined]="true" (onClick)="dismissCreated()" />
+    </div>
+  }
+
+  <form [formGroup]="form" (ngSubmit)="create()" class="api-tokens__form">
+    <div class="field api-tokens__name">
+      <label for="tokenName">{{ 'profile.tokens.name' | translate }}</label>
+      <input pInputText id="tokenName" formControlName="name" maxlength="100" class="w-full" [placeholder]="'profile.tokens.namePlaceholder' | translate" />
+    </div>
+    <div class="field">
+      <label for="tokenLifetime">{{ 'profile.tokens.lifetime' | translate }}</label>
+      <p-select inputId="tokenLifetime" formControlName="lifetime" [options]="lifetimes" appendTo="body" styleClass="w-full">
+        <ng-template #selectedItem let-option>{{ 'profile.tokens.lifetimes.' + option | translate }}</ng-template>
+        <ng-template #item let-option>{{ 'profile.tokens.lifetimes.' + option | translate }}</ng-template>
+      </p-select>
+    </div>
+    @if (form.controls.lifetime.value === 'custom') {
+      <div class="field api-tokens__days">
+        <label for="tokenDays">{{ 'profile.tokens.days' | translate }}</label>
+        <input pInputText id="tokenDays" type="number" formControlName="customDays" min="1" [max]="maxLifetimeDays" class="w-full" />
+      </div>
+    }
+    <p-button [label]="'profile.tokens.create' | translate" icon="pi pi-plus" type="submit" [loading]="saving()" [disabled]="form.invalid" />
+  </form>
+
+  @if (form.controls.lifetime.value === 'never') {
+    <p class="api-tokens__warning"><i class="pi pi-exclamation-triangle"></i>{{ 'profile.tokens.neverWarning' | translate }}</p>
+  }
+
+  @if (errorKey(); as key) {
+    <p class="error-text">{{ key | translate }}</p>
+  }
+
+  <div class="api-tokens__list">
+    @for (token of tokens(); track token.id) {
+      <div class="api-token">
+        <div class="api-token__main">
+          <span class="api-token__name">{{ token.name }}</span>
+          <code class="api-token__prefix">{{ token.prefix }}…</code>
+          @if (token.expired) {
+            <span class="chip tone-red">{{ 'profile.tokens.expired' | translate }}</span>
+          } @else if (!token.expiresAt) {
+            <span class="chip tone-amber">{{ 'profile.tokens.never' | translate }}</span>
+          }
+        </div>
+        <div class="api-token__meta">
+          <span>{{ 'profile.tokens.createdAt' | translate }}: {{ token.createdAt | date: 'yyyy-MM-dd HH:mm' }}</span>
+          @if (token.expiresAt) {
+            <span>{{ 'profile.tokens.expiresAt' | translate }}: {{ token.expiresAt | date: 'yyyy-MM-dd HH:mm' }}</span>
+          }
+          <span>
+            {{ 'profile.tokens.lastUsedAt' | translate }}:
+            @if (token.lastUsedAt) {
+              {{ token.lastUsedAt | date: 'yyyy-MM-dd HH:mm' }}
+            } @else {
+              {{ 'profile.tokens.notUsed' | translate }}
+            }
+          </span>
+        </div>
+        <p-button
+          class="api-token__revoke"
+          [label]="'profile.tokens.revoke' | translate"
+          icon="pi pi-trash"
+          size="small"
+          severity="danger"
+          [outlined]="true"
+          (onClick)="revoke(token)"
+        />
+      </div>
+    } @empty {
+      @if (!loading()) {
+        <p class="secondary">{{ 'profile.tokens.empty' | translate }}</p>
+      }
+    }
+  </div>
+</p-card>

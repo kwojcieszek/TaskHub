@@ -75,7 +75,7 @@ export class ProjectListComponent implements OnInit {
 
     return [
       { labelKey: 'projects.statProjects', icon: 'pi pi-briefcase', tone: 'blue', value: projects.length },
-      { labelKey: 'projects.statGroups', icon: 'pi pi-folder', tone: 'amber', value: this.groups().length },
+      { labelKey: 'projects.statGroups', icon: 'pi pi-folder', tone: 'green', value: this.groups().length },
       { labelKey: 'projects.statTasks', icon: 'pi pi-check-square', tone: 'violet', value: projects.reduce((sum, p) => sum + p.taskCount, 0) }
     ];
   });

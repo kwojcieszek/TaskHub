@@ -23,7 +23,7 @@ public class JwtTokenService : IJwtTokenService
         _options = options.Value;
     }
 
-    public (string Token, DateTimeOffset ExpiresAt) CreateAccessToken(ApplicationUser user, IReadOnlyCollection<string> roles)
+    public (string Token, DateTimeOffset ExpiresAt) CreateAccessToken(User user, IReadOnlyCollection<string> roles)
     {
         var expiresAt = DateTimeOffset.UtcNow.AddMinutes(_options.AccessTokenMinutes);
 

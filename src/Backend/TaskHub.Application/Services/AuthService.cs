@@ -13,14 +13,14 @@ public class AuthService : IAuthService
     private const string AuthenticatorTokenProvider = "Authenticator";
     private const string GoogleProvider = "Google";
 
-    private readonly UserManager<ApplicationUser> _userManager;
+    private readonly UserManager<User> _userManager;
     private readonly IJwtTokenService _tokenService;
     private readonly IAuditLogService _auditLogService;
     private readonly ISecuritySettingsService _securitySettingsService;
     private readonly IGoogleTokenValidator _googleTokenValidator;
 
     public AuthService(
-        UserManager<ApplicationUser> userManager,
+        UserManager<User> userManager,
         IJwtTokenService tokenService,
         IAuditLogService auditLogService,
         ISecuritySettingsService securitySettingsService,
@@ -42,7 +42,7 @@ public class AuthService : IAuthService
             throw new ForbiddenAccessException("Registration is turned off. Ask an administrator for an account.");
         }
 
-        var user = new ApplicationUser
+        var user = new User
         {
             Id = Guid.NewGuid(),
             UserName = request.UserName,
@@ -319,14 +319,14 @@ public class AuthService : IAuthService
         return await MapToUserDtoAsync(user);
     }
 
-    private async Task<UserLoginInfo?> FindGoogleLoginAsync(ApplicationUser user)
+    private async Task<UserLoginInfo?> FindGoogleLoginAsync(User user)
     {
         var logins = await _userManager.GetLoginsAsync(user);
 
         return logins.FirstOrDefault(l => l.LoginProvider == GoogleProvider);
     }
 
-    private async Task RegisterFailedAttemptAsync(ApplicationUser user, CancellationToken cancellationToken)
+    private async Task RegisterFailedAttemptAsync(User user, CancellationToken cancellationToken)
     {
         var settings = await _securitySettingsService.GetAsync(cancellationToken);
 
@@ -347,7 +347,7 @@ public class AuthService : IAuthService
         await _userManager.UpdateAsync(user);
     }
 
-    private async Task<LoginResponse> BuildLoginResponseAsync(ApplicationUser user)
+    private async Task<LoginResponse> BuildLoginResponseAsync(User user)
     {
         var roles = await _userManager.GetRolesAsync(user);
         var (token, expiresAt) = _tokenService.CreateAccessToken(user, roles.ToList());
@@ -361,7 +361,7 @@ public class AuthService : IAuthService
         };
     }
 
-    private async Task<UserDto> MapToUserDtoAsync(ApplicationUser user)
+    private async Task<UserDto> MapToUserDtoAsync(User user)
     {
         var roles = await _userManager.GetRolesAsync(user);
         var googleLogin = await FindGoogleLoginAsync(user);
@@ -380,7 +380,7 @@ public class AuthService : IAuthService
         };
     }
 
-    private async Task<ApplicationUser> GetUserOrThrowAsync(Guid userId)
+    private async Task<User> GetUserOrThrowAsync(Guid userId)
     {
         return await _userManager.FindByIdAsync(userId.ToString())
             ?? throw new NotFoundException("User not found.");

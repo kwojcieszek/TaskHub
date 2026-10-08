@@ -6,6 +6,7 @@ import { Textarea } from 'primeng/textarea';
 import { Button } from 'primeng/button';
 import { TranslateModule } from '@ngx-translate/core';
 import { ProjectGroup } from '../../../core/models/project-group.model';
+import { DictationDirective } from '../../../shared/dictation/dictation.directive';
 
 export interface ProjectGroupDialogData {
   group?: ProjectGroup;
@@ -14,7 +15,7 @@ export interface ProjectGroupDialogData {
 @Component({
   selector: 'app-project-group-dialog',
   standalone: true,
-  imports: [ReactiveFormsModule, InputText, Textarea, Button, TranslateModule],
+  imports: [ReactiveFormsModule, DictationDirective, InputText, Textarea, Button, TranslateModule],
   templateUrl: './project-group-dialog.component.html'
 })
 export class ProjectGroupDialogComponent {

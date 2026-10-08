@@ -5,7 +5,7 @@ using TaskHub.Domain.Entities;
 
 namespace TaskHub.Infrastructure.Persistence;
 
-public class ApplicationDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, Guid>, IApplicationDbContext
+public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplicationDbContext
 {
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
     {
@@ -17,9 +17,13 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
 
     public DbSet<ProjectMember> ProjectMembers => Set<ProjectMember>();
 
+    public DbSet<ProjectTeam> ProjectTeams => Set<ProjectTeam>();
+
     public DbSet<TaskItem> Tasks => Set<TaskItem>();
 
     public DbSet<Attachment> Attachments => Set<Attachment>();
+
+    public DbSet<Comment> Comments => Set<Comment>();
 
     public DbSet<UserGroup> UserGroups => Set<UserGroup>();
 
@@ -27,11 +31,11 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
 
     public DbSet<UserSetting> UserSettings => Set<UserSetting>();
 
-    public DbSet<LoginLog> LoginLogs => Set<LoginLog>();
-
     public DbSet<UserActivityLog> UserActivityLogs => Set<UserActivityLog>();
 
     public DbSet<SystemSetting> SystemSettings => Set<SystemSetting>();
+
+    public DbSet<ApiToken> ApiTokens => Set<ApiToken>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

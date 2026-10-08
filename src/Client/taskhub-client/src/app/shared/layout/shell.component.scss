@@ -10,7 +10,8 @@
   --p-menubar-item-active-color: var(--p-primary-color);
   --p-menubar-item-active-background: var(--app-highlight);
   --p-menubar-item-icon-active-color: var(--p-primary-color);
-  --p-menubar-item-border-radius: 10px;
+  --p-menubar-item-border-radius: 6px;
+  --p-menubar-gap: 0.125rem;
   --p-menubar-mobile-button-color: var(--p-text-color);
   --p-menubar-mobile-button-hover-color: var(--p-text-color);
   --p-menubar-mobile-button-hover-background: var(--app-hover);
@@ -18,7 +19,6 @@
   background: var(--app-bar-bg);
   border: 0;
   border-radius: 0;
-  font-family: var(--app-font-condensed);
   font-size: 0.9rem;
   font-weight: 400;
   letter-spacing: -0.01em;
@@ -30,13 +30,18 @@
 }
 
 ::ng-deep .app-menubar .p-menubar-item-link-active {
-  background: var(--app-highlight);
-  border-radius: 10px;
-  font-weight: 500;
+  // The theme colours the icon through these variables in every state, with rules that outrank a plain colour.
+  --p-menubar-item-icon-color: #ffffff;
+  --p-menubar-item-icon-focus-color: #ffffff;
+  --p-menubar-item-icon-active-color: #ffffff;
+
+  background: var(--app-menu-active-bg);
+  border-radius: 6px;
+  font-weight: 400;
 
   .p-menubar-item-icon,
   .p-menubar-item-label {
-    color: var(--p-primary-color);
+    color: #ffffff;
   }
 }
 
@@ -55,7 +60,7 @@
   gap: 0.6rem;
   margin-right: 0.75rem;
   font-size: 1.1rem;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--p-text-color);
 
   &__icon {
@@ -78,7 +83,7 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.3rem 0.6rem;
-  border-radius: 10px;
+  border-radius: var(--app-control-radius);
   border: none;
   background: transparent;
   color: var(--p-text-color);
@@ -99,7 +104,7 @@
     align-items: center;
     justify-content: center;
     font-size: 0.8rem;
-    font-weight: 700;
+    font-weight: 500;
     flex-shrink: 0;
   }
 
@@ -151,7 +156,7 @@
 }
 
 .user-menu__name {
-  font-weight: 600;
+  font-weight: 500;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -169,7 +174,7 @@
   width: 100%;
   padding: 0.55rem 0.6rem;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--app-control-radius);
   background: transparent;
   color: inherit;
   font: inherit;

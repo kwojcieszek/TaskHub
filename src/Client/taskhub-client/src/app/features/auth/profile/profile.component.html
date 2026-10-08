@@ -90,4 +90,8 @@
   }
 </p-card>
 
+@if (!auth.currentUser()?.mustChangePassword) {
+  <app-api-tokens />
+}
+
 <app-login-history />

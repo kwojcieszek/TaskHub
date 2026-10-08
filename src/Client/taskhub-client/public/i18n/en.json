@@ -10,7 +10,7 @@
     "tasks": "Tasks",
     "calendar": "Calendar",
     "reports": "Reports",
-    "userGroups": "User groups",
+    "userGroups": "Teams",
     "admin": "Administration",
     "adminLocked": "Requires admin access",
     "logout": "Log out",
@@ -89,7 +89,43 @@
     "loginHistoryHint": "Successful and failed attempts to log in to your account.",
     "loginHistoryEmpty": "No logins recorded yet.",
     "loginHistoryError": "Could not load the login history.",
-    "confirm": "Confirm"
+    "confirm": "Confirm",
+    "tokens": {
+      "title": "Access tokens",
+      "hint": "A token lets scripts and other programs use the API on your behalf, without your password. A token cannot change the password or two-step verification, or create further tokens.",
+      "name": "Name",
+      "namePlaceholder": "e.g. Backup script",
+      "lifetime": "Valid for",
+      "days": "Number of days",
+      "lifetimes": {
+        "7": "7 days",
+        "30": "30 days",
+        "90": "90 days",
+        "365": "1 year",
+        "custom": "Custom number of days",
+        "never": "No expiry"
+      },
+      "neverWarning": "A token without an expiry works until you revoke it. Choose it only when you have to.",
+      "create": "Create token",
+      "createdTitle": "Token \"{{name}}\" was created",
+      "createdHint": "Copy it now and keep it like a password. It cannot be read again after this message is closed.",
+      "copied": "Copied",
+      "token": "Token",
+      "createdAt": "Created",
+      "expiresAt": "Expires",
+      "lastUsedAt": "Last used",
+      "never": "No expiry",
+      "expired": "Expired",
+      "notUsed": "Not used",
+      "revoke": "Revoke",
+      "revokeHeader": "Revoke the token?",
+      "revokeConfirm": "Token \"{{name}}\" stops working at once. This cannot be undone.",
+      "empty": "You have no tokens.",
+      "loadError": "Could not load the tokens.",
+      "createError": "Could not create the token.",
+      "revokeError": "Could not revoke the token.",
+      "limitReached": "The token limit is reached. Revoke one you no longer use."
+    }
   },
   "projects": {
     "title": "Projects",
@@ -120,7 +156,19 @@
     "noProjects": "No projects yet. Create your first one.",
     "loadError": "Could not load projects. Check that the backend is running.",
     "deleteConfirm": "Delete this project? This cannot be undone.",
-    "role": "Role"
+    "role": "Role",
+    "teams": {
+      "title": "Teams",
+      "hint": "Every member of a team has the role of the team in the project, for as long as they belong to it.",
+      "add": "Add team",
+      "team": "Team",
+      "choose": "Choose a team",
+      "memberCount": "{{count}} members",
+      "roleHint": "A team can view (Viewer) or edit (Editor). One person remains the owner of the project.",
+      "empty": "No team has access to this project.",
+      "noneAvailable": "There are no teams to add. Teams are created by an administrator in the admin panel.",
+      "loadError": "Could not load the teams."
+    }
   },
   "projectGroups": {
     "deleteConfirm": "Delete this group? Its projects are kept and become ungrouped.",
@@ -199,7 +247,17 @@
     "noDueDate": "No due date",
     "noDueDateEmpty": "Nothing without a due date.",
     "loadError": "Couldn't load tasks. The API may need to be rebuilt/restarted to pick up the latest changes.",
-    "retry": "Retry"
+    "retry": "Retry",
+    "view": "Task view",
+    "viewList": "List",
+    "viewBoard": "Board",
+    "boardHint": "Drag a card to another column to change the status of the task. Click a card to open it.",
+    "boardEmpty": "No tasks.",
+    "boardMore": "and {{count}} older ones",
+    "moveError": "Could not change the status of the task. You may not be allowed to edit in this project.",
+    "boardStatuses": "Board columns",
+    "moveConfirmHeader": "Change the status of the task?",
+    "moveConfirm": "Move the task \"{{title}}\" to \"{{status}}\"?"
   },
   "dashboard": {
     "greeting": "Welcome, {{name}}",
@@ -244,6 +302,7 @@
     "duration": "Time taken",
     "durationMinutes": "Time taken (min)",
     "notStarted": "Not started",
+    "copy": "Copy",
     "delay": "Delay against the plan",
     "delayDays": "Delay (days)",
     "delayedBy": "{{days}} days late",
@@ -262,13 +321,14 @@
     }
   },
   "userGroups": {
-    "deleteConfirm": "Delete this user group? This cannot be undone.",
-    "title": "User groups",
-    "newGroup": "New group",
+    "deleteConfirm": "Delete this team? Its members lose the access to projects they had through it. This cannot be undone.",
+    "title": "Teams",
+    "newGroup": "New team",
     "name": "Name",
     "description": "Description",
     "members": "Members",
-    "addMember": "Add member"
+    "addMember": "Add member",
+    "editGroup": "Rename"
   },
   "passwordPolicy": {
     "minLength": "At least {{count}} characters",
@@ -349,5 +409,28 @@
     "confirm": "Confirm",
     "yes": "Yes",
     "no": "No"
+  },
+  "users": {
+    "searchPlaceholder": "Name or the full login",
+    "searchHint": "Type at least 2 characters. A login is found only when it is typed in full."
+  },
+  "dictation": {
+    "start": "Dictate",
+    "stop": "Stop dictating",
+    "notAllowed": "The microphone is blocked. Allow it in the browser settings.",
+    "failed": "Dictation failed. Please try again."
+  },
+  "comments": {
+    "title": "Comments",
+    "placeholder": "Write a comment…",
+    "send": "Add comment",
+    "sendHint": "Ctrl+Enter sends the comment.",
+    "empty": "There are no comments yet.",
+    "edited": "edited",
+    "deletedUser": "Deleted user",
+    "deleteConfirm": "Delete this comment? This cannot be undone.",
+    "loadError": "Could not load the comments.",
+    "saveError": "Could not save the comment.",
+    "deleteError": "Could not delete the comment."
   }
 }

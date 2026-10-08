@@ -41,3 +41,10 @@
   margin-right: 0.5rem;
   color: var(--p-text-muted-color);
 }
+
+.group-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-top: 0.5rem;
+}

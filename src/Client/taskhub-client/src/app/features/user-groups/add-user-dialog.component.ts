@@ -5,9 +5,12 @@ import { InputText } from 'primeng/inputtext';
 import { Listbox } from 'primeng/listbox';
 import { Button } from 'primeng/button';
 import { TranslateModule } from '@ngx-translate/core';
-import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
+import { debounceTime, distinctUntilChanged, of, switchMap } from 'rxjs';
 import { UserDirectoryService } from '../../core/services/user-directory.service';
 import { UserSummary } from '../../core/models/user.model';
+
+// The server answers a shorter search with nothing, so the request is not sent at all.
+const MIN_SEARCH_LENGTH = 2;
 
 @Component({
   selector: 'app-add-user-dialog',
@@ -29,7 +32,7 @@ export class AddUserDialogComponent {
       .pipe(
         debounceTime(250),
         distinctUntilChanged(),
-        switchMap((query) => this.userDirectory.search(query))
+        switchMap((query) => (query.trim().length < MIN_SEARCH_LENGTH ? of([]) : this.userDirectory.search(query.trim())))
       )
       .subscribe((users) => this.results.set(users));
   }

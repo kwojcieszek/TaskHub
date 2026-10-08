@@ -1,5 +1,6 @@
 using System.Net;
 using TaskHub.Application.Dtos.Attachments;
+using TaskHub.Application.Dtos.Comments;
 using TaskHub.Application.Dtos.ProjectGroups;
 using TaskHub.Application.Dtos.Projects;
 using TaskHub.Application.Dtos.Tasks;
@@ -27,6 +28,11 @@ public static class ApiSessionExtensions
         return session.PostAsync<ProjectMemberDto>(ApiRoutes.ProjectMembers(projectId), new AddProjectMemberRequest { UserId = userId, Role = role });
     }
 
+    public static Task<ProjectTeamDto> AddTeamAsync(this ApiSession session, Guid projectId, Guid userGroupId, ProjectMemberRole role)
+    {
+        return session.PostAsync<ProjectTeamDto>(ApiRoutes.ProjectTeams(projectId), new AddProjectTeamRequest { UserGroupId = userGroupId, Role = role });
+    }
+
     public static Task<TaskItemDto> CreateTaskAsync(this ApiSession session, Guid projectId, string title = "Task", DateTime? dueDate = null)
     {
         return session.PostAsync<TaskItemDto>(ApiRoutes.Tasks(projectId), new CreateTaskItemRequest { Title = title, DueDate = dueDate });
@@ -35,6 +41,16 @@ public static class ApiSessionExtensions
     public static Task<TaskItemDto> CreateSubTaskAsync(this ApiSession session, Guid projectId, Guid parentTaskId, string title = "Subtask")
     {
         return session.PostAsync<TaskItemDto>(ApiRoutes.SubTasks(projectId, parentTaskId), new CreateTaskItemRequest { Title = title });
+    }
+
+    public static Task<CommentDto> CommentOnProjectAsync(this ApiSession session, Guid projectId, string content = "Comment")
+    {
+        return session.PostAsync<CommentDto>(ApiRoutes.ProjectComments(projectId), new SaveCommentRequest { Content = content });
+    }
+
+    public static Task<CommentDto> CommentOnTaskAsync(this ApiSession session, Guid projectId, Guid taskId, string content = "Comment")
+    {
+        return session.PostAsync<CommentDto>(ApiRoutes.TaskComments(projectId, taskId), new SaveCommentRequest { Content = content });
     }
 
     public static async Task<AttachmentDto> UploadAttachmentAsync(this ApiSession session, Guid projectId, Guid taskId, string fileName, byte[] content, string contentType = "application/octet-stream")

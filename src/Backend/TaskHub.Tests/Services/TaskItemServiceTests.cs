@@ -241,7 +241,7 @@ public class TaskItemServiceTests : IDisposable
         Assert.Single(insideProject);
     }
 
-    private async Task<(ProjectDto Project, ApplicationUser Owner)> ArrangeProjectAsync()
+    private async Task<(ProjectDto Project, User Owner)> ArrangeProjectAsync()
     {
         var owner = await _host.CreateUserAsync("owner");
         var project = await _host.CreateProjectAsync(owner);

@@ -13,8 +13,10 @@ public static class ApplicationServiceCollectionExtensions
         services.AddScoped<IProjectAccessGuard, ProjectAccessGuard>();
         services.AddScoped<IProjectGroupService, ProjectGroupService>();
         services.AddScoped<IProjectService, ProjectService>();
+        services.AddScoped<IProjectTeamService, ProjectTeamService>();
         services.AddScoped<ITaskItemService, TaskItemService>();
         services.AddScoped<IAttachmentService, AttachmentService>();
+        services.AddScoped<ICommentService, CommentService>();
         services.AddScoped<IUserGroupService, UserGroupService>();
         services.AddScoped<IUserSettingService, UserSettingService>();
         services.AddScoped<IAdminUserService, AdminUserService>();
@@ -22,6 +24,7 @@ public static class ApplicationServiceCollectionExtensions
         services.AddScoped<ISecuritySettingsService, SecuritySettingsService>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IUserDirectoryService, UserDirectoryService>();
+        services.AddScoped<IApiTokenService, ApiTokenService>();
 
         return services;
     }

@@ -1,0 +1,156 @@
+:host {
+  display: block;
+  margin-top: 1.25rem;
+}
+
+::ng-deep .api-tokens-card.p-card {
+  width: 100%;
+}
+
+.api-tokens__title {
+  margin: 0 0 0.35rem;
+  font-size: 1.05rem;
+  font-weight: 500;
+
+  i {
+    margin-right: 0.5rem;
+    color: var(--p-primary-color);
+  }
+}
+
+.api-tokens__hint {
+  margin: 0 0 1rem;
+  color: var(--p-text-muted-color);
+  font-size: 0.875rem;
+}
+
+.api-tokens__form {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+
+  .field {
+    margin: 0;
+    min-width: 11rem;
+  }
+}
+
+.api-tokens__name {
+  flex: 1 1 14rem;
+}
+
+.api-tokens__days {
+  max-width: 8rem;
+}
+
+.api-tokens__warning {
+  margin: 0 0 1rem;
+  color: var(--tone-amber-fg);
+  font-size: 0.875rem;
+
+  i {
+    margin-right: 0.4rem;
+  }
+}
+
+.api-tokens__created {
+  margin-bottom: 1.25rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--tone-green-solid);
+  border-radius: var(--app-radius);
+  background: var(--tone-green-bg);
+}
+
+.api-tokens__created-title {
+  margin: 0 0 0.25rem;
+  font-weight: 500;
+  color: var(--tone-green-fg);
+
+  i {
+    margin-right: 0.4rem;
+  }
+}
+
+.api-tokens__created-hint {
+  margin: 0 0 0.75rem;
+  font-size: 0.875rem;
+}
+
+.api-tokens__secret {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-bottom: 0.75rem;
+
+  code {
+    flex: 1 1 16rem;
+    padding: 0.5rem 0.65rem;
+    border-radius: 8px;
+    background: var(--app-surface);
+    border: 1px solid var(--app-border);
+    font-size: 0.85rem;
+    word-break: break-all;
+    user-select: all;
+  }
+}
+
+.secondary {
+  font-size: 0.8rem;
+  color: var(--p-text-muted-color);
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+.api-tokens__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.api-token {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.25rem 0.75rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--app-border);
+  border-radius: 10px;
+  background: var(--app-surface);
+}
+
+.api-token__main {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.api-token__name {
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.api-token__prefix {
+  font-size: 0.8rem;
+  color: var(--p-text-muted-color);
+}
+
+.api-token__meta {
+  grid-column: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.15rem 0.9rem;
+  font-size: 0.78rem;
+  color: var(--p-text-muted-color);
+}
+
+.api-token__revoke {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+}

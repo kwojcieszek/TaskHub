@@ -178,6 +178,11 @@ public class TaskItemService : ITaskItemService
             .Select(a => a.Sha256)
             .ToListAsync(cancellationToken);
 
+        var comments = await _dbContext.Comments
+            .Where(c => c.TaskItemId == taskId || c.TaskItem!.ParentTaskId == taskId)
+            .ToListAsync(cancellationToken);
+
+        _dbContext.Comments.RemoveRange(comments);
         _dbContext.Tasks.RemoveRange(task.SubTasks);
         _dbContext.Tasks.Remove(task);
         await _dbContext.SaveChangesAsync(cancellationToken);
@@ -197,7 +202,8 @@ public class TaskItemService : ITaskItemService
 
         if (!_currentUser.IsInRole(Roles.Admin))
         {
-            query = query.Where(t => t.Project!.Members.Any(m => m.UserId == _currentUser.UserId));
+            var visibleProjects = VisibleProjectIds();
+            query = query.Where(t => visibleProjects.Contains(t.ProjectId));
         }
 
         var tasks = await query.OrderBy(t => t.DueDate).ToListAsync(cancellationToken);
@@ -216,7 +222,8 @@ public class TaskItemService : ITaskItemService
 
         if (!_currentUser.IsInRole(Roles.Admin))
         {
-            query = query.Where(t => t.Project!.Members.Any(m => m.UserId == _currentUser.UserId));
+            var visibleProjects = VisibleProjectIds();
+            query = query.Where(t => visibleProjects.Contains(t.ProjectId));
         }
 
         var tasks = await query
@@ -400,12 +407,19 @@ public class TaskItemService : ITaskItemService
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
 
+    // The projects the caller can open, as a subquery for the lists that span projects.
+    private IQueryable<Guid> VisibleProjectIds()
+    {
+        return _dbContext.Projects.Where(ProjectAccess.VisibleTo(_currentUser.UserId)).Select(p => p.Id);
+    }
+
     // The assignee is shown to everyone in the project, so it has to be someone who can open it.
     private async Task EnsureCanBeAssignedAsync(Guid projectId, Guid userId, CancellationToken cancellationToken)
     {
-        var isMember = await _dbContext.ProjectMembers
+        var isMember = await _dbContext.Projects
             .AsNoTracking()
-            .AnyAsync(m => m.ProjectId == projectId && m.UserId == userId, cancellationToken);
+            .Where(p => p.Id == projectId)
+            .AnyAsync(ProjectAccess.VisibleTo(userId), cancellationToken);
 
         if (!isMember)
         {

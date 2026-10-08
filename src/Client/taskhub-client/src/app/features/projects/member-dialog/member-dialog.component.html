@@ -1,7 +1,8 @@
 <div class="dialog-form">
   <div class="field">
     <label for="userSearch">{{ 'common.search' | translate }}</label>
-    <input pInputText id="userSearch" [formControl]="searchControl" class="w-full" />
+    <input pInputText id="userSearch" [formControl]="searchControl" class="w-full" [placeholder]="'users.searchPlaceholder' | translate" />
+    <small class="field-hint">{{ 'users.searchHint' | translate }}</small>
   </div>
 
   <p-listbox
@@ -13,7 +14,7 @@
     styleClass="w-full member-listbox"
   >
     <ng-template #item let-user>
-      <span>{{ user.displayName }} ({{ user.userName }})</span>
+      <span>{{ user.displayName }}@if (user.userName) { ({{ user.userName }}) }</span>
     </ng-template>
   </p-listbox>
 

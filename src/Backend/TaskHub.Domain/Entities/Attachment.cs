@@ -18,7 +18,7 @@ public class Attachment
 
     public Guid UploadedById { get; set; }
 
-    public ApplicationUser? UploadedBy { get; set; }
+    public User? UploadedBy { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

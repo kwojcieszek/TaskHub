@@ -1,5 +1,6 @@
 using System.Net;
 using TaskHub.Application.Dtos.Attachments;
+using TaskHub.Application.Dtos.Comments;
 using TaskHub.Application.Dtos.Projects;
 using TaskHub.Application.Dtos.Tasks;
 using TaskHub.IntegrationTests.Support;
@@ -57,5 +58,10 @@ public abstract class AccessMatrixTestsBase : IClassFixture<TaskHubApiFactory>
 
         var content = await owner.GetAsync(ApiRoutes.AttachmentContent(scenario.Project.Id, scenario.LeafTask.Id, scenario.Attachment.Id));
         await content.ShouldBeAsync(HttpStatusCode.OK);
+
+        Assert.Empty(await owner.GetAsync<List<ProjectTeamDto>>(ApiRoutes.ProjectTeams(scenario.Project.Id)));
+        Assert.Empty(await owner.GetAsync<List<CommentDto>>(ApiRoutes.ProjectComments(scenario.Project.Id)));
+        Assert.Empty(await owner.GetAsync<List<CommentDto>>(ApiRoutes.TaskComments(scenario.Project.Id, scenario.LeafTask.Id)));
+        Assert.Empty(await owner.GetAsync<List<CommentDto>>(ApiRoutes.TaskComments(scenario.Project.Id, scenario.SubTask.Id)));
     }
 }

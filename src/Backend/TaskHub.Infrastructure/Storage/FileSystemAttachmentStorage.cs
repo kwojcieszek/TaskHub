@@ -64,7 +64,13 @@ public class FileSystemAttachmentStorage : IAttachmentStorage
 
     public Task DeleteAsync(string sha256, CancellationToken cancellationToken = default)
     {
-        File.Delete(GetPath(sha256));
+        var path = GetPath(sha256);
+
+        // File.Delete ignores a missing file, but not a missing directory above it.
+        if (File.Exists(path))
+        {
+            File.Delete(path);
+        }
 
         return Task.CompletedTask;
     }

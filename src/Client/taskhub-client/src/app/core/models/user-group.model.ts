@@ -16,6 +16,11 @@ export interface UserGroupMember {
   displayName: string;
 }
 
+export interface UpdateUserGroupRequest {
+  name: string;
+  description?: string | null;
+}
+
 export interface AddUserGroupMemberRequest {
   userId: string;
 }

@@ -1,12 +1,12 @@
 <form [formGroup]="form" (ngSubmit)="submit()" class="dialog-form">
   <div class="field">
     <label for="name">{{ 'projects.name' | translate }}</label>
-    <input pInputText id="name" formControlName="name" class="w-full" />
+    <input pInputText appDictation id="name" formControlName="name" class="w-full" />
   </div>
 
   <div class="field">
     <label for="description">{{ 'projects.description' | translate }}</label>
-    <textarea pTextarea id="description" formControlName="description" rows="3" class="w-full"></textarea>
+    <textarea pTextarea appDictation id="description" formControlName="description" rows="3" class="w-full"></textarea>
   </div>
 
   <div class="field">

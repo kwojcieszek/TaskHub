@@ -30,7 +30,7 @@ public class TaskItem
 
     public Guid? AssignedUserId { get; set; }
 
-    public ApplicationUser? AssignedUser { get; set; }
+    public User? AssignedUser { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

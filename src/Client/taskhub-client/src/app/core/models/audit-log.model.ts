@@ -1,5 +1,7 @@
 export type LoginFailureReason = 'UserNotFound' | 'LockedOut' | 'InvalidPassword' | 'InvalidTwoFactorCode' | 'GoogleAccountNotLinked';
 
+export type UserActivityType = 'Request' | 'Login';
+
 export interface PagedResult<T> {
   items: T[];
   totalCount: number;
@@ -13,19 +15,10 @@ export interface AuditLogQuery {
   search?: string;
 }
 
-export interface LoginLog {
-  id: string;
-  userId: string | null;
-  userName: string;
-  ipAddress: string | null;
-  userAgent: string | null;
-  succeeded: boolean;
-  failureReason: LoginFailureReason | null;
-  createdAt: string;
-}
-
+// One entry of the audit log: a login attempt or a modifying request of a signed-in user.
 export interface UserActivityLog {
   id: string;
+  type: UserActivityType;
   userId: string | null;
   userName: string;
   action: string;
@@ -33,5 +26,9 @@ export interface UserActivityLog {
   path: string;
   statusCode: number;
   ipAddress: string | null;
+  // Recorded for login attempts only.
+  userAgent: string | null;
+  // Set on a rejected login attempt; a login without it succeeded.
+  failureReason: LoginFailureReason | null;
   createdAt: string;
 }

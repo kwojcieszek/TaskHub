@@ -11,9 +11,13 @@ public interface IApplicationDbContext
 
     DbSet<ProjectMember> ProjectMembers { get; }
 
+    DbSet<ProjectTeam> ProjectTeams { get; }
+
     DbSet<TaskItem> Tasks { get; }
 
     DbSet<Attachment> Attachments { get; }
+
+    DbSet<Comment> Comments { get; }
 
     DbSet<UserGroup> UserGroups { get; }
 
@@ -21,11 +25,11 @@ public interface IApplicationDbContext
 
     DbSet<UserSetting> UserSettings { get; }
 
-    DbSet<LoginLog> LoginLogs { get; }
-
     DbSet<UserActivityLog> UserActivityLogs { get; }
 
     DbSet<SystemSetting> SystemSettings { get; }
+
+    DbSet<ApiToken> ApiTokens { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

@@ -2,7 +2,15 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { AddProjectMemberRequest, CreateProjectRequest, Project, ProjectMember, UpdateProjectRequest } from '../models/project.model';
+import {
+  AddProjectMemberRequest,
+  AddProjectTeamRequest,
+  CreateProjectRequest,
+  Project,
+  ProjectMember,
+  ProjectTeam,
+  UpdateProjectRequest
+} from '../models/project.model';
 
 @Injectable({ providedIn: 'root' })
 export class ProjectService {
@@ -44,5 +52,22 @@ export class ProjectService {
 
   removeMember(projectId: string, userId: string): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/${projectId}/members/${userId}`);
+  }
+
+  getTeams(projectId: string): Observable<ProjectTeam[]> {
+    return this.http.get<ProjectTeam[]>(`${this.baseUrl}/${projectId}/teams`);
+  }
+
+  // The teams that can still be added; only the owner of the project may ask.
+  getAvailableTeams(projectId: string): Observable<ProjectTeam[]> {
+    return this.http.get<ProjectTeam[]>(`${this.baseUrl}/${projectId}/teams/available`);
+  }
+
+  addTeam(projectId: string, request: AddProjectTeamRequest): Observable<ProjectTeam> {
+    return this.http.post<ProjectTeam>(`${this.baseUrl}/${projectId}/teams`, request);
+  }
+
+  removeTeam(projectId: string, userGroupId: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/${projectId}/teams/${userGroupId}`);
   }
 }

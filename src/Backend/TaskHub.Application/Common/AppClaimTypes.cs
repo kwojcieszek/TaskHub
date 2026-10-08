@@ -10,4 +10,7 @@ public static class AppClaimTypes
 
     // Added to the signed-in principal while the user still has to replace an assigned password.
     public const string PasswordChangeRequired = "pwd_change";
+
+    // Carried by a request signed in with an API token instead of a session; holds the id of that token.
+    public const string ApiTokenId = "api_token";
 }

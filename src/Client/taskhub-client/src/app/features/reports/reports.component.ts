@@ -20,6 +20,7 @@ const UNASSIGNED_KEY = '';
 const MINUTE_MS = 60 * 1000;
 const HOUR_MS = 60 * MINUTE_MS;
 const DAY_MS = 24 * HOUR_MS;
+const COPIED_MARK_MS = 1500;
 
 @Component({
   selector: 'app-reports',
@@ -40,6 +41,9 @@ export class ReportsComponent implements OnInit {
   readonly loading = signal(false);
   readonly loadError = signal(false);
   readonly taskPageSize = 20;
+
+  // The cell whose text was just copied, so its icon can confirm it for a moment.
+  readonly copiedKey = signal<string | null>(null);
 
   // First day of the first and of the last month in the range; null leaves that side open.
   readonly fromMonth = signal<Date | null>(this.monthStart(new Date(), -DEFAULT_MONTHS_BACK));
@@ -225,6 +229,18 @@ export class ReportsComponent implements OnInit {
       ]),
       fileName
     );
+  }
+
+  copy(text: string, key: string): void {
+    navigator.clipboard.writeText(text).then(() => {
+      this.copiedKey.set(key);
+
+      setTimeout(() => {
+        if (this.copiedKey() === key) {
+          this.copiedKey.set(null);
+        }
+      }, COPIED_MARK_MS);
+    });
   }
 
   private toTaskRow(task: TaskItem): ReportTaskRow {

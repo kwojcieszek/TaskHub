@@ -3,7 +3,7 @@ import { Card } from 'primeng/card';
 import { TableLazyLoadEvent, TableModule } from 'primeng/table';
 import { TranslateModule } from '@ngx-translate/core';
 import { AuditLogService } from '../../../../core/services/audit-log.service';
-import { LoginLog } from '../../../../core/models/audit-log.model';
+import { UserActivityLog } from '../../../../core/models/audit-log.model';
 import { LocalizedDatePipe } from '../../../../shared/pipes/localized-date.pipe';
 
 const PAGE_SIZE = 10;
@@ -18,7 +18,7 @@ const PAGE_SIZE = 10;
 export class LoginHistoryComponent {
   private readonly auditLogService = inject(AuditLogService);
 
-  readonly logs = signal<LoginLog[]>([]);
+  readonly logs = signal<UserActivityLog[]>([]);
   readonly totalCount = signal(0);
   readonly loading = signal(false);
   readonly failed = signal(false);

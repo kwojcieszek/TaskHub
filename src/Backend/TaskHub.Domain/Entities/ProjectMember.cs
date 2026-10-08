@@ -12,7 +12,7 @@ public class ProjectMember
 
     public Guid UserId { get; set; }
 
-    public ApplicationUser? User { get; set; }
+    public User? User { get; set; }
 
     public ProjectMemberRole Role { get; set; } = ProjectMemberRole.Viewer;
 

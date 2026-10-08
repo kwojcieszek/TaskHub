@@ -1,48 +1,57 @@
-<form [formGroup]="form" (ngSubmit)="submit()" class="dialog-form">
-  <div class="field">
-    <label for="title">{{ 'tasks.titleField' | translate }}</label>
-    <input pInputText id="title" formControlName="title" class="w-full" />
-  </div>
-
-  <div class="field">
-    <label for="description">{{ 'tasks.description' | translate }}</label>
-    <textarea pTextarea id="description" formControlName="description" rows="3" class="w-full"></textarea>
-  </div>
-
-  <div class="field">
-    <label for="dueDate">{{ 'tasks.dueDate' | translate }}</label>
-    <p-datepicker appendTo="body" inputId="dueDate" formControlName="dueDate" dateFormat="yy-mm-dd" [showIcon]="true" styleClass="w-full" />
-  </div>
-
-  @if (data.task) {
+<form [formGroup]="form" (ngSubmit)="submit()" class="dialog-form task-dialog" [class.task-dialog--wide]="data.task">
+  <div class="task-dialog__main">
     <div class="field">
-      <label for="status">{{ 'tasks.status' | translate }}</label>
-      @if (data.statusDerived) {
-        <span class="badge" [attr.data-status]="data.task.status">{{ 'tasks.status.' + data.task.status | translate }}</span>
-        <small class="secondary">{{ 'tasks.statusFromSubTasks' | translate }}</small>
-      } @else {
-        <p-select appendTo="body" inputId="status" formControlName="status" [options]="statusOptions" optionLabel="label" optionValue="value" styleClass="w-full" />
-      }
+      <label for="title">{{ 'tasks.titleField' | translate }}</label>
+      <input pInputText appDictation id="title" formControlName="title" class="w-full" />
     </div>
-  }
 
-  <div class="field">
-    <label for="priority">{{ 'tasks.priority' | translate }}</label>
-    <p-select appendTo="body" inputId="priority" formControlName="priority" [options]="priorityOptions" optionLabel="label" optionValue="value" styleClass="w-full" />
-  </div>
+    <div class="field">
+      <label for="description">{{ 'tasks.description' | translate }}</label>
+      <textarea pTextarea appDictation id="description" formControlName="description" rows="5" class="w-full"></textarea>
+    </div>
 
-  <div class="field">
-    <label for="assignee">{{ 'tasks.assignee' | translate }}</label>
-    <p-select appendTo="body" inputId="assignee" formControlName="assignedUserId" [options]="assigneeOptions" optionLabel="label" optionValue="value" styleClass="w-full" />
+    <div class="task-dialog__meta">
+      <div class="field">
+        <label for="dueDate">{{ 'tasks.dueDate' | translate }}</label>
+        <p-datepicker appendTo="body" inputId="dueDate" formControlName="dueDate" dateFormat="yy-mm-dd" [showIcon]="true" styleClass="w-full" />
+      </div>
+
+      @if (data.task) {
+        <div class="field">
+          <label for="status">{{ 'tasks.status' | translate }}</label>
+          @if (data.statusDerived) {
+            <span class="badge" [attr.data-status]="data.task.status">{{ 'tasks.status.' + data.task.status | translate }}</span>
+            <small class="secondary">{{ 'tasks.statusFromSubTasks' | translate }}</small>
+          } @else {
+            <p-select appendTo="body" inputId="status" formControlName="status" [options]="statusOptions" optionLabel="label" optionValue="value" styleClass="w-full" />
+          }
+        </div>
+      }
+
+      <div class="field">
+        <label for="priority">{{ 'tasks.priority' | translate }}</label>
+        <p-select appendTo="body" inputId="priority" formControlName="priority" [options]="priorityOptions" optionLabel="label" optionValue="value" styleClass="w-full" />
+      </div>
+
+      <div class="field">
+        <label for="assignee">{{ 'tasks.assignee' | translate }}</label>
+        <p-select appendTo="body" inputId="assignee" formControlName="assignedUserId" [options]="assigneeOptions" optionLabel="label" optionValue="value" styleClass="w-full" />
+      </div>
+    </div>
+
+    @if (!data.task) {
+      <p class="page-header__subtitle">{{ 'attachments.afterSaveHint' | translate }}</p>
+    }
   </div>
 
   @if (data.task; as task) {
-    <app-task-attachments [projectId]="task.projectId" [taskId]="task.id" />
-  } @else {
-    <p class="page-header__subtitle">{{ 'attachments.afterSaveHint' | translate }}</p>
+    <div class="task-dialog__side">
+      <app-task-attachments [projectId]="task.projectId" [taskId]="task.id" />
+      <app-comments [projectId]="task.projectId" [taskId]="task.id" />
+    </div>
   }
 
-  <div class="dialog-actions">
+  <div class="dialog-actions task-dialog__actions">
     <p-button [label]="'common.cancel' | translate" severity="secondary" [outlined]="true" type="button" (onClick)="cancel()" />
     <p-button [label]="'common.save' | translate" icon="pi pi-check" type="submit" [disabled]="form.invalid" />
   </div>

@@ -1,0 +1,58 @@
+<div class="board" cdkDropListGroup [style.--board-columns]="columns().length">
+  @for (column of columns(); track column.status) {
+    <section class="board__column" [attr.data-status]="column.status">
+      <h2 class="board__title">
+        <span class="board__icon"><i [class]="column.icon"></i></span>
+        {{ 'tasks.status.' + column.status | translate }}
+        <span class="board__count">{{ column.tasks.length + column.hidden }}</span>
+      </h2>
+
+      <div class="board__cards" cdkDropList [cdkDropListData]="column.status" [cdkDropListSortingDisabled]="true" (cdkDropListDropped)="onDrop($event)">
+        @for (task of column.tasks; track task.id) {
+          <article
+            class="board-card"
+            cdkDrag
+            [cdkDragData]="task"
+            [cdkDragDisabled]="isLocked(task)"
+            [class.board-card--locked]="isLocked(task)"
+            [class.board-card--sub]="task.parentTaskId !== null"
+            (click)="open.emit(task)"
+          >
+            <div class="board-card__placeholder" *cdkDragPlaceholder></div>
+            <p class="board-card__title">{{ task.title }}</p>
+
+            @if (projectName(task)) {
+              <span class="board-card__project">
+                <span class="project-dot" [style.--project-color]="projectColor(task)"></span>{{ projectName(task) }}
+              </span>
+            }
+
+            <div class="board-card__meta">
+              <span class="badge" [attr.data-priority]="task.priority">{{ 'tasks.priority.' + task.priority | translate }}</span>
+              @if (task.dueDate) {
+                <span class="board-card__date" [class.board-card__date--overdue]="isOverdue(task)">
+                  <i class="pi pi-calendar"></i>{{ task.dueDate | date: 'mediumDate' }}
+                </span>
+              }
+              @if (task.attachmentCount > 0) {
+                <span class="board-card__date"><i class="pi pi-paperclip"></i>{{ task.attachmentCount }}</span>
+              }
+              @if (isLocked(task)) {
+                <span class="board-card__date" [title]="'tasks.statusFromSubTasks' | translate"><i class="pi pi-lock"></i></span>
+              }
+              @if (task.assignedUserDisplayName) {
+                <span class="board-card__assignee" [title]="task.assignedUserDisplayName">{{ initial(task) }}</span>
+              }
+            </div>
+          </article>
+        } @empty {
+          <p class="board__empty">{{ 'tasksOverview.boardEmpty' | translate }}</p>
+        }
+
+        @if (column.hidden > 0) {
+          <p class="board__empty">{{ 'tasksOverview.boardMore' | translate: { count: column.hidden } }}</p>
+        }
+      </div>
+    </section>
+  }
+</div>

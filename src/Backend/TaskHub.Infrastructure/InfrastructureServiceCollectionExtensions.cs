@@ -30,7 +30,7 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddDbContext<ApplicationDbContext>(options => ConfigureProvider(options, databaseOptions));
         services.AddScoped<IApplicationDbContext>(sp => sp.GetRequiredService<ApplicationDbContext>());
 
-        services.AddIdentityCore<ApplicationUser>(options =>
+        services.AddIdentityCore<User>(options =>
             {
                 // The rules live in the security settings and are applied by ConfigurablePasswordValidator;
                 // the built-in checks are switched off so the two cannot disagree.
@@ -43,7 +43,7 @@ public static class InfrastructureServiceCollectionExtensions
                 options.User.RequireUniqueEmail = true;
                 options.Tokens.AuthenticatorTokenProvider = TokenOptions.DefaultAuthenticatorProvider;
             })
-            .AddRoles<ApplicationRole>()
+            .AddRoles<Role>()
             .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddPasswordValidator<ConfigurablePasswordValidator>()
             .AddDefaultTokenProviders();
@@ -52,6 +52,7 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<ICurrentUserService, CurrentUserService>();
         services.AddSingleton<IJwtTokenService, JwtTokenService>();
         services.AddSingleton<IGoogleTokenValidator, GoogleTokenValidator>();
+        services.AddScoped<DatabaseSchemaUpdater>();
         services.AddScoped<DbSeeder>();
 
         services.Configure<AttachmentStorageOptions>(configuration.GetSection(AttachmentStorageOptions.SectionName));
@@ -81,7 +82,7 @@ public static class InfrastructureServiceCollectionExtensions
                 options.UseNpgsql(databaseOptions.ConnectionString);
                 break;
             case DatabaseProvider.MySql:
-                options.UseMySql(databaseOptions.ConnectionString, ServerVersion.AutoDetect(databaseOptions.ConnectionString));
+                options.UseMySQL(databaseOptions.ConnectionString);
                 break;
             case DatabaseProvider.MsSql:
                 options.UseSqlServer(databaseOptions.ConnectionString);

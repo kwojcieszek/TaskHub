@@ -54,6 +54,20 @@ export class UserGroupsComponent implements OnInit {
     });
   }
 
+  editGroup(group: UserGroup): void {
+    const ref = this.dialogService.open(UserGroupDialogComponent, {
+      header: this.translate.instant('userGroups.editGroup'),
+      width: '440px',
+      data: { group }
+    });
+    ref?.onClose.subscribe((result) => {
+      if (!result) {
+        return;
+      }
+      this.userGroupService.update(group.id, result).subscribe(() => this.load());
+    });
+  }
+
   deleteGroup(group: UserGroup): void {
     this.confirmDelete('userGroups.deleteConfirm', () => {
       this.userGroupService.delete(group.id).subscribe(() => this.load());

@@ -31,9 +31,11 @@ dotnet run --project TaskHub.Api
 cd src/Backend
 dotnet test
 ```
+The frontend has its own unit tests: `cd src/Client/taskhub-client` and `npx ng test --watch=false --browsers=ChromeHeadless`.
+
 `TaskHub.Tests` runs the real application services against a private in-memory SQLite database; only the HTTP user, file storage and Google are replaced with test doubles.
 
-`TaskHub.IntegrationTests` runs the whole API in memory (the real pipeline, authentication, middleware and file storage) against a private SQLite database in a temporary folder, and calls it over HTTP. `Integration/` covers the flows of users, projects, tasks and attachments; `Security/` covers who may do what: every project operation tried by every kind of caller, forged and revoked tokens, login, lockout and 2FA, isolation between users, hostile input, rate limiting and CORS. Tests that prove a defect which is not fixed yet are skipped with a reason from `Support/KnownDefects.cs`, so every run lists what is still open.
+`TaskHub.IntegrationTests` runs the whole API in memory (the real pipeline, authentication, middleware and file storage) against a private SQLite database in a temporary folder, and calls it over HTTP. `Integration/` covers the flows of users, projects, tasks and attachments; `Security/` covers who may do what: every project operation tried by every kind of caller, forged and revoked tokens, login, lockout and 2FA, isolation between users (including several users who each attack the tasks of every other one), hostile input, rate limiting and CORS. Tests that prove a defect which is not fixed yet are skipped with a reason from `Support/KnownDefects.cs`, so every run lists what is still open.
 
 On first run, if the configured database doesn't exist yet, it is created automatically and seeded with:
 - roles `Admin`, `User`
@@ -61,9 +63,17 @@ Example connection strings:
 
 **Attachments** — tasks can carry file attachments. Metadata lives in the database; the files go to the storage chosen in `AttachmentStorage` in `appsettings.json` (`FileSystem` or `Ftp`) and are stored once under their SHA-256 hash, which is also the lookup key (`GET /api/v1/attachments/{sha256}?taskId={taskId}`). The lookup requires the id of a task the file is attached to, and access is checked through that task's project. One file can be at most `AttachmentStorage:MaxFileSizeBytes`, and all attachments uploaded by one user together at most `AttachmentStorage:MaxTotalBytesPerUser` (1 GB by default, `0` for no limit); deleting an attachment frees its share.
 
-**Audit and security** — every login attempt is stored in `LoginLogs` (user name, IP address, browser, result) and every modifying request of a signed-in user in `UserActivityLogs` (action, path, status code, IP address). Administrators read both under `GET /api/v1/admin/logs/logins` and `GET /api/v1/admin/logs/activity`, and in the admin panel. Accounts are locked for a set time after a set number of failed logins; the defaults come from `Security` in `appsettings.json` and can be changed in the admin panel (`/api/v1/admin/security`, stored in `SystemSettings`). Requests are rate limited per user or IP address (`RateLimiting` in `appsettings.json`), with a tighter limit on login, registration and 2FA; exceeding it returns `429`. Behind a reverse proxy, set `ReverseProxy:Enabled` to `true` in `appsettings.json` (and list the proxy in `KnownProxies` or `KnownNetworks` unless it runs on the same machine), otherwise the proxy's address is logged and limited instead of the client's.
+**Audit and security** — every login attempt (user name, IP address, browser, result) and every modifying request of a signed-in user (action, path, status code, IP address) is stored in `UserActivityLogs`; the `Type` column tells the two apart. Administrators read both under `GET /api/v1/admin/logs/logins` and `GET /api/v1/admin/logs/activity`, and in the admin panel. Accounts are locked for a set time after a set number of failed logins; the defaults come from `Security` in `appsettings.json` and can be changed in the admin panel (`/api/v1/admin/security`, stored in `SystemSettings`). Requests are rate limited per user or IP address (`RateLimiting` in `appsettings.json`), with a tighter limit on login, registration and 2FA; exceeding it returns `429`. Behind a reverse proxy, set `ReverseProxy:Enabled` to `true` in `appsettings.json` (and list the proxy in `KnownProxies` or `KnownNetworks` unless it runs on the same machine), otherwise the proxy's address is logged and limited instead of the client's.
 
 **Accounts** - self-registration is off by default (`Security:RegistrationEnabled`, or the Security tab of the admin panel); an administrator creates users and can set a new password for them. New passwords must meet the password policy (minimum length, uppercase and lowercase letter, digit, special character): the defaults come from `Security:PasswordPolicy` in `appsettings.json` and can be changed in the Security tab; existing passwords keep working until they are changed. A password assigned by someone else (the default administrator's, a created user's, a reset one) must be changed at the next sign-in, and until then the API serves only the account endpoints. Every access token is checked against the user on each request, so deleting or locking a user, changing roles or changing a password ends the affected sessions at once. Turning two-factor authentication off requires the password. User groups are managed by administrators only.
+
+**API tokens** — a signed-in user creates tokens for scripts under `POST /api/v1/tokens` (name and validity in days, or no expiry), lists them with `GET` and revokes one with `DELETE /api/v1/tokens/{id}`. A token (`thp_...`) is sent as `Authorization: Bearer <token>` and acts as its user with the roles the user has at that moment; it is shown once and only its SHA-256 hash is stored. A token cannot manage tokens, the password, two-factor authentication or the Google link, and it stops working when it expires, is revoked, or its user is locked or deleted.
+
+**Teams** — a user group (created by an administrator) can be given access to a project as Viewer or Editor under `/api/v1/projects/{id}/teams`; its members then have that role for as long as they are in the group. The strongest of a user's own membership and their teams applies, and the owner of a project remains one person.
+
+**Comments** — projects and tasks have comments (`/api/v1/projects/{id}/comments`, `/api/v1/projects/{id}/tasks/{taskId}/comments`). Everyone who can open the project reads and writes them; a comment is changed only by its author and deleted by its author, the project owner or an administrator.
+
+**User directory** — `GET /api/v1/users?q=` finds people to add to a project. It answers only a search of at least two characters, matches the display name (or a login typed in full), returns at most 20 users and shows logins to administrators only.
 
 **Google sign-in** — set `GoogleAuth:ClientId` in `appsettings.json` to an OAuth 2.0 *Web application* client ID from Google Cloud Console and add the address the Angular app is served from (for example `http://localhost:4200`) to its *Authorized JavaScript origins*. A user first links a Google account in their profile; after that the login page accepts that Google account. An unlinked Google account cannot log in, even if its e-mail matches a user. With an empty client ID the Google buttons are hidden.
 
@@ -84,7 +94,11 @@ The client expects the API at `http://localhost:5080/api/v1` (see `src/environme
 - Login / register / 2FA verification, profile page to enable/disable 2FA
 - Projects: create/edit/delete, members with roles, tasks with optional subtasks (each task card lists its subtasks)
 - Calendar: month view of tasks by due date across all accessible projects
-- User groups: independent from projects, for organizing users
+- Teams (user groups): created in the admin panel and added to a project with a role in the project's members view
+- Tasks page: the list by due date, or a kanban board with a column per status where dragging a card changes the status
+- Comments on projects and tasks
+- API tokens in the profile: create with a chosen validity (or none), copy once, revoke
+- Dictation: a microphone button on the name, description and comment fields types what is said (browser speech recognition; where the browser has none, the button is not shown)
 - Admin module: role management, lockout, delete users (Admin role only)
 - Language switcher (English/Polish, `ngx-translate`), light/dark/automatic theme (PrimeNG Aura's dark-mode selector wired to `prefers-color-scheme` + a manual toggle), responsive layout down to mobile widths
 - UI library: PrimeNG (Aura theme) with a top `p-menubar`, matching `AirMonitor/frontend`'s look — `p-card`/`p-button`/`p-table`/`p-select` etc., PrimeNG `DialogService` for modals, `primeicons` throughout

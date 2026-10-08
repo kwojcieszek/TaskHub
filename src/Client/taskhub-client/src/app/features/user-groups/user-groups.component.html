@@ -44,7 +44,10 @@
           }
         </div>
 
-        <p-button [label]="'common.delete' | translate" icon="pi pi-trash" severity="danger" [text]="true" (onClick)="deleteGroup(group)" />
+        <div class="group-actions">
+          <p-button [label]="'userGroups.editGroup' | translate" icon="pi pi-pencil" severity="secondary" [text]="true" (onClick)="editGroup(group)" />
+          <p-button [label]="'common.delete' | translate" icon="pi pi-trash" severity="danger" [text]="true" (onClick)="deleteGroup(group)" />
+        </div>
       </p-accordion-content>
     </p-accordion-panel>
   }

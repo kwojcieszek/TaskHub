@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace TaskHub.Domain.Entities;
 
-public class ApplicationUser : IdentityUser<Guid>
+public class User : IdentityUser<Guid>
 {
     public string DisplayName { get; set; } = string.Empty;
 

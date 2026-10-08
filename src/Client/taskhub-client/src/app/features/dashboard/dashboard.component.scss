@@ -19,7 +19,7 @@
   border: none;
   background: transparent;
   color: inherit;
-  font-weight: 600;
+  font-weight: 500;
   cursor: pointer;
   text-decoration: underline;
 }
@@ -40,7 +40,7 @@
   align-items: center;
   gap: 0.6rem;
   font-size: 1.05rem;
-  font-weight: 700;
+  font-weight: 500;
   margin: 0 0 0.75rem;
 }
 
@@ -58,10 +58,10 @@
 
 .dashboard-section__count {
   font-size: 0.78rem;
-  font-weight: 700;
+  font-weight: 500;
   color: var(--tone-fg);
   background: var(--tone-bg);
-  border-radius: 20px;
+  border-radius: var(--app-label-radius);
   padding: 0.1rem 0.6rem;
 }
 
@@ -87,7 +87,7 @@
   gap: 0.4rem;
   margin-top: 0.75rem;
   font-size: 0.88rem;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--p-primary-color);
   text-decoration: none;
 

@@ -34,6 +34,11 @@ public class PasswordChangeRequiredTests : IClassFixture<TaskHubApiFactory>
         { "GET", "/api/v1/attachments/limits" },
         { "GET", "/api/v1/admin/users" },
         { "GET", "/api/v1/user-groups" },
+        { "GET", "/api/v1/tokens" },
+        { "POST", "/api/v1/tokens" },
+        { "GET", $"/api/v1/projects/{Id}/teams" },
+        { "GET", $"/api/v1/projects/{Id}/comments" },
+        { "POST", $"/api/v1/projects/{Id}/comments" },
 
         // Addresses that merely mention the account area must not pass for it.
         { "GET", "/api/v1/projects?next=/api/v1/auth/" },

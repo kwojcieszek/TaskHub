@@ -51,12 +51,12 @@ public class AuthServiceTests : IDisposable
         var user = await _host.CreateUserAsync("anna", Roles.User);
 
         var response = await LoginAsync("anna", TestHost.DefaultPassword);
-        var log = await _host.Db.LoginLogs.AsNoTracking().SingleAsync();
+        var log = await _host.Db.UserActivityLogs.AsNoTracking().SingleAsync(entry => entry.Type == UserActivityType.Login);
 
         Assert.False(response.RequiresTwoFactor);
         Assert.False(string.IsNullOrEmpty(response.AccessToken));
         Assert.Equal(user.Id, response.User!.Id);
-        Assert.True(log.Succeeded);
+        Assert.Null(log.FailureReason);
         Assert.Equal(user.Id, log.UserId);
     }
 
@@ -67,7 +67,7 @@ public class AuthServiceTests : IDisposable
 
         await Assert.ThrowsAsync<AuthenticationFailedException>(() => LoginAsync("anna", "wrong"));
         await Assert.ThrowsAsync<AuthenticationFailedException>(() => LoginAsync("nobody", "wrong"));
-        var reasons = await _host.Db.LoginLogs.AsNoTracking().Select(log => log.FailureReason).ToListAsync();
+        var reasons = await _host.Db.UserActivityLogs.AsNoTracking().Where(log => log.Type == UserActivityType.Login).Select(log => log.FailureReason).ToListAsync();
 
         Assert.Contains(LoginFailureReason.InvalidPassword, reasons);
         Assert.Contains(LoginFailureReason.UserNotFound, reasons);
@@ -267,7 +267,7 @@ public class AuthServiceTests : IDisposable
         return _auth.LoginAsync(new LoginRequest { UserName = userName, Password = password });
     }
 
-    private async Task<string> EnableTwoFactorAsync(ApplicationUser user)
+    private async Task<string> EnableTwoFactorAsync(User user)
     {
         var setup = await _auth.BeginTwoFactorSetupAsync(user.Id);
         await _auth.EnableTwoFactorAsync(user.Id, CodeFor(setup.SharedKey));

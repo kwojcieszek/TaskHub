@@ -11,6 +11,7 @@ import { Project } from '../../../core/models/project.model';
 import { ProjectGroup } from '../../../core/models/project-group.model';
 import { PROJECT_ICONS } from '../../../core/utils/project-icons';
 import { imageFileToIcon, isImageIcon } from '../../../core/utils/image-icon';
+import { DictationDirective } from '../../../shared/dictation/dictation.directive';
 
 export interface ProjectFormDialogData {
   project?: Project;
@@ -20,7 +21,7 @@ export interface ProjectFormDialogData {
 @Component({
   selector: 'app-project-form-dialog',
   standalone: true,
-  imports: [ReactiveFormsModule, InputText, Textarea, Select, ToggleSwitch, Button, TranslateModule],
+  imports: [ReactiveFormsModule, DictationDirective, InputText, Textarea, Select, ToggleSwitch, Button, TranslateModule],
   templateUrl: './project-form-dialog.component.html',
   styleUrl: './project-form-dialog.component.scss'
 })

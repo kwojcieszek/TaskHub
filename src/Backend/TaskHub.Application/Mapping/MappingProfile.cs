@@ -41,9 +41,6 @@ public class MappingProfile : Profile
         CreateMap<UserSetting, UserSettingDto>();
 
         // Timestamps are stored in UTC; marking the kind makes the API emit them with a "Z" suffix.
-        CreateMap<LoginLog, LoginLogDto>()
-            .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.SpecifyKind(src.CreatedAt, DateTimeKind.Utc)));
-
         CreateMap<UserActivityLog, UserActivityLogDto>()
             .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.SpecifyKind(src.CreatedAt, DateTimeKind.Utc)));
 

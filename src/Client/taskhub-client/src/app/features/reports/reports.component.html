@@ -114,8 +114,38 @@
     </ng-template>
     <ng-template #body let-row>
       <tr>
-        <td class="report-label">{{ row.title }}</td>
-        <td>{{ row.project }}</td>
+        <td class="report-label">
+          <span class="report-copy">
+            {{ row.title }}
+            @if (row.title) {
+              <button
+                type="button"
+                class="report-copy__button"
+                [title]="'reports.copy' | translate"
+                [attr.aria-label]="'reports.copy' | translate"
+                (click)="copy(row.title, row.id + ':title')"
+              >
+                <i [class]="copiedKey() === row.id + ':title' ? 'pi pi-check' : 'pi pi-copy'"></i>
+              </button>
+            }
+          </span>
+        </td>
+        <td>
+          <span class="report-copy">
+            {{ row.project }}
+            @if (row.project) {
+              <button
+                type="button"
+                class="report-copy__button"
+                [title]="'reports.copy' | translate"
+                [attr.aria-label]="'reports.copy' | translate"
+                (click)="copy(row.project, row.id + ':project')"
+              >
+                <i [class]="copiedKey() === row.id + ':project' ? 'pi pi-check' : 'pi pi-copy'"></i>
+              </button>
+            }
+          </span>
+        </td>
         <td>{{ row.assignee }}</td>
         @if (!showCompleted) {
           <td><span class="badge" [attr.data-status]="row.status">{{ 'tasks.status.' + row.status | translate }}</span></td>

@@ -32,6 +32,12 @@ public static class ApiRoutes
     public const string ProjectGroups = Root + "/project-groups";
     public const string AllTasks = Root + "/tasks";
     public const string AttachmentLimits = Root + "/attachments/limits";
+    public const string Tokens = Root + "/tokens";
+
+    public static string Token(Guid tokenId)
+    {
+        return $"{Tokens}/{tokenId}";
+    }
 
     public static string AdminUser(Guid userId)
     {
@@ -93,6 +99,21 @@ public static class ApiRoutes
         return $"{Projects}/{projectId}/members/{userId}";
     }
 
+    public static string ProjectTeams(Guid projectId)
+    {
+        return $"{Projects}/{projectId}/teams";
+    }
+
+    public static string AvailableProjectTeams(Guid projectId)
+    {
+        return $"{Projects}/{projectId}/teams/available";
+    }
+
+    public static string ProjectTeam(Guid projectId, Guid userGroupId)
+    {
+        return $"{Projects}/{projectId}/teams/{userGroupId}";
+    }
+
     public static string ProjectGroup(Guid projectGroupId)
     {
         return $"{ProjectGroups}/{projectGroupId}";
@@ -126,6 +147,21 @@ public static class ApiRoutes
     public static string CompleteTask(Guid projectId, Guid taskId)
     {
         return $"{Projects}/{projectId}/tasks/{taskId}/complete";
+    }
+
+    public static string ProjectComments(Guid projectId)
+    {
+        return $"{Projects}/{projectId}/comments";
+    }
+
+    public static string TaskComments(Guid projectId, Guid taskId)
+    {
+        return $"{Projects}/{projectId}/tasks/{taskId}/comments";
+    }
+
+    public static string Comment(Guid projectId, Guid commentId)
+    {
+        return $"{Projects}/{projectId}/comments/{commentId}";
     }
 
     public static string Attachments(Guid projectId, Guid taskId)

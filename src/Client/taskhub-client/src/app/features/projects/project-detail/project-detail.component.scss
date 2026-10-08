@@ -12,7 +12,7 @@
   h1 {
     margin: 0;
     font-size: 1.65rem;
-    font-weight: 800;
+    font-weight: 600;
     line-height: 1.2;
     letter-spacing: -0.015em;
     overflow-wrap: anywhere;
@@ -32,7 +32,7 @@
   align-items: center;
   gap: 0.4rem;
   font-size: 0.9rem;
-  font-weight: 500;
+  font-weight: 400;
   color: var(--p-text-color);
 
   i {
@@ -46,7 +46,7 @@
   gap: 0.4rem;
   max-width: 100%;
   font-size: 0.9rem;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--p-primary-color);
   text-decoration: none;
   overflow-wrap: anywhere;
@@ -85,7 +85,7 @@
 
 .progress__percent {
   min-width: 2.8rem;
-  font-weight: 800;
+  font-weight: 600;
   font-size: 1.15rem;
   font-variant-numeric: tabular-nums;
   color: var(--p-text-color);
@@ -114,12 +114,12 @@
   gap: 0.4rem;
   padding: 0.22rem 0.7rem;
   border: 1px solid var(--app-border);
-  border-radius: 20px;
+  border-radius: var(--app-control-radius);
   background: transparent;
   color: var(--p-text-muted-color);
   font: inherit;
   font-size: 0.78rem;
-  font-weight: 700;
+  font-weight: 500;
   white-space: nowrap;
   cursor: pointer;
 
@@ -141,6 +141,11 @@
   flex-direction: column;
   gap: 0.4rem;
   padding: 1rem 0;
+}
+
+.comments-panel {
+  padding: 1rem 0;
+  max-width: 46rem;
 }
 
 .members-panel {
@@ -177,9 +182,30 @@
   justify-content: center;
   flex-shrink: 0;
   font-size: 0.85rem;
-  font-weight: 700;
+  font-weight: 500;
   color: #ffffff;
   background: linear-gradient(145deg, color-mix(in srgb, var(--project-color) 68%, white), var(--project-color));
+}
+
+.member-row__avatar--team {
+  background: var(--tone-slate-solid);
+}
+
+.members-panel__title {
+  margin: 0.75rem 0 0;
+  font-size: 1rem;
+  font-weight: 500;
+
+  i {
+    margin-right: 0.5rem;
+    color: var(--p-primary-color);
+  }
+}
+
+.members-panel__hint {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--p-text-muted-color);
 }
 
 .member-row__name {
@@ -187,7 +213,7 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .member-row__login {

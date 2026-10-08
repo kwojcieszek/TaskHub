@@ -14,9 +14,9 @@ namespace TaskHub.Api.Authentication;
 /// </summary>
 public class SessionJwtBearerEvents : JwtBearerEvents
 {
-    private readonly UserManager<ApplicationUser> _userManager;
+    private readonly UserManager<User> _userManager;
 
-    public SessionJwtBearerEvents(UserManager<ApplicationUser> userManager)
+    public SessionJwtBearerEvents(UserManager<User> userManager)
     {
         _userManager = userManager;
     }

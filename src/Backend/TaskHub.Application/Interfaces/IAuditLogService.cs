@@ -10,9 +10,9 @@ public interface IAuditLogService
 
     Task RecordActivityAsync(Guid userId, string userName, string action, string httpMethod, string path, int statusCode, CancellationToken cancellationToken = default);
 
-    Task<PagedResultDto<LoginLogDto>> GetLoginLogsAsync(AuditLogQuery query, CancellationToken cancellationToken = default);
+    Task<PagedResultDto<UserActivityLogDto>> GetLoginLogsAsync(AuditLogQuery query, CancellationToken cancellationToken = default);
 
-    Task<PagedResultDto<LoginLogDto>> GetLoginLogsForUserAsync(Guid userId, AuditLogQuery query, CancellationToken cancellationToken = default);
+    Task<PagedResultDto<UserActivityLogDto>> GetLoginLogsForUserAsync(Guid userId, AuditLogQuery query, CancellationToken cancellationToken = default);
 
     Task<PagedResultDto<UserActivityLogDto>> GetActivityLogsAsync(AuditLogQuery query, CancellationToken cancellationToken = default);
 }

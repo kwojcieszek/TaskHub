@@ -10,7 +10,7 @@
     "tasks": "Zadania",
     "calendar": "Kalendarz",
     "reports": "Raporty",
-    "userGroups": "Grupy użytkowników",
+    "userGroups": "Zespoły",
     "admin": "Administracja",
     "adminLocked": "Wymaga uprawnień administratora",
     "logout": "Wyloguj",
@@ -89,7 +89,43 @@
     "loginHistoryHint": "Udane i nieudane próby logowania na Twoje konto.",
     "loginHistoryEmpty": "Brak zapisanych logowań.",
     "loginHistoryError": "Nie udało się wczytać historii logowań.",
-    "confirm": "Potwierdź"
+    "confirm": "Potwierdź",
+    "tokens": {
+      "title": "Tokeny dostępu",
+      "hint": "Token pozwala skryptom i innym programom korzystać z API w Twoim imieniu, bez podawania hasła. Tokenem nie da się zmienić hasła, weryfikacji dwuetapowej ani utworzyć kolejnych tokenów.",
+      "name": "Nazwa",
+      "namePlaceholder": "np. Skrypt kopii zapasowej",
+      "lifetime": "Ważność",
+      "days": "Liczba dni",
+      "lifetimes": {
+        "7": "7 dni",
+        "30": "30 dni",
+        "90": "90 dni",
+        "365": "1 rok",
+        "custom": "Własna liczba dni",
+        "never": "Bez terminu"
+      },
+      "neverWarning": "Token bez terminu działa, dopóki go nie odwołasz. Wybieraj go tylko wtedy, gdy to konieczne.",
+      "create": "Utwórz token",
+      "createdTitle": "Token „{{name}}” został utworzony",
+      "createdHint": "Skopiuj go teraz i przechowuj jak hasło. Po zamknięciu tej informacji nie da się go już odczytać.",
+      "copied": "Skopiowano",
+      "token": "Token",
+      "createdAt": "Utworzono",
+      "expiresAt": "Wygasa",
+      "lastUsedAt": "Ostatnie użycie",
+      "never": "Bez terminu",
+      "expired": "Wygasł",
+      "notUsed": "Nie użyto",
+      "revoke": "Odwołaj",
+      "revokeHeader": "Odwołać token?",
+      "revokeConfirm": "Token „{{name}}” natychmiast przestanie działać. Tej operacji nie da się cofnąć.",
+      "empty": "Nie masz żadnych tokenów.",
+      "loadError": "Nie udało się wczytać tokenów.",
+      "createError": "Nie udało się utworzyć tokenu.",
+      "revokeError": "Nie udało się odwołać tokenu.",
+      "limitReached": "Osiągnięto limit tokenów. Odwołaj któryś z nieużywanych."
+    }
   },
   "projects": {
     "title": "Projekty",
@@ -120,7 +156,19 @@
     "noProjects": "Brak projektów. Utwórz swój pierwszy projekt.",
     "loadError": "Nie udało się wczytać projektów. Sprawdź, czy backend działa.",
     "deleteConfirm": "Usunąć ten projekt? Tej operacji nie można cofnąć.",
-    "role": "Rola"
+    "role": "Rola",
+    "teams": {
+      "title": "Zespoły",
+      "hint": "Każdy członek zespołu ma w projekcie rolę zespołu, dopóki do niego należy.",
+      "add": "Dodaj zespół",
+      "team": "Zespół",
+      "choose": "Wybierz zespół",
+      "memberCount": "osób: {{count}}",
+      "roleHint": "Zespół może przeglądać (Viewer) albo edytować (Editor). Właścicielem projektu pozostaje jedna osoba.",
+      "empty": "Żaden zespół nie ma dostępu do tego projektu.",
+      "noneAvailable": "Nie ma zespołów do dodania. Zespoły tworzy administrator w panelu administracyjnym.",
+      "loadError": "Nie udało się wczytać zespołów."
+    }
   },
   "projectGroups": {
     "deleteConfirm": "Usunąć tę grupę? Projekty z grupy nie zostaną usunięte, trafią do „Bez grupy”.",
@@ -199,7 +247,17 @@
     "noDueDate": "Bez terminu",
     "noDueDateEmpty": "Brak zadań bez terminu.",
     "loadError": "Nie udało się wczytać zadań. Backend może wymagać przebudowania/restartu, aby uwzględnić najnowsze zmiany.",
-    "retry": "Spróbuj ponownie"
+    "retry": "Spróbuj ponownie",
+    "view": "Widok zadań",
+    "viewList": "Lista",
+    "viewBoard": "Tablica",
+    "boardHint": "Przeciągnij kartę do innej kolumny, aby zmienić status zadania. Kliknij kartę, aby je otworzyć.",
+    "boardEmpty": "Brak zadań.",
+    "boardMore": "i jeszcze {{count}} starszych",
+    "moveError": "Nie udało się zmienić statusu zadania. Możesz nie mieć uprawnień do edycji w tym projekcie.",
+    "boardStatuses": "Kolumny tablicy",
+    "moveConfirmHeader": "Zmienić status zadania?",
+    "moveConfirm": "Przenieść zadanie „{{title}}” do statusu „{{status}}”?"
   },
   "dashboard": {
     "greeting": "Witaj, {{name}}",
@@ -244,6 +302,7 @@
     "duration": "Czas wykonania",
     "durationMinutes": "Czas wykonania (min)",
     "notStarted": "Bez rozpoczęcia",
+    "copy": "Kopiuj",
     "delay": "Opóźnienie względem planu",
     "delayDays": "Opóźnienie (dni)",
     "delayedBy": "{{days}} dni po terminie",
@@ -262,13 +321,14 @@
     }
   },
   "userGroups": {
-    "deleteConfirm": "Usunąć tę grupę użytkowników? Tej operacji nie można cofnąć.",
-    "title": "Grupy użytkowników",
-    "newGroup": "Nowa grupa",
+    "deleteConfirm": "Usunąć ten zespół? Jego członkowie stracą dostęp do projektów, które mieli dzięki niemu. Tej operacji nie można cofnąć.",
+    "title": "Zespoły",
+    "newGroup": "Nowy zespół",
     "name": "Nazwa",
     "description": "Opis",
     "members": "Członkowie",
-    "addMember": "Dodaj członka"
+    "addMember": "Dodaj członka",
+    "editGroup": "Zmień nazwę"
   },
   "passwordPolicy": {
     "minLength": "Co najmniej {{count}} znaków",
@@ -349,5 +409,28 @@
     "confirm": "Potwierdź",
     "yes": "Tak",
     "no": "Nie"
+  },
+  "users": {
+    "searchPlaceholder": "Imię i nazwisko lub pełny login",
+    "searchHint": "Wpisz co najmniej 2 znaki. Po loginie wyszukasz tylko wtedy, gdy podasz go w całości."
+  },
+  "dictation": {
+    "start": "Dyktuj",
+    "stop": "Zatrzymaj dyktowanie",
+    "notAllowed": "Brak dostępu do mikrofonu. Zezwól na niego w ustawieniach przeglądarki.",
+    "failed": "Dyktowanie nie powiodło się. Spróbuj ponownie."
+  },
+  "comments": {
+    "title": "Komentarze",
+    "placeholder": "Napisz komentarz…",
+    "send": "Dodaj komentarz",
+    "sendHint": "Ctrl+Enter wysyła komentarz.",
+    "empty": "Nie ma jeszcze komentarzy.",
+    "edited": "edytowano",
+    "deletedUser": "Usunięty użytkownik",
+    "deleteConfirm": "Usunąć ten komentarz? Tej operacji nie można cofnąć.",
+    "loadError": "Nie udało się wczytać komentarzy.",
+    "saveError": "Nie udało się zapisać komentarza.",
+    "deleteError": "Nie udało się usunąć komentarza."
   }
 }

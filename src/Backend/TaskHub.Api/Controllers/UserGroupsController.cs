@@ -33,6 +33,13 @@ public class UserGroupsController : ApiControllerBase
         return Ok(group);
     }
 
+    [HttpPut("{groupId:guid}")]
+    public async Task<ActionResult<UserGroupDto>> Update(Guid groupId, UpdateUserGroupRequest request, CancellationToken cancellationToken)
+    {
+        var group = await _userGroupService.UpdateAsync(groupId, request, cancellationToken);
+        return Ok(group);
+    }
+
     [HttpDelete("{groupId:guid}")]
     public async Task<IActionResult> Delete(Guid groupId, CancellationToken cancellationToken)
     {

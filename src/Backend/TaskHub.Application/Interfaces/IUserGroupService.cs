@@ -8,6 +8,8 @@ public interface IUserGroupService
 
     Task<UserGroupDto> CreateAsync(CreateUserGroupRequest request, CancellationToken cancellationToken = default);
 
+    Task<UserGroupDto> UpdateAsync(Guid groupId, UpdateUserGroupRequest request, CancellationToken cancellationToken = default);
+
     Task DeleteAsync(Guid groupId, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyCollection<UserGroupMemberDto>> GetMembersAsync(Guid groupId, CancellationToken cancellationToken = default);

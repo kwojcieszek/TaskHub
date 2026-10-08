@@ -10,7 +10,7 @@ public class UserGroupMember
 
     public Guid UserId { get; set; }
 
-    public ApplicationUser? User { get; set; }
+    public User? User { get; set; }
 
     public DateTime JoinedAt { get; set; } = DateTime.UtcNow;
 }

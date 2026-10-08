@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text;
 using Asp.Versioning;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -10,6 +11,7 @@ using TaskHub.Api.Authentication;
 using TaskHub.Api.Middleware;
 using TaskHub.Api.RateLimiting;
 using TaskHub.Application;
+using TaskHub.Application.Common;
 using TaskHub.Application.Options;
 using TaskHub.Infrastructure;
 using TaskHub.Infrastructure.Seed;
@@ -70,11 +72,15 @@ builder.Services
 var jwtOptions = builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>() ?? new JwtOptions();
 
 builder.Services
-    .AddAuthentication(options =>
+    .AddAuthentication(ApiTokenAuthenticationDefaults.SelectorScheme)
+    // A request is signed in either with the session token issued at login or with an API token of the user.
+    .AddPolicyScheme(ApiTokenAuthenticationDefaults.SelectorScheme, displayName: null, options =>
     {
-        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.ForwardDefaultSelector = context => ApiTokenAuthenticationHandler.CarriesApiToken(context.Request)
+            ? ApiTokenAuthenticationDefaults.AuthenticationScheme
+            : JwtBearerDefaults.AuthenticationScheme;
     })
+    .AddScheme<AuthenticationSchemeOptions, ApiTokenAuthenticationHandler>(ApiTokenAuthenticationDefaults.AuthenticationScheme, configureOptions: null)
     .AddJwtBearer(options =>
     {
         options.TokenValidationParameters = new TokenValidationParameters
@@ -94,7 +100,12 @@ builder.Services
 
 builder.Services.AddScoped<SessionJwtBearerEvents>();
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy(AuthorizationPolicies.InteractiveSession, policy => policy
+        .RequireAuthenticatedUser()
+        .RequireAssertion(context => !context.User.HasClaim(claim => claim.Type == AppClaimTypes.ApiTokenId)));
+});
 
 builder.Services.AddApiRateLimiting(builder.Configuration);
 
@@ -127,7 +138,7 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
 
     foreach (var network in reverseProxyOptions.KnownNetworks)
     {
-        options.KnownNetworks.Add(Microsoft.AspNetCore.HttpOverrides.IPNetwork.Parse(network));
+        options.KnownIPNetworks.Add(System.Net.IPNetwork.Parse(network));
     }
 });
 

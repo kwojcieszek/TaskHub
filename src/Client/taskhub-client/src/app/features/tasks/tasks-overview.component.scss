@@ -19,9 +19,92 @@
   border: none;
   background: transparent;
   color: inherit;
-  font-weight: 600;
+  font-weight: 500;
   cursor: pointer;
   text-decoration: underline;
+}
+
+.task-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.view-switch {
+  display: inline-flex;
+  padding: 0.2rem;
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-control-radius);
+  background: var(--app-surface);
+}
+
+.view-switch__button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.75rem;
+  border: 0;
+  border-radius: var(--app-control-radius-inner);
+  background: transparent;
+  color: var(--p-text-muted-color);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--p-text-color);
+  }
+}
+
+.view-switch__button--active,
+.view-switch__button--active:hover {
+  background: var(--p-primary-color);
+  color: var(--p-primary-contrast-color);
+}
+
+.board-statuses {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.board-statuses__button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.7rem;
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-control-radius);
+  background: transparent;
+  color: var(--p-text-muted-color);
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+
+  i {
+    font-size: 0.7rem;
+  }
+
+  &:hover {
+    color: var(--p-text-color);
+    background: var(--app-hover);
+  }
+}
+
+// A chosen status takes the colour the status has everywhere else.
+.board-statuses__button--active,
+.board-statuses__button--active:hover {
+  border-color: var(--tone-solid);
+  background: var(--tone-bg);
+  color: var(--tone-fg);
+}
+
+.board-hint {
+  margin: 0 0 1rem;
+  font-size: 0.85rem;
+  color: var(--p-text-muted-color);
 }
 
 .task-summary {
@@ -42,7 +125,7 @@
   align-items: center;
   gap: 0.6rem;
   font-size: 1.05rem;
-  font-weight: 700;
+  font-weight: 500;
   margin: 0 0 0.75rem;
 }
 
@@ -60,10 +143,10 @@
 
 .task-section__count {
   font-size: 0.78rem;
-  font-weight: 700;
+  font-weight: 500;
   color: var(--tone-fg);
   background: var(--tone-bg);
-  border-radius: 20px;
+  border-radius: var(--app-label-radius);
   padding: 0.1rem 0.6rem;
 }
 

@@ -2,7 +2,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { CreateTaskItemRequest, TaskItem, UpdateTaskItemRequest } from '../models/task.model';
+import { CreateTaskItemRequest, TaskItem, UpdateTaskItemRequest, TaskItemStatus } from '../models/task.model';
 
 @Injectable({ providedIn: 'root' })
 export class TaskItemService {
@@ -45,6 +45,28 @@ export class TaskItemService {
 
   complete(projectId: string, taskId: string): Observable<TaskItem> {
     return this.http.post<TaskItem>(`${this.tasksUrl(projectId)}/${taskId}/complete`, {});
+  }
+
+  // Moves a task to another status the way the task buttons do: starting and completing have their own
+  // operations, which also record when they happened; any other change is an ordinary update.
+  setStatus(task: TaskItem, status: TaskItemStatus): Observable<TaskItem> {
+    if (status === 'InProgress' && task.status === 'ToDo') {
+      return this.start(task.projectId, task.id);
+    }
+
+    if (status === 'Done') {
+      return this.complete(task.projectId, task.id);
+    }
+
+    return this.update(task.projectId, task.id, {
+      parentTaskId: task.parentTaskId,
+      title: task.title,
+      description: task.description,
+      dueDate: task.dueDate,
+      status,
+      priority: task.priority,
+      assignedUserId: task.assignedUserId
+    });
   }
 
   // Undoes a completion: back to "in progress" when the task had been started, otherwise to "to do".

@@ -11,6 +11,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { TwoFactorSetupResponse } from '../../../core/models/auth.model';
 import { GoogleIdentityService } from '../../../core/services/google-identity.service';
 import { GoogleButtonComponent } from '../../../shared/google-button/google-button.component';
+import { ApiTokensComponent } from './api-tokens/api-tokens.component';
 import { ChangePasswordComponent } from './change-password/change-password.component';
 import { LoginHistoryComponent } from './login-history/login-history.component';
 
@@ -29,6 +30,7 @@ const CONFLICT = 409;
     TranslateModule,
     ChangePasswordComponent,
     LoginHistoryComponent,
+    ApiTokensComponent,
     GoogleButtonComponent
   ],
   templateUrl: './profile.component.html',

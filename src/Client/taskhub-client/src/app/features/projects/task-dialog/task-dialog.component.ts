@@ -10,6 +10,8 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { TaskItem, TaskItemPriority, TaskItemStatus } from '../../../core/models/task.model';
 import { ProjectMember } from '../../../core/models/project.model';
 import { TaskAttachmentsComponent } from '../task-attachments/task-attachments.component';
+import { CommentsComponent } from '../../../shared/comments/comments.component';
+import { DictationDirective } from '../../../shared/dictation/dictation.directive';
 
 export interface TaskDialogData {
   task?: TaskItem;
@@ -21,8 +23,9 @@ export interface TaskDialogData {
 @Component({
   selector: 'app-task-dialog',
   standalone: true,
-  imports: [ReactiveFormsModule, InputText, Textarea, Select, DatePicker, Button, TranslateModule, TaskAttachmentsComponent],
-  templateUrl: './task-dialog.component.html'
+  imports: [ReactiveFormsModule, DictationDirective, InputText, Textarea, Select, DatePicker, Button, TranslateModule, TaskAttachmentsComponent, CommentsComponent],
+  templateUrl: './task-dialog.component.html',
+  styleUrl: './task-dialog.component.scss'
 })
 export class TaskDialogComponent {
   private readonly fb = inject(FormBuilder);

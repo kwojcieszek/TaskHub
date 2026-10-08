@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using TaskHub.Application;
 using TaskHub.Application.Common;
 using TaskHub.Application.Dtos.Projects;
+using TaskHub.Application.Dtos.UserGroups;
 using TaskHub.Application.Interfaces;
 using TaskHub.Application.Options;
 using TaskHub.Application.Services;
@@ -43,7 +44,7 @@ public sealed class TestHost : IDisposable
         services.AddDbContext<ApplicationDbContext>(options => options.UseSqlite(_connection));
         services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
 
-        services.AddIdentityCore<ApplicationUser>(options =>
+        services.AddIdentityCore<User>(options =>
             {
                 options.Password.RequiredLength = 1;
                 options.Password.RequiredUniqueChars = 1;
@@ -54,7 +55,7 @@ public sealed class TestHost : IDisposable
                 options.User.RequireUniqueEmail = true;
                 options.Tokens.AuthenticatorTokenProvider = TokenOptions.DefaultAuthenticatorProvider;
             })
-            .AddRoles<ApplicationRole>()
+            .AddRoles<Role>()
             .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddPasswordValidator<ConfigurablePasswordValidator>()
             .AddDefaultTokenProviders();
@@ -85,9 +86,9 @@ public sealed class TestHost : IDisposable
 
         Db.Database.EnsureCreated();
 
-        var roleManager = Get<RoleManager<ApplicationRole>>();
-        roleManager.CreateAsync(new ApplicationRole(Roles.Admin)).GetAwaiter().GetResult();
-        roleManager.CreateAsync(new ApplicationRole(Roles.User)).GetAwaiter().GetResult();
+        var roleManager = Get<RoleManager<Role>>();
+        roleManager.CreateAsync(new Role(Roles.Admin)).GetAwaiter().GetResult();
+        roleManager.CreateAsync(new Role(Roles.User)).GetAwaiter().GetResult();
     }
 
     public ApplicationDbContext Db => Get<ApplicationDbContext>();
@@ -96,16 +97,16 @@ public sealed class TestHost : IDisposable
 
     public InMemoryAttachmentStorage Storage => Get<InMemoryAttachmentStorage>();
 
-    public UserManager<ApplicationUser> Users => Get<UserManager<ApplicationUser>>();
+    public UserManager<User> Users => Get<UserManager<User>>();
 
     public T Get<T>() where T : notnull
     {
         return _scope.ServiceProvider.GetRequiredService<T>();
     }
 
-    public async Task<ApplicationUser> CreateUserAsync(string userName, params string[] roles)
+    public async Task<User> CreateUserAsync(string userName, params string[] roles)
     {
-        var user = new ApplicationUser
+        var user = new User
         {
             Id = Guid.NewGuid(),
             UserName = userName,
@@ -125,13 +126,13 @@ public sealed class TestHost : IDisposable
     }
 
     /// <summary>Makes the given user the caller of every following service call.</summary>
-    public void SignIn(ApplicationUser user, params string[] roles)
+    public void SignIn(User user, params string[] roles)
     {
         CurrentUser.SignIn(user.Id, roles);
     }
 
     /// <summary>Creates a project owned by the given user and leaves that user signed in.</summary>
-    public async Task<ProjectDto> CreateProjectAsync(ApplicationUser owner, string name = "Project")
+    public async Task<ProjectDto> CreateProjectAsync(User owner, string name = "Project")
     {
         SignIn(owner);
 
@@ -139,11 +140,33 @@ public sealed class TestHost : IDisposable
     }
 
     /// <summary>Adds a member to a project on behalf of its owner, then signs the owner back in.</summary>
-    public async Task AddMemberAsync(ProjectDto project, ApplicationUser owner, ApplicationUser member, ProjectMemberRole role)
+    public async Task AddMemberAsync(ProjectDto project, User owner, User member, ProjectMemberRole role)
     {
         SignIn(owner);
 
         await Get<IProjectService>().AddMemberAsync(project.Id, new AddProjectMemberRequest { UserId = member.Id, Role = role });
+    }
+
+    /// <summary>Creates a team (a user group) with the given members, the way an administrator does.</summary>
+    public async Task<UserGroupDto> CreateTeamAsync(string name, params User[] members)
+    {
+        var groups = Get<IUserGroupService>();
+        var team = await groups.CreateAsync(new CreateUserGroupRequest { Name = name });
+
+        foreach (var member in members)
+        {
+            await groups.AddMemberAsync(team.Id, new AddUserGroupMemberRequest { UserId = member.Id });
+        }
+
+        return team;
+    }
+
+    /// <summary>Gives a team access to a project on behalf of its owner, who stays signed in.</summary>
+    public async Task AddTeamAsync(ProjectDto project, User owner, UserGroupDto team, ProjectMemberRole role)
+    {
+        SignIn(owner);
+
+        await Get<IProjectTeamService>().AddAsync(project.Id, new AddProjectTeamRequest { UserGroupId = team.Id, Role = role });
     }
 
     public void Dispose()

@@ -1,0 +1,48 @@
+.task-dialog__main,
+.task-dialog__side {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+}
+
+// The short fields sit side by side, so the form is not a long column.
+.task-dialog__meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+// An existing task has attachments and comments; they get a column of their own next to the fields.
+.task-dialog--wide {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: start;
+  gap: 1rem 1.75rem;
+}
+
+.task-dialog--wide .task-dialog__side {
+  padding-left: 1.75rem;
+  border-left: 1px solid var(--app-border);
+}
+
+.task-dialog--wide .task-dialog__actions {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 860px) {
+  .task-dialog--wide {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .task-dialog--wide .task-dialog__side {
+    padding-left: 0;
+    border-left: 0;
+  }
+}
+
+@media (max-width: 520px) {
+  .task-dialog__meta {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

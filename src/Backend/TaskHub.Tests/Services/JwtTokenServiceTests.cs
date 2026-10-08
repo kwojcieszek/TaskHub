@@ -81,9 +81,9 @@ public class JwtTokenServiceTests
         Assert.Null(_tokens.ValidateTwoFactorToken(token));
     }
 
-    private static ApplicationUser NewUser()
+    private static User NewUser()
     {
-        return new ApplicationUser
+        return new User
         {
             Id = Guid.NewGuid(),
             UserName = "anna",

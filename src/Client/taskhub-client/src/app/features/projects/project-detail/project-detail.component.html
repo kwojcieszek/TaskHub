@@ -11,7 +11,7 @@
           <span class="chip tone-slate"><i class="pi pi-ban"></i>{{ 'projects.inactive' | translate }}</span>
         }
         @if (project.projectGroupName) {
-          <span class="chip tone-amber"><i class="pi pi-folder"></i>{{ project.projectGroupName }}</span>
+          <span class="chip tone-green"><i class="pi pi-folder"></i>{{ project.projectGroupName }}</span>
         }
         <span class="project-header__owner"><i class="pi pi-user"></i>{{ project.ownerDisplayName }}</span>
         @if (gitLink(); as git) {
@@ -57,6 +57,15 @@
     >
       <i class="pi pi-users"></i>{{ 'projects.members' | translate }} · {{ members().length }}
     </button>
+    <button
+      type="button"
+      class="members-toggle"
+      [class.members-toggle--active]="view() === 'comments'"
+      [attr.aria-pressed]="view() === 'comments'"
+      (click)="toggleComments()"
+    >
+      <i class="pi pi-comments"></i>{{ 'comments.title' | translate }}@if (commentCount() !== null) { · {{ commentCount() }} }
+    </button>
   </div>
 
   @if (view() === 'tasks' && tasks().length > 0) {
@@ -101,6 +110,10 @@
         }
       }
     </div>
+  } @else if (view() === 'comments') {
+    <div class="comments-panel">
+      <app-comments [projectId]="projectId" (countChange)="commentCount.set($event)" />
+    </div>
   } @else {
     <div class="members-panel">
       @if (canManage()) {
@@ -115,13 +128,43 @@
               {{ member.displayName }}
               <span class="member-row__login">{{ member.userName }}</span>
             </span>
+            @for (team of member.teams; track team) {
+              <span class="chip tone-slate"><i class="pi pi-users"></i>{{ team }}</span>
+            }
             <span class="chip" [attr.data-role]="member.role">{{ member.role }}</span>
-            @if (canManage() && member.role !== 'Owner') {
+            @if (canManage() && member.direct && member.role !== 'Owner') {
               <button type="button" class="icon-btn icon-btn--danger" (click)="removeMember(member)">
                 <i class="pi pi-times"></i>
               </button>
             }
           </div>
+        }
+      </div>
+
+      <h3 class="members-panel__title"><i class="pi pi-users"></i>{{ 'projects.teams.title' | translate }}</h3>
+      <p class="members-panel__hint">{{ 'projects.teams.hint' | translate }}</p>
+
+      @if (canManage()) {
+        <p-button [label]="'projects.teams.add' | translate" icon="pi pi-plus" size="small" [outlined]="true" (onClick)="addTeam()" />
+      }
+
+      <div class="members-list">
+        @for (team of teams(); track team.userGroupId) {
+          <div class="member-row">
+            <span class="member-row__avatar member-row__avatar--team"><i class="pi pi-users"></i></span>
+            <span class="member-row__name">
+              {{ team.name }}
+              <span class="member-row__login">{{ 'projects.teams.memberCount' | translate: { count: team.memberCount } }}</span>
+            </span>
+            <span class="chip" [attr.data-role]="team.role">{{ team.role }}</span>
+            @if (canManage()) {
+              <button type="button" class="icon-btn icon-btn--danger" (click)="removeTeam(team)">
+                <i class="pi pi-times"></i>
+              </button>
+            }
+          </div>
+        } @empty {
+          <p class="members-panel__hint">{{ 'projects.teams.empty' | translate }}</p>
         }
       </div>
     </div>

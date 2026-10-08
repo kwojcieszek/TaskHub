@@ -43,6 +43,7 @@ public class AnonymousAccessTests : IClassFixture<TaskHubApiFactory>
 
         { "GET", "/api/v1/user-groups" },
         { "POST", "/api/v1/user-groups" },
+        { "PUT", $"/api/v1/user-groups/{Id}" },
         { "DELETE", $"/api/v1/user-groups/{Id}" },
         { "GET", $"/api/v1/user-groups/{Id}/members" },
         { "POST", $"/api/v1/user-groups/{Id}/members" },
@@ -90,7 +91,23 @@ public class AnonymousAccessTests : IClassFixture<TaskHubApiFactory>
         { "DELETE", $"/api/v1/projects/{Id}/tasks/{OtherId}/attachments/{Id}" },
         { "GET", "/api/v1/attachments/limits" },
         { "GET", $"/api/v1/attachments/{Sha256}?taskId={Id}" },
-        { "GET", $"/api/v1/attachments/{Sha256}/content?taskId={Id}" }
+        { "GET", $"/api/v1/attachments/{Sha256}/content?taskId={Id}" },
+
+        { "GET", "/api/v1/tokens" },
+        { "POST", "/api/v1/tokens" },
+        { "DELETE", $"/api/v1/tokens/{Id}" },
+
+        { "GET", $"/api/v1/projects/{Id}/teams" },
+        { "GET", $"/api/v1/projects/{Id}/teams/available" },
+        { "POST", $"/api/v1/projects/{Id}/teams" },
+        { "DELETE", $"/api/v1/projects/{Id}/teams/{OtherId}" },
+
+        { "GET", $"/api/v1/projects/{Id}/comments" },
+        { "POST", $"/api/v1/projects/{Id}/comments" },
+        { "GET", $"/api/v1/projects/{Id}/tasks/{OtherId}/comments" },
+        { "POST", $"/api/v1/projects/{Id}/tasks/{OtherId}/comments" },
+        { "PUT", $"/api/v1/projects/{Id}/comments/{OtherId}" },
+        { "DELETE", $"/api/v1/projects/{Id}/comments/{OtherId}" }
     };
 
     [Theory]

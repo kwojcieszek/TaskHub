@@ -44,6 +44,28 @@ public class UserGroupService : IUserGroupService
         return _mapper.Map<UserGroupDto>(group);
     }
 
+    public async Task<UserGroupDto> UpdateAsync(Guid groupId, UpdateUserGroupRequest request, CancellationToken cancellationToken = default)
+    {
+        var name = (request.Name ?? string.Empty).Trim();
+
+        if (name.Length == 0)
+        {
+            throw new ValidationFailedException(new[] { "The group name is required." });
+        }
+
+        var group = await _dbContext.UserGroups
+            .Include(g => g.Members)
+            .FirstOrDefaultAsync(g => g.Id == groupId, cancellationToken)
+            ?? throw new NotFoundException("User group not found.");
+
+        group.Name = name;
+        group.Description = string.IsNullOrWhiteSpace(request.Description) ? null : request.Description.Trim();
+
+        await _dbContext.SaveChangesAsync(cancellationToken);
+
+        return _mapper.Map<UserGroupDto>(group);
+    }
+
     public async Task DeleteAsync(Guid groupId, CancellationToken cancellationToken = default)
     {
         var group = await _dbContext.UserGroups.FirstOrDefaultAsync(g => g.Id == groupId, cancellationToken)

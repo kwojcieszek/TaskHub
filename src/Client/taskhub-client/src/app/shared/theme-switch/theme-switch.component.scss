@@ -5,7 +5,7 @@
 .theme-switch {
   display: inline-flex;
   padding: 3px;
-  border-radius: 999px;
+  border-radius: var(--app-control-radius);
   background: var(--app-hover);
 }
 
@@ -16,7 +16,7 @@
   align-items: center;
   justify-content: center;
   border: none;
-  border-radius: 999px;
+  border-radius: var(--app-control-radius-inner);
   background: transparent;
   color: var(--p-text-muted-color);
   cursor: pointer;

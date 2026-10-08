@@ -77,7 +77,7 @@ export class DashboardComponent implements OnInit {
       {
         key: 'today',
         icon: 'pi pi-sun',
-        tone: 'amber',
+        tone: 'green',
         tasks: open
           .filter((task) => this.dueDay(task) === today)
           .sort((a, b) => PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority] || a.title.localeCompare(b.title))

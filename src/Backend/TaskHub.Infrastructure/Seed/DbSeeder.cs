@@ -11,17 +11,20 @@ namespace TaskHub.Infrastructure.Seed;
 public class DbSeeder
 {
     private readonly ApplicationDbContext _dbContext;
-    private readonly UserManager<ApplicationUser> _userManager;
-    private readonly RoleManager<ApplicationRole> _roleManager;
+    private readonly DatabaseSchemaUpdater _schemaUpdater;
+    private readonly UserManager<User> _userManager;
+    private readonly RoleManager<Role> _roleManager;
     private readonly DefaultAdminOptions _defaultAdmin;
 
     public DbSeeder(
         ApplicationDbContext dbContext,
-        UserManager<ApplicationUser> userManager,
-        RoleManager<ApplicationRole> roleManager,
+        DatabaseSchemaUpdater schemaUpdater,
+        UserManager<User> userManager,
+        RoleManager<Role> roleManager,
         IOptions<DefaultAdminOptions> defaultAdmin)
     {
         _dbContext = dbContext;
+        _schemaUpdater = schemaUpdater;
         _userManager = userManager;
         _roleManager = roleManager;
         _defaultAdmin = defaultAdmin.Value;
@@ -29,14 +32,20 @@ public class DbSeeder
 
     public async Task SeedAsync()
     {
-        await _dbContext.Database.EnsureCreatedAsync();
+        var created = await _dbContext.Database.EnsureCreatedAsync();
+
+        // A database that was already there may come from an earlier version of the application.
+        if (!created)
+        {
+            await _schemaUpdater.UpdateAsync();
+        }
 
         await EnsureRoleAsync(Roles.Admin);
         await EnsureRoleAsync(Roles.User);
 
         if (!_userManager.Users.AsNoTracking().Any())
         {
-            var admin = new ApplicationUser
+            var admin = new User
             {
                 Id = Guid.NewGuid(),
                 UserName = _defaultAdmin.UserName,
@@ -82,7 +91,7 @@ public class DbSeeder
     {
         if (!await _roleManager.RoleExistsAsync(roleName))
         {
-            await _roleManager.CreateAsync(new ApplicationRole(roleName));
+            await _roleManager.CreateAsync(new Role(roleName));
         }
     }
 }
