@@ -62,6 +62,13 @@
   font-variant-numeric: tabular-nums;
 }
 
+// Date above the time, so the two timestamps do not take the width away from the task and the project.
+.report-datetime {
+  display: inline-flex;
+  flex-direction: column;
+  font-variant-numeric: tabular-nums;
+}
+
 .nowrap {
   white-space: nowrap;
 }
@@ -90,6 +97,35 @@
   min-width: 760px;
   display: block;
   overflow-x: auto;
+}
+
+// The short columns take only what their content needs, so the spare width goes to the task and the project.
+::ng-deep .report-table--tasks {
+  th:nth-child(n + 3),
+  td:nth-child(n + 3) {
+    width: 1%;
+  }
+
+  // Long headings may wrap; the values stay on one line and set the column width.
+  td:nth-child(n + 3) {
+    white-space: nowrap;
+  }
+
+  // The person is the least important text here: smaller and free to wrap, so the column stays narrow.
+  td:nth-child(3) {
+    white-space: normal;
+    font-size: 0.85rem;
+  }
+
+  // The task takes everything the other columns leave.
+  th:first-child {
+    width: 100%;
+    min-width: 16rem;
+  }
+
+  th:nth-child(2) {
+    min-width: 11rem;
+  }
 }
 
 .report-summary {

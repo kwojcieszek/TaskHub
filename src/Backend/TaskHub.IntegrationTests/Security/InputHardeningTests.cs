@@ -29,7 +29,7 @@ public class InputHardeningTests : IClassFixture<TaskHubApiFactory>
         "javascript:alert(1)",
         "'; DROP TABLE Projects;--",
         "' OR '1'='1",
-        "1; DELETE FROM AspNetUsers",
+        "1; DELETE FROM Users",
         "Robert'); DROP TABLE Tasks;--",
         "{{7*7}}",
         "${7*7}",

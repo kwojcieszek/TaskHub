@@ -1,6 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <PackageReference Include="FluentMigrator.Runner.SQLite" Version="8.0.1" />
+    <PackageReference Include="FluentMigrator.Runner.SqlServer" Version="8.0.1" />
+    <PackageReference Include="FluentMigrator.Runner.Postgres" Version="8.0.1" />
+    <PackageReference Include="FluentMigrator.Runner.MySql" Version="8.0.1" />
+    <PackageReference Include="MailKit" Version="4.18.2" />
     <ProjectReference Include="..\TaskHub.Domain\TaskHub.Domain.csproj" />
     <ProjectReference Include="..\TaskHub.Application\TaskHub.Application.csproj" />
   </ItemGroup>

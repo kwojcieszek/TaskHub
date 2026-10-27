@@ -81,6 +81,22 @@ public class AuthController : ApiControllerBase
         return Ok(response);
     }
 
+    [EnableRateLimiting(RateLimitPolicies.Auth)]
+    [HttpPost("password/forgot")]
+    public async Task<IActionResult> ForgotPassword(ForgotPasswordRequest request, CancellationToken cancellationToken)
+    {
+        await _authService.RequestPasswordResetAsync(request, cancellationToken);
+        return NoContent();
+    }
+
+    [EnableRateLimiting(RateLimitPolicies.Auth)]
+    [HttpPost("password/reset")]
+    public async Task<IActionResult> ResetPassword(ResetPasswordRequest request, CancellationToken cancellationToken)
+    {
+        await _authService.ResetPasswordAsync(request, cancellationToken);
+        return NoContent();
+    }
+
     [Authorize]
     [HttpGet("me")]
     public async Task<ActionResult<UserDto>> Me(CancellationToken cancellationToken)

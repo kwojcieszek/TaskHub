@@ -34,5 +34,7 @@ public class TaskItemDto
 
     public int AttachmentCount { get; set; }
 
+    public TaskRecurrenceDto? Recurrence { get; set; }
+
     public IReadOnlyCollection<TaskItemDto> SubTasks { get; set; } = new List<TaskItemDto>();
 }

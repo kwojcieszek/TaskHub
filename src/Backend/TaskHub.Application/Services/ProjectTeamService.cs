@@ -39,7 +39,7 @@ public class ProjectTeamService : IProjectTeamService
 
     public async Task<IReadOnlyCollection<ProjectTeamDto>> GetAvailableAsync(Guid projectId, CancellationToken cancellationToken = default)
     {
-        // Teams are managed by administrators; only someone who may share the project gets to see which exist.
+        // Only someone who may share the project gets to see which teams can be added.
         await _accessGuard.EnsureCanManageAsync(projectId, cancellationToken);
 
         return await _dbContext.UserGroups
@@ -107,5 +107,6 @@ public class ProjectTeamService : IProjectTeamService
 
         _dbContext.ProjectTeams.Remove(team);
         await _dbContext.SaveChangesAsync(cancellationToken);
+        await AssignmentCleanup.ClearInaccessibleAsync(_dbContext, new[] { projectId }, cancellationToken);
     }
 }

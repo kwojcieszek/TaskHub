@@ -14,9 +14,11 @@ using TaskHub.Application;
 using TaskHub.Application.Common;
 using TaskHub.Application.Options;
 using TaskHub.Infrastructure;
+using TaskHub.Infrastructure.Persistence.Migrations;
 using TaskHub.Infrastructure.Seed;
 
 var builder = WebApplication.CreateBuilder(args);
+TaskHub.Api.StartupSecurity.Validate(builder.Configuration, builder.Environment);
 
 builder.Services.AddControllers()
     .ConfigureApiBehaviorOptions(options =>
@@ -152,8 +154,14 @@ if (reverseProxyOptions.Enabled)
 
 using (var scope = app.Services.CreateScope())
 {
+    // Complete schema upgrades before seeding accounts or accepting HTTP requests,
+    // and stop if the model has changed without a migration for it.
+    scope.ServiceProvider.GetRequiredService<DatabaseMigrator>().Migrate();
+    await scope.ServiceProvider.GetRequiredService<DatabaseSchemaVerifier>().VerifyAsync();
     var seeder = scope.ServiceProvider.GetRequiredService<DbSeeder>();
     await seeder.SeedAsync();
+    if (app.Environment.IsProduction())
+        await TaskHub.Api.StartupSecurity.ValidateAccountsAsync(scope.ServiceProvider.GetRequiredService<Microsoft.AspNetCore.Identity.UserManager<TaskHub.Domain.Entities.User>>());
 }
 
 // Registered first so it sees the final status code, including the ones set by the exception handler.

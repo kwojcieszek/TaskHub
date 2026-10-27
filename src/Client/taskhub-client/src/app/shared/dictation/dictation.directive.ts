@@ -3,8 +3,6 @@ import { TranslateService } from '@ngx-translate/core';
 import { Subscription } from 'rxjs';
 import { DictationService } from '../../core/services/dictation.service';
 
-const ERROR_MARK_MS = 4000;
-
 /**
  * Adds a microphone button to a text field. While it is on, what the user says is appended to the field
  * as if it had been typed, so forms and validation notice it the usual way.
@@ -21,10 +19,14 @@ export class DictationDirective implements OnInit, OnDestroy {
 
   private wrapper: HTMLElement | null = null;
   private button: HTMLButtonElement | null = null;
+  private status: HTMLElement | null = null;
   private stopListening: (() => void) | null = null;
   private removeClickListener: (() => void) | null = null;
   private languageChange: Subscription | null = null;
   private errorKey: string | null = null;
+  private statusKey: string | null = null;
+  private interim = '';
+  private destroyed = false;
 
   ngOnInit(): void {
     if (!this.dictation.supported) {
@@ -35,6 +37,7 @@ export class DictationDirective implements OnInit, OnDestroy {
     const wrapper: HTMLElement = this.renderer.createElement('span');
     const button: HTMLButtonElement = this.renderer.createElement('button');
     const icon: HTMLElement = this.renderer.createElement('i');
+    const status: HTMLElement = this.renderer.createElement('span');
 
     this.renderer.addClass(wrapper, 'dictation');
     this.renderer.insertBefore(parent, wrapper, this.field);
@@ -47,16 +50,22 @@ export class DictationDirective implements OnInit, OnDestroy {
     this.renderer.addClass(icon, 'pi-microphone');
     this.renderer.appendChild(button, icon);
     this.renderer.appendChild(wrapper, button);
+    this.renderer.addClass(status, 'dictation__status');
+    this.renderer.setAttribute(status, 'role', 'status');
+    this.renderer.setAttribute(status, 'aria-live', 'polite');
+    this.renderer.appendChild(wrapper, status);
 
     this.removeClickListener = this.renderer.listen(button, 'click', () => this.toggle());
     this.languageChange = this.translate.onLangChange.subscribe(() => this.updateLabel());
 
     this.wrapper = wrapper;
     this.button = button;
+    this.status = status;
     this.updateLabel();
   }
 
   ngOnDestroy(): void {
+    this.destroyed = true;
     this.stopListening?.();
     this.removeClickListener?.();
     this.languageChange?.unsubscribe();
@@ -77,14 +86,28 @@ export class DictationDirective implements OnInit, OnDestroy {
     }
 
     this.errorKey = null;
+    this.interim = '';
+    this.statusKey = 'dictation.starting';
+    if (this.button) this.renderer.removeClass(this.button, 'dictation__button--error');
+    this.updateLabel();
 
     let ended = false;
 
     const stop = this.dictation.start({
       onText: (text) => this.append(text),
+      onListening: () => {
+        this.statusKey = 'dictation.listening';
+        this.updateLabel();
+      },
+      onInterim: (text) => {
+        this.interim = text;
+        this.updateLabel();
+      },
       onEnd: () => {
         ended = true;
         this.stopListening = null;
+        this.statusKey = null;
+        this.interim = '';
         this.setActive(false);
       },
       onError: (code) => this.showError(code)
@@ -98,14 +121,14 @@ export class DictationDirective implements OnInit, OnDestroy {
   }
 
   private append(text: string): void {
-    if (!text) {
+    if (!text || this.destroyed || this.field.disabled || this.field.readOnly) {
       return;
     }
 
     const current = this.field.value.trimEnd();
     let value = current ? `${current} ${text}` : text;
 
-    if (this.field.maxLength > 0) {
+    if (this.field.maxLength >= 0) {
       value = value.slice(0, this.field.maxLength);
     }
 
@@ -115,30 +138,30 @@ export class DictationDirective implements OnInit, OnDestroy {
   }
 
   private showError(code: string): void {
-    // "no-speech" and "aborted" only mean that nothing was said or that listening was stopped.
-    if (code === 'no-speech' || code === 'aborted') {
+    if (code === 'aborted' || this.destroyed) {
       return;
     }
 
-    this.errorKey = code === 'not-allowed' || code === 'service-not-allowed' ? 'dictation.notAllowed' : 'dictation.failed';
+    const keys: Record<string, string> = {
+      'not-allowed': 'dictation.notAllowed',
+      'service-not-allowed': 'dictation.serviceNotAllowed',
+      'no-speech': 'dictation.noSpeech',
+      'audio-capture': 'dictation.audioCapture',
+      'network': 'dictation.network',
+      'language-not-supported': 'dictation.languageNotSupported'
+    };
+    this.errorKey = keys[code] ?? 'dictation.failed';
+    this.interim = '';
     this.updateLabel();
 
     if (this.button) {
       this.renderer.addClass(this.button, 'dictation__button--error');
     }
 
-    setTimeout(() => {
-      this.errorKey = null;
-      this.updateLabel();
-
-      if (this.button) {
-        this.renderer.removeClass(this.button, 'dictation__button--error');
-      }
-    }, ERROR_MARK_MS);
   }
 
   private setActive(active: boolean): void {
-    if (!this.button) {
+    if (!this.button || this.destroyed) {
       return;
     }
 
@@ -153,7 +176,7 @@ export class DictationDirective implements OnInit, OnDestroy {
   }
 
   private updateLabel(): void {
-    if (!this.button) {
+    if (!this.button || this.destroyed) {
       return;
     }
 
@@ -162,5 +185,16 @@ export class DictationDirective implements OnInit, OnDestroy {
 
     this.renderer.setAttribute(this.button, 'title', label);
     this.renderer.setAttribute(this.button, 'aria-label', label);
+    if (this.status) {
+      const statusKey = this.errorKey ?? this.statusKey;
+      const message = this.interim || (statusKey ? this.translate.instant(statusKey) : '');
+      this.renderer.setProperty(this.status, 'textContent', message);
+      this.renderer.setProperty(this.status, 'hidden', !message);
+      if (this.errorKey) {
+        this.renderer.addClass(this.status, 'dictation__status--error');
+      } else {
+        this.renderer.removeClass(this.status, 'dictation__status--error');
+      }
+    }
   }
 }

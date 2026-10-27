@@ -1,3 +1,6 @@
+import { ProjectService } from '../../../core/services/project.service';
+import { of, switchMap } from 'rxjs';
+import { DialogSave } from '../../../shared/dialog-save';
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
@@ -28,6 +31,8 @@ export interface ProjectFormDialogData {
 export class ProjectFormDialogComponent {
   private readonly fb = inject(FormBuilder);
   private readonly dialogRef = inject(DynamicDialogRef);
+  readonly save = new DialogSave(this.dialogRef);
+  private readonly persistence = inject(ProjectService);
   private readonly config = inject(DynamicDialogConfig<ProjectFormDialogData>);
   private readonly translate = inject(TranslateService);
 
@@ -51,7 +56,10 @@ export class ProjectFormDialogComponent {
       return;
     }
     const value = this.form.getRawValue();
-    this.dialogRef.close({ ...value, gitUrl: value.gitUrl.trim() || null });
+    const request = { ...value, gitUrl: value.gitUrl.trim() || null };
+    const project = this.data.project;
+    const operation = project ? this.persistence.update(project.id, request).pipe(switchMap(updated => value.projectGroupId !== project.projectGroupId ? this.persistence.setGroup(project.id, value.projectGroupId) : of(updated))) : this.persistence.create(request);
+    this.save.submit(operation);
   }
 
   get customIcon(): string | null {

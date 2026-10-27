@@ -5,6 +5,7 @@ namespace TaskHub.Application.Interfaces;
 
 public interface IApplicationDbContext
 {
+    DbSet<User> Users { get; }
     DbSet<ProjectGroup> ProjectGroups { get; }
 
     DbSet<Project> Projects { get; }
@@ -30,6 +31,10 @@ public interface IApplicationDbContext
     DbSet<SystemSetting> SystemSettings { get; }
 
     DbSet<ApiToken> ApiTokens { get; }
+
+    DbSet<UserSession> UserSessions { get; }
+    DbSet<TwoFactorChallenge> TwoFactorChallenges { get; }
+    DbSet<TaskChange> TaskChanges { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

@@ -1,4 +1,6 @@
-import { Component, inject } from '@angular/core';
+import { UserGroupService } from '../../core/services/user-group.service';
+import { finalize } from 'rxjs';
+import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { InputText } from 'primeng/inputtext';
@@ -27,11 +29,17 @@ export class UserGroupDialogComponent {
     description: [this.group?.description ?? '', Validators.maxLength(2000)]
   });
 
+  readonly saving = signal(false);
+  private readonly service = inject(UserGroupService);
   submit(): void {
     if (this.form.invalid) {
       return;
     }
-    this.dialogRef.close(this.form.getRawValue());
+    if (this.saving()) return;
+    this.saving.set(true);
+    const request = this.form.getRawValue();
+    const operation = this.group ? this.service.update(this.group.id, request) : this.service.create(request);
+    operation.pipe(finalize(() => this.saving.set(false))).subscribe({next: () => this.dialogRef.close(true), error: () => {}});
   }
 
   cancel(): void {

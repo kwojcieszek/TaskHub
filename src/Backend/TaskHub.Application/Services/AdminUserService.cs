@@ -152,6 +152,13 @@ public class AdminUserService : IAdminUserService
             throw new ConflictException("You cannot delete your own account.");
         }
 
+        if (await _dbContext.Projects.AnyAsync(p => p.OwnerId == userId, cancellationToken) ||
+            await _dbContext.ProjectGroups.AnyAsync(g => g.OwnerId == userId, cancellationToken) ||
+            await _dbContext.UserGroups.AnyAsync(g => g.OwnerId == userId, cancellationToken))
+            throw new ConflictException("Transfer or remove the user's projects and teams before deleting this account.");
+        if (await _dbContext.Attachments.AnyAsync(a => a.UploadedById == userId, cancellationToken))
+            throw new ConflictException("Remove the user's attachments before deleting this account.");
+
         var result = await _userManager.DeleteAsync(user);
 
         if (!result.Succeeded)

@@ -71,7 +71,13 @@ export class ApiTokensComponent implements OnInit {
   }
 
   create(): void {
-    if (this.form.invalid || this.saving()) {
+    if (this.form.invalid) {
+      this.markInvalid();
+
+      return;
+    }
+
+    if (this.saving()) {
       return;
     }
 
@@ -132,6 +138,14 @@ export class ApiTokensComponent implements OnInit {
 
   dismissCreated(): void {
     this.created.set(null);
+  }
+
+  // The button stays enabled, so an incomplete form is pointed out on the fields instead.
+  private markInvalid(): void {
+    Object.values(this.form.controls).forEach((control) => {
+      control.markAsDirty();
+      control.markAsTouched();
+    });
   }
 
   private daysOf(lifetime: Lifetime, customDays: number): number | null {

@@ -1,3 +1,5 @@
+import { ProjectGroupService } from '../../../core/services/project-group.service';
+import { DialogSave } from '../../../shared/dialog-save';
 import { Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
@@ -21,6 +23,8 @@ export interface ProjectGroupDialogData {
 export class ProjectGroupDialogComponent {
   private readonly fb = inject(FormBuilder);
   private readonly dialogRef = inject(DynamicDialogRef);
+  readonly save = new DialogSave(this.dialogRef);
+  private readonly persistence = inject(ProjectGroupService);
   private readonly config = inject(DynamicDialogConfig<ProjectGroupDialogData>);
 
   readonly data: ProjectGroupDialogData = this.config.data ?? {};
@@ -34,7 +38,8 @@ export class ProjectGroupDialogComponent {
     if (this.form.invalid) {
       return;
     }
-    this.dialogRef.close(this.form.getRawValue());
+    const request = this.form.getRawValue();
+    this.save.submit(this.data.group ? this.persistence.update(this.data.group.id, request) : this.persistence.create(request));
   }
 
   cancel(): void {

@@ -32,6 +32,10 @@
         </p-iconfield>
       </div>
 
+      @if (authService.passwordResetEnabled()) {
+        <a class="auth-forgot" routerLink="/forgot-password">{{ 'auth.forgotPassword' | translate }}</a>
+      }
+
       @if (errorMessage()) {
         <p-message severity="error" [text]="errorMessage()! | translate" styleClass="w-full" />
       }

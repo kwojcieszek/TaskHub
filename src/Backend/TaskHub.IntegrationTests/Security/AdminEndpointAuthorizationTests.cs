@@ -14,7 +14,6 @@ namespace TaskHub.IntegrationTests.Security;
 public class AdminEndpointAuthorizationTests : IClassFixture<TaskHubApiFactory>
 {
     private const string Id = "11111111-2222-3333-4444-555555555555";
-    private const string OtherId = "66666666-7777-8888-9999-000000000000";
 
     private readonly TaskHubApiFactory _factory;
 
@@ -34,13 +33,7 @@ public class AdminEndpointAuthorizationTests : IClassFixture<TaskHubApiFactory>
         { "GET", "/api/v1/admin/logs/logins" },
         { "GET", "/api/v1/admin/logs/activity" },
         { "GET", "/api/v1/admin/security" },
-        { "PUT", "/api/v1/admin/security" },
-        { "GET", "/api/v1/user-groups" },
-        { "POST", "/api/v1/user-groups" },
-        { "DELETE", $"/api/v1/user-groups/{Id}" },
-        { "GET", $"/api/v1/user-groups/{Id}/members" },
-        { "POST", $"/api/v1/user-groups/{Id}/members" },
-        { "DELETE", $"/api/v1/user-groups/{Id}/members/{OtherId}" }
+        { "PUT", "/api/v1/admin/security" }
     };
 
     [Theory]
@@ -209,7 +202,7 @@ public class AdminEndpointAuthorizationTests : IClassFixture<TaskHubApiFactory>
     }
 
     [Fact]
-    public async Task User_CannotManageUserGroups()
+    public async Task User_CannotManageAnotherOwnersTeam()
     {
         var user = await _factory.CreateUserAsync();
         var admin = await _factory.AdminAsync();

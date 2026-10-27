@@ -11,16 +11,51 @@
   margin-top: 0.5rem;
 }
 
+// The divider takes the place of the gap between the panels.
 .projects-layout {
   display: flex;
-  align-items: flex-start;
-  gap: 1.25rem;
+  align-items: stretch;
+}
+
+// While dragging, text must not get selected and the cursor stays the resize one over the panels.
+.projects-layout--resizing {
+  cursor: col-resize;
+  user-select: none;
 }
 
 .projects-sidebar {
-  width: 290px;
-  flex: 0 0 290px;
+  width: var(--projects-sidebar-width, 360px);
+  flex: 0 0 var(--projects-sidebar-width, 360px);
+  align-self: flex-start;
   padding: 0.6rem;
+}
+
+.projects-divider {
+  position: relative;
+  flex: 0 0 1.25rem;
+  cursor: col-resize;
+  touch-action: none;
+  outline: none;
+
+  // A thin line in the middle of the gap, visible when the divider is pointed at, dragged or focused.
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 3px;
+    border-radius: 2px;
+    transform: translateX(-50%);
+    background: transparent;
+    transition: background-color 0.15s;
+  }
+
+  &:hover::after,
+  &:focus-visible::after,
+  .projects-layout--resizing &::after {
+    background: var(--p-primary-color);
+  }
 }
 
 .project-section + .project-section {
@@ -109,6 +144,8 @@
 .project-nav-item__name {
   flex: 1;
   min-width: 0;
+  font-size: 0.82rem;
+  line-height: 1.4;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -140,11 +177,18 @@
 @media (max-width: 900px) {
   .projects-layout {
     flex-direction: column;
+    gap: 1.25rem;
   }
 
   .projects-sidebar {
     width: 100%;
     flex-basis: auto;
+    align-self: stretch;
+  }
+
+  // Stacked panels have nothing to share sideways.
+  .projects-divider {
+    display: none;
   }
 
   .project-nav {

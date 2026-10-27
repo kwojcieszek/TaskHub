@@ -19,4 +19,7 @@ public class CreateTaskItemRequest
     public TaskItemPriority Priority { get; set; } = TaskItemPriority.Medium;
 
     public Guid? AssignedUserId { get; set; }
+
+    // Null for a task that does not repeat.
+    public TaskRecurrenceDto? Recurrence { get; set; }
 }

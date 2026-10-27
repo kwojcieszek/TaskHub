@@ -22,6 +22,7 @@ export interface SpeechRecognitionLike {
   lang: string;
   continuous: boolean;
   interimResults: boolean;
+  onstart: (() => void) | null;
   onresult: ((event: SpeechRecognitionEventLike) => void) | null;
   onerror: ((event: SpeechRecognitionErrorLike) => void) | null;
   onend: (() => void) | null;
@@ -38,6 +39,8 @@ export interface SpeechRecognitionWindow {
 
 export interface DictationHandlers {
   onText: (text: string) => void;
+  onListening?: () => void;
+  onInterim?: (text: string) => void;
   onEnd: () => void;
   onError: (code: string) => void;
 }

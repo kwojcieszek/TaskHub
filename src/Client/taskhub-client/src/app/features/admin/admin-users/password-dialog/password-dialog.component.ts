@@ -1,6 +1,8 @@
+import { AdminService } from '../../../../core/services/admin.service';
+import { DialogSave } from '../../../../shared/dialog-save';
 import { Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { DynamicDialogRef } from 'primeng/dynamicdialog';
+import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { Button } from 'primeng/button';
 import { Password } from 'primeng/password';
 import { TranslateModule } from '@ngx-translate/core';
@@ -17,6 +19,9 @@ import { PasswordRulesComponent } from '../../../../shared/password-rules/passwo
 export class PasswordDialogComponent {
   private readonly fb = inject(FormBuilder);
   private readonly dialogRef = inject(DynamicDialogRef);
+  readonly save = new DialogSave(this.dialogRef);
+  private readonly config = inject(DynamicDialogConfig);
+  private readonly persistence = inject(AdminService);
   private readonly authService = inject(AuthService);
 
   readonly form = this.fb.nonNullable.group({
@@ -27,7 +32,7 @@ export class PasswordDialogComponent {
     if (this.form.invalid) {
       return;
     }
-    this.dialogRef.close(this.form.getRawValue().newPassword);
+    this.save.submit(this.persistence.resetPassword(this.config.data.userId, this.form.getRawValue().newPassword));
   }
 
   cancel(): void {

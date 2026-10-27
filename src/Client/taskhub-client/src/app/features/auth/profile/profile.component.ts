@@ -11,6 +11,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { TwoFactorSetupResponse } from '../../../core/models/auth.model';
 import { GoogleIdentityService } from '../../../core/services/google-identity.service';
 import { GoogleButtonComponent } from '../../../shared/google-button/google-button.component';
+import { SessionsComponent } from './sessions/sessions.component';
 import { ApiTokensComponent } from './api-tokens/api-tokens.component';
 import { ChangePasswordComponent } from './change-password/change-password.component';
 import { LoginHistoryComponent } from './login-history/login-history.component';
@@ -30,7 +31,7 @@ const CONFLICT = 409;
     TranslateModule,
     ChangePasswordComponent,
     LoginHistoryComponent,
-    ApiTokensComponent,
+    ApiTokensComponent, SessionsComponent,
     GoogleButtonComponent
   ],
   templateUrl: './profile.component.html',
@@ -42,6 +43,7 @@ export class ProfileComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
 
   readonly googleErrorKey = signal<string | null>(null);
+  readonly googleConfirmForm = this.fb.nonNullable.group({ password: ['', Validators.required], code: [''] });
 
   readonly setupResponse = signal<TwoFactorSetupResponse | null>(null);
   readonly errorMessage = signal<string | null>(null);
@@ -95,9 +97,12 @@ export class ProfileComponent implements OnInit {
   }
 
   linkGoogle(idToken: string): void {
+    if (this.googleConfirmForm.invalid) { this.googleConfirmForm.markAllAsTouched(); return; }
     this.googleErrorKey.set(null);
 
-    this.auth.linkGoogle(idToken).subscribe({
+    const { password, code } = this.googleConfirmForm.getRawValue();
+    this.auth.linkGoogle(idToken, password, code).subscribe({
+      next: () => this.googleConfirmForm.reset(),
       error: (error: HttpErrorResponse) =>
         this.googleErrorKey.set(error.status === CONFLICT ? 'profile.googleAlreadyLinked' : 'profile.googleLinkError')
     });

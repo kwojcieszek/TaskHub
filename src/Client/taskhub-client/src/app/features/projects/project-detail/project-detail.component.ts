@@ -157,20 +157,8 @@ export class ProjectDetailComponent implements OnChanges {
       if (!result) {
         return;
       }
-      const groupChanged = result.projectGroupId !== project.projectGroupId;
-      this.projectService
-        .update(this.projectId, {
-          name: result.name,
-          description: result.description,
-          icon: result.icon,
-          gitUrl: result.gitUrl,
-          isActive: result.isActive
-        })
-        .pipe(switchMap((updated) => (groupChanged ? this.projectService.setGroup(this.projectId, result.projectGroupId) : of(updated))))
-        .subscribe(() => {
-          this.loadAll();
-          this.changed.emit();
-        });
+      this.loadAll();
+      this.changed.emit();
     });
   }
 
@@ -184,23 +172,22 @@ export class ProjectDetailComponent implements OnChanges {
     const ref = this.dialogService.open(TaskDialogComponent, {
       header: this.translate.instant(parentTask ? 'tasks.newSubTask' : 'tasks.newTask'),
       width: 'min(620px, 96vw)',
-      data: { members: this.members() }
+      data: { members: this.members(), projectId: this.projectId, parentTaskId: parentTask?.id ?? null }
     });
     ref?.onClose.subscribe((result) => {
       if (!result) {
         return;
       }
-      this.taskItemService.create(this.projectId, { ...result, parentTaskId: parentTask?.id ?? null }).subscribe(() => {
-        this.loadAll();
-        this.changed.emit();
-      });
+      this.loadAll();
+      this.changed.emit();
     });
   }
 
   editTask(task: TaskItem): void {
     const ref = this.dialogService.open(TaskDialogComponent, {
       header: this.translate.instant('common.edit'),
-      width: 'min(1040px, 96vw)',
+      width: 'min(620px, 96vw)',
+      style: { maxHeight: 'calc(100dvh - 2rem)' },
       data: { task, members: this.members(), statusDerived: task.subTasks.length > 0 }
     });
     ref?.onClose.subscribe((result) => {
@@ -209,7 +196,7 @@ export class ProjectDetailComponent implements OnChanges {
         this.loadAll();
         return;
       }
-      this.taskItemService.update(this.projectId, task.id, result).subscribe(() => this.loadAll());
+      this.loadAll();
     });
   }
 
@@ -269,18 +256,20 @@ export class ProjectDetailComponent implements OnChanges {
   addMember(): void {
     const ref = this.dialogService.open(MemberDialogComponent, {
       header: this.translate.instant('projects.addMember'),
-      width: '420px'
+      width: '420px', data: { projectId: this.projectId }
     });
     ref?.onClose.subscribe((result) => {
       if (!result) {
         return;
       }
-      this.projectService.addMember(this.projectId, result).subscribe(() => this.loadAll());
+      this.loadAll();
     });
   }
 
   removeMember(member: ProjectMember): void {
-    this.projectService.removeMember(this.projectId, member.userId).subscribe(() => this.loadAll());
+    this.confirmRemoval(this.translate.instant('projects.removeMemberConfirm', { name: member.displayName }), () => {
+      this.projectService.removeMember(this.projectId, member.userId).subscribe(() => this.loadAll());
+    });
   }
 
   addTeam(): void {
@@ -293,17 +282,23 @@ export class ProjectDetailComponent implements OnChanges {
       if (!result) {
         return;
       }
-      this.projectService.addTeam(this.projectId, result).subscribe(() => this.loadAll());
+      this.loadAll();
     });
   }
 
   removeTeam(team: ProjectTeam): void {
-    this.projectService.removeTeam(this.projectId, team.userGroupId).subscribe(() => this.loadAll());
+    this.confirmRemoval(this.translate.instant('projects.teams.removeConfirm', { name: team.name }), () => {
+      this.projectService.removeTeam(this.projectId, team.userGroupId).subscribe(() => this.loadAll());
+    });
   }
 
   private confirmDelete(messageKey: string, accept: () => void): void {
+    this.confirmRemoval(this.translate.instant(messageKey), accept);
+  }
+
+  private confirmRemoval(message: string, accept: () => void): void {
     this.confirmationService.confirm({
-      message: this.translate.instant(messageKey),
+      message,
       header: this.translate.instant('common.deleteConfirmHeader'),
       icon: 'pi pi-exclamation-triangle',
       acceptLabel: this.translate.instant('common.delete'),

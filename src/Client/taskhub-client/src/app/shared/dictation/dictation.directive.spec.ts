@@ -138,27 +138,64 @@ describe('DictationDirective', () => {
     expect(handlers).toBeNull();
   });
 
-  it('explains a blocked microphone for a while', fakeAsync(() => {
+  it('keeps a microphone error visible until the next attempt', fakeAsync(() => {
     create();
 
     button().click();
     handlers?.onError('not-allowed');
+    handlers?.onEnd();
 
     expect(button().classList.contains('dictation__button--error')).toBeTrue();
     expect(button().getAttribute('title')).toBe('dictation.notAllowed');
 
     tick(4000);
 
+    expect(element().querySelector('.dictation__status')?.textContent).toBe('dictation.notAllowed');
+    expect(button().classList.contains('dictation__button--error')).toBeTrue();
+    button().click();
     expect(button().classList.contains('dictation__button--error')).toBeFalse();
+    expect(element().querySelector('.dictation__status')?.textContent).toBe('dictation.starting');
   }));
 
-  it('says nothing when the user simply did not speak', () => {
+  it('explains when no speech could be recognised', () => {
     create();
 
     button().click();
     handlers?.onError('no-speech');
 
-    expect(button().classList.contains('dictation__button--error')).toBeFalse();
+    expect(element().querySelector('.dictation__status')?.textContent).toBe('dictation.noSpeech');
+  });
+
+  it('previews changing hypotheses and inserts only the confirmed phrase', () => {
+    create();
+    button().click();
+    handlers?.onListening?.();
+    expect(element().querySelector('.dictation__status')?.textContent).toBe('dictation.listening');
+    handlers?.onInterim?.('kupi');
+    handlers?.onInterim?.('kupić mleko');
+    expect(element().querySelector('.dictation__status')?.textContent).toBe('kupić mleko');
+    expect(fixture.componentInstance.control.value).toBe('');
+    handlers?.onText('kupić mleko');
+    handlers?.onEnd();
+    expect(fixture.componentInstance.control.value).toBe('kupić mleko');
+    expect(fixture.componentInstance.control.dirty).toBeTrue();
+    expect((element().querySelector('.dictation__status') as HTMLElement).hidden).toBeTrue();
+  });
+
+  it('distinguishes a recognition service failure from microphone permissions', () => {
+    create();
+    button().click();
+    handlers?.onError('network');
+    handlers?.onEnd();
+    expect(element().querySelector('.dictation__status')?.textContent).toBe('dictation.network');
+  });
+
+  it('does not write results to a field disabled while listening', () => {
+    create();
+    button().click();
+    fixture.componentInstance.control.disable();
+    handlers?.onText('tekst');
+    expect(fixture.componentInstance.control.value).toBe('');
   });
 
   it('stops listening and removes its button when the field goes away', () => {

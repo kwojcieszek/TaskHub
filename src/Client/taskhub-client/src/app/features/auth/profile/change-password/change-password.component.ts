@@ -36,6 +36,12 @@ export class ChangePasswordComponent {
 
   submit(): void {
     if (this.form.invalid || this.passwordsDiffer) {
+      this.markInvalid();
+
+      return;
+    }
+
+    if (this.saving()) {
       return;
     }
 
@@ -55,6 +61,14 @@ export class ChangePasswordComponent {
         this.saving.set(false);
         this.errorKey.set('profile.passwordChangeError');
       }
+    });
+  }
+
+  // The button stays enabled, so an incomplete form is pointed out on the fields instead.
+  private markInvalid(): void {
+    Object.values(this.form.controls).forEach((control) => {
+      control.markAsDirty();
+      control.markAsTouched();
     });
   }
 }

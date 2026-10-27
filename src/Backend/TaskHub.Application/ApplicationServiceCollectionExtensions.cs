@@ -25,6 +25,7 @@ public static class ApplicationServiceCollectionExtensions
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IUserDirectoryService, UserDirectoryService>();
         services.AddScoped<IApiTokenService, ApiTokenService>();
+        services.AddScoped<ISessionService, SessionService>();
 
         return services;
     }

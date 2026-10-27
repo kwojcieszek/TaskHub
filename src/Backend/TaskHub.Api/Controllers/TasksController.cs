@@ -96,6 +96,10 @@ public class TasksController : ApiControllerBase
         return Ok(task);
     }
 
+    [HttpGet("{taskId:guid}/history")]
+    public async Task<ActionResult<IReadOnlyCollection<TaskChangeDto>>> History(Guid projectId, Guid taskId, [FromQuery] int page = 1, CancellationToken ct = default)
+        => Ok(await _taskItemService.GetHistoryAsync(projectId, taskId, page, ct));
+
     [HttpPost("{taskId:guid}/complete")]
     public async Task<ActionResult<TaskItemDto>> Complete(Guid projectId, Guid taskId, CancellationToken cancellationToken)
     {

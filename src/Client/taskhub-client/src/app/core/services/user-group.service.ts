@@ -16,6 +16,10 @@ export class UserGroupService {
 
   constructor(private readonly http: HttpClient) {}
 
+  transferOwner(groupId: string, userId: string): Observable<UserGroup> { return this.http.put<UserGroup>(`${this.baseUrl}/${groupId}/owner`, { userId }); }
+
+  leave(groupId: string): Observable<void> { return this.http.post<void>(`${this.baseUrl}/${groupId}/leave`, {}); }
+
   getAll(): Observable<UserGroup[]> {
     return this.http.get<UserGroup[]>(this.baseUrl);
   }

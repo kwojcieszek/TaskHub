@@ -80,6 +80,7 @@
           [task]="task"
           [canEdit]="canEdit()"
           [allowSubTasks]="true"
+          [stacked]="true"
           (edit)="editTask(task)"
           (start)="startTask(task)"
           (complete)="completeTask(task)"
@@ -91,6 +92,7 @@
           <app-task-row
             [task]="subTask"
             [canEdit]="canEdit()"
+            [stacked]="true"
             (edit)="editTask(subTask)"
             (start)="startTask(subTask)"
             (complete)="completeTask(subTask)"

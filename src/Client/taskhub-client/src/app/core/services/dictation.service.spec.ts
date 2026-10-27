@@ -1,4 +1,4 @@
-import { signal } from '@angular/core';
+import { NgZone, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { SpeechRecognitionEventLike, SpeechRecognitionLike, SpeechRecognitionWindow } from '../models/speech-recognition.model';
 import { DictationService } from './dictation.service';
@@ -12,6 +12,7 @@ class FakeRecognition implements SpeechRecognitionLike {
   interimResults = true;
   started = false;
   stopped = false;
+  onstart: (() => void) | null = null;
   onresult: ((event: SpeechRecognitionEventLike) => void) | null = null;
   onerror: ((event: { error: string }) => void) | null = null;
   onend: (() => void) | null = null;
@@ -82,7 +83,7 @@ describe('DictationService', () => {
     expect(recognition.started).toBeTrue();
     expect(recognition.lang).toBe('pl-PL');
     expect(recognition.continuous).toBeTrue();
-    expect(recognition.interimResults).toBeFalse();
+    expect(recognition.interimResults).toBeTrue();
   });
 
   it('uses English recognition when the application is in English', () => {
@@ -133,5 +134,59 @@ describe('DictationService', () => {
     FakeRecognition.instances[0].onerror?.({ error: 'not-allowed' });
 
     expect(onError).toHaveBeenCalledWith('not-allowed');
+  });
+
+  it('reports recognition progress and replaces interim text without duplicating final phrases', () => {
+    const onText = jasmine.createSpy();
+    const onInterim = jasmine.createSpy();
+    const onListening = jasmine.createSpy();
+    create().start({ onText, onInterim, onListening, onEnd: () => undefined, onError: () => undefined });
+    const recognition = FakeRecognition.instances[0];
+    recognition.onstart?.();
+    recognition.say('kupi', false);
+    recognition.say('kupić mleko', false);
+    expect(onText).not.toHaveBeenCalled();
+    expect(onInterim).toHaveBeenCalledWith('kupić mleko');
+    recognition.say('kupić mleko');
+    recognition.say('kupić mleko');
+    expect(onText).toHaveBeenCalledOnceWith('kupić mleko');
+    expect(onInterim).toHaveBeenCalledWith('');
+    expect(onListening).toHaveBeenCalledTimes(1);
+  });
+
+  it('delivers native callbacks inside Angular even when the browser invokes them outside it', () => {
+    const zones: boolean[] = [];
+    create().start({ onText: () => zones.push(NgZone.isInAngularZone()), onEnd: () => undefined, onError: () => undefined });
+    TestBed.inject(NgZone).runOutsideAngular(() => FakeRecognition.instances[0].say('tekst'));
+    expect(zones).toEqual([true]);
+  });
+
+  it('reports an empty recognition session instead of silently stopping', () => {
+    const onError = jasmine.createSpy();
+    create().start({ onText: () => undefined, onEnd: () => undefined, onError });
+    FakeRecognition.instances[0].onend?.();
+    expect(onError).toHaveBeenCalledOnceWith('no-speech');
+  });
+
+  it('handles synchronous startup failures and allows a subsequent attempt', () => {
+    const service = create();
+    const onError = jasmine.createSpy();
+    const onEnd = jasmine.createSpy();
+    const start = spyOn(FakeRecognition.prototype, 'start').and.throwError(new DOMException('Denied', 'NotAllowedError'));
+    const stop = service.start({ onText: () => undefined, onEnd, onError });
+    stop();
+    expect(onError).toHaveBeenCalledOnceWith('not-allowed');
+    expect(onEnd).toHaveBeenCalledTimes(1);
+    start.and.callThrough();
+    service.start({ onText: () => undefined, onEnd: () => undefined, onError });
+    expect(FakeRecognition.instances[1].started).toBeTrue();
+  });
+
+  it('ignores results that arrive after a session ends', () => {
+    const onText = jasmine.createSpy();
+    const stop = create().start({ onText, onEnd: () => undefined, onError: () => undefined });
+    stop();
+    FakeRecognition.instances[0].say('spóźniony tekst');
+    expect(onText).not.toHaveBeenCalled();
   });
 });

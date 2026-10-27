@@ -1,3 +1,5 @@
+import { AdminService } from '../../../../core/services/admin.service';
+import { DialogSave } from '../../../../shared/dialog-save';
 import { Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { DynamicDialogRef } from 'primeng/dynamicdialog';
@@ -20,6 +22,8 @@ const MIN_USER_NAME_LENGTH = 3;
 export class UserDialogComponent {
   private readonly fb = inject(FormBuilder);
   private readonly dialogRef = inject(DynamicDialogRef);
+  readonly save = new DialogSave(this.dialogRef);
+  private readonly persistence = inject(AdminService);
   private readonly authService = inject(AuthService);
 
   readonly form = this.fb.nonNullable.group({
@@ -33,7 +37,7 @@ export class UserDialogComponent {
     if (this.form.invalid) {
       return;
     }
-    this.dialogRef.close(this.form.getRawValue());
+    this.save.submit(this.persistence.createUser(this.form.getRawValue()));
   }
 
   cancel(): void {

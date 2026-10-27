@@ -15,7 +15,7 @@
   </div>
 </div>
 
-<div class="projects-layout">
+<div class="projects-layout" [class.projects-layout--resizing]="resizing()" [style.--projects-sidebar-width.px]="sidebarWidth()">
   <aside class="projects-sidebar panel">
     @if (loadError()) {
       <div class="empty-state empty-state--compact">
@@ -74,6 +74,24 @@
       </div>
     }
   </aside>
+
+  <div
+    class="projects-divider"
+    role="separator"
+    tabindex="0"
+    aria-orientation="vertical"
+    [attr.aria-label]="'projects.resizeSidebar' | translate"
+    [attr.aria-valuenow]="sidebarWidth()"
+    [attr.aria-valuemin]="minSidebarWidth"
+    [attr.aria-valuemax]="maxSidebarWidth"
+    [title]="'projects.resizeSidebar' | translate"
+    (pointerdown)="startResize($event)"
+    (pointermove)="resize($event)"
+    (pointerup)="endResize($event)"
+    (pointercancel)="endResize($event)"
+    (keydown)="resizeWithKeyboard($event)"
+    (dblclick)="resetSidebarWidth()"
+  ></div>
 
   <section class="projects-content panel">
     @if (selectedProjectId(); as id) {

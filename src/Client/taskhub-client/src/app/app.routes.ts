@@ -16,6 +16,18 @@ export const routes: Routes = [
     loadComponent: () => import('./features/auth/register/register.component').then((m) => m.RegisterComponent)
   },
   {
+    path: 'forgot-password',
+    canActivate: [guestGuard],
+    loadComponent: () =>
+      import('./features/auth/forgot-password/forgot-password.component').then((m) => m.ForgotPasswordComponent)
+  },
+  {
+    path: 'reset-password',
+    canActivate: [guestGuard],
+    loadComponent: () =>
+      import('./features/auth/reset-password/reset-password.component').then((m) => m.ResetPasswordComponent)
+  },
+  {
     path: 'two-factor',
     canActivate: [guestGuard],
     loadComponent: () =>
@@ -49,6 +61,10 @@ export const routes: Routes = [
       {
         path: 'reports',
         loadComponent: () => import('./features/reports/reports.component').then((m) => m.ReportsComponent)
+      },
+      {
+        path: 'user-groups',
+        loadComponent: () => import('./features/user-groups/user-groups.component').then((m) => m.UserGroupsComponent)
       },
       {
         path: 'profile',

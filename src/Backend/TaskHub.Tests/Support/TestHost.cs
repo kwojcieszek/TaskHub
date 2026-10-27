@@ -18,12 +18,13 @@ namespace TaskHub.Tests.Support;
 
 /// <summary>
 /// Wires the real application services to a private in-memory SQLite database.
-/// Only what lives outside the process is replaced: the HTTP user, file storage and Google.
+/// Only what lives outside the process is replaced: the HTTP user, file storage, e-mail and Google.
 /// </summary>
 public sealed class TestHost : IDisposable
 {
     public const string DefaultPassword = "Password1";
     public const long MaxFileSizeBytes = 1024;
+    public const string ResetUrl = "https://taskhub.test/reset-password";
 
     private readonly SqliteConnection _connection;
     private readonly ServiceProvider _provider;
@@ -38,6 +39,7 @@ public sealed class TestHost : IDisposable
         var services = new ServiceCollection();
 
         services.AddLogging();
+        services.AddHttpContextAccessor();
         services.AddDataProtection();
         services.AddApplication();
 
@@ -67,6 +69,7 @@ public sealed class TestHost : IDisposable
             options.SigningKey = "unit-test-signing-key-that-is-long-enough-0123456789";
         });
         services.Configure<SecurityOptions>(options => configureSecurity?.Invoke(options));
+        services.Configure<PasswordResetOptions>(options => options.ResetUrl = ResetUrl);
         services.Configure<AttachmentStorageOptions>(options =>
         {
             options.MaxFileSizeBytes = MaxFileSizeBytes;
@@ -79,6 +82,8 @@ public sealed class TestHost : IDisposable
         services.AddSingleton<IAttachmentStorage>(provider => provider.GetRequiredService<InMemoryAttachmentStorage>());
         services.AddSingleton<FakeGoogleTokenValidator>();
         services.AddSingleton<IGoogleTokenValidator>(provider => provider.GetRequiredService<FakeGoogleTokenValidator>());
+        services.AddSingleton<FakeEmailSender>();
+        services.AddSingleton<IEmailSender>(provider => provider.GetRequiredService<FakeEmailSender>());
         services.AddSingleton<IJwtTokenService, JwtTokenService>();
 
         _provider = services.BuildServiceProvider();
@@ -94,6 +99,8 @@ public sealed class TestHost : IDisposable
     public ApplicationDbContext Db => Get<ApplicationDbContext>();
 
     public FakeCurrentUserService CurrentUser => Get<FakeCurrentUserService>();
+
+    public FakeEmailSender Email => Get<FakeEmailSender>();
 
     public InMemoryAttachmentStorage Storage => Get<InMemoryAttachmentStorage>();
 

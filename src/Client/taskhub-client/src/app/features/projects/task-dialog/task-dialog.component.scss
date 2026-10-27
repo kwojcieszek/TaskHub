@@ -1,3 +1,4 @@
+// The form and the sections under it are stacked in a single column.
 .task-dialog__main,
 .task-dialog__side {
   display: flex;
@@ -6,43 +7,58 @@
   min-width: 0;
 }
 
-// The short fields sit side by side, so the form is not a long column.
+// The short fields go in pairs: due date with status, priority with assignee.
 .task-dialog__meta {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1rem;
+
+  // A new task has no status, so the due date takes the whole row and the second pair stays together.
+  .field:first-child:nth-last-child(odd) {
+    grid-column: 1 / -1;
+  }
 }
 
-// An existing task has attachments and comments; they get a column of their own next to the fields.
-.task-dialog--wide {
+.task-dialog__recurrence {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.task-dialog__recurrence-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  cursor: pointer;
+}
+
+// Interval and unit share a row; the basis gets the whole row under them.
+.task-dialog__recurrence-fields {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  align-items: start;
-  gap: 1rem 1.75rem;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+  gap: 1rem;
 }
 
-.task-dialog--wide .task-dialog__side {
-  padding-left: 1.75rem;
-  border-left: 1px solid var(--app-border);
-}
-
-.task-dialog--wide .task-dialog__actions {
+.task-dialog__recurrence-basis {
   grid-column: 1 / -1;
 }
 
-@media (max-width: 860px) {
-  .task-dialog--wide {
+@media (max-width: 520px) {
+  .task-dialog__meta,
+  .task-dialog__recurrence-fields {
     grid-template-columns: minmax(0, 1fr);
-  }
-
-  .task-dialog--wide .task-dialog__side {
-    padding-left: 0;
-    border-left: 0;
   }
 }
 
-@media (max-width: 520px) {
-  .task-dialog__meta {
-    grid-template-columns: minmax(0, 1fr);
-  }
+// Keep saving within reach on small screens and tasks with many comments.
+.task-dialog__actions {
+  position: sticky;
+  // Reaches over the padding under the content, so nothing scrolls past below the buttons. It has to match
+  // that padding exactly: a larger value makes the dialog scroll even when everything fits.
+  bottom: calc(-1 * var(--p-overlay-modal-padding));
+  z-index: 1;
+  margin: 0 0 calc(-1 * var(--p-overlay-modal-padding));
+  padding: 0.75rem 0 var(--p-overlay-modal-padding);
+  border-top: 1px solid var(--app-border);
+  background: var(--p-dialog-background);
 }

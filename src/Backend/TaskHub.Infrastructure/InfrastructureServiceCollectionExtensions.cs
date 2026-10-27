@@ -7,7 +7,9 @@ using TaskHub.Application.Interfaces;
 using TaskHub.Application.Options;
 using TaskHub.Application.Services;
 using TaskHub.Domain.Entities;
+using TaskHub.Infrastructure.Email;
 using TaskHub.Infrastructure.Persistence;
+using TaskHub.Infrastructure.Persistence.Migrations;
 using TaskHub.Infrastructure.Seed;
 using TaskHub.Infrastructure.Services;
 using TaskHub.Infrastructure.Storage;
@@ -23,11 +25,14 @@ public static class InfrastructureServiceCollectionExtensions
         services.Configure<DefaultAdminOptions>(configuration.GetSection(DefaultAdminOptions.SectionName));
         services.Configure<SecurityOptions>(configuration.GetSection(SecurityOptions.SectionName));
         services.Configure<GoogleAuthOptions>(configuration.GetSection(GoogleAuthOptions.SectionName));
+        services.Configure<EmailOptions>(configuration.GetSection(EmailOptions.SectionName));
+        services.Configure<PasswordResetOptions>(configuration.GetSection(PasswordResetOptions.SectionName));
 
         var databaseOptions = configuration.GetSection(DatabaseOptions.SectionName).Get<DatabaseOptions>()
             ?? new DatabaseOptions();
 
         services.AddDbContext<ApplicationDbContext>(options => ConfigureProvider(options, databaseOptions));
+        services.AddDatabaseMigrations(databaseOptions);
         services.AddScoped<IApplicationDbContext>(sp => sp.GetRequiredService<ApplicationDbContext>());
 
         services.AddIdentityCore<User>(options =>
@@ -48,11 +53,22 @@ public static class InfrastructureServiceCollectionExtensions
             .AddPasswordValidator<ConfigurablePasswordValidator>()
             .AddDefaultTokenProviders();
 
+        var passwordResetOptions = configuration.GetSection(PasswordResetOptions.SectionName).Get<PasswordResetOptions>()
+            ?? new PasswordResetOptions();
+
+        // Password reset links are the only data protection tokens that leave the server.
+        services.Configure<DataProtectionTokenProviderOptions>(options =>
+            options.TokenLifespan = TimeSpan.FromMinutes(passwordResetOptions.TokenLifetimeMinutes));
+
+        services.AddSingleton<QueuedEmailSender>();
+        services.AddSingleton<IEmailSender>(sp => sp.GetRequiredService<QueuedEmailSender>());
+        services.AddSingleton<SmtpEmailTransport>();
+        services.AddHostedService<EmailDeliveryService>();
+
         services.AddHttpContextAccessor();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
         services.AddSingleton<IJwtTokenService, JwtTokenService>();
         services.AddSingleton<IGoogleTokenValidator, GoogleTokenValidator>();
-        services.AddScoped<DatabaseSchemaUpdater>();
         services.AddScoped<DbSeeder>();
 
         services.Configure<AttachmentStorageOptions>(configuration.GetSection(AttachmentStorageOptions.SectionName));

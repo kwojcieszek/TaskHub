@@ -7,7 +7,7 @@ using TaskHub.Application.Interfaces;
 
 namespace TaskHub.Api.Controllers;
 
-[Authorize(Roles = Roles.Admin)]
+[Authorize]
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/user-groups")]
 public class UserGroupsController : ApiControllerBase
@@ -24,6 +24,17 @@ public class UserGroupsController : ApiControllerBase
     {
         var groups = await _userGroupService.GetAllAsync(cancellationToken);
         return Ok(groups);
+    }
+
+    [HttpPut("{groupId:guid}/owner")]
+    public async Task<ActionResult<UserGroupDto>> TransferOwner(Guid groupId, TransferTeamOwnershipRequest request, CancellationToken ct)
+        => Ok(await _userGroupService.TransferOwnershipAsync(groupId, request.UserId, ct));
+
+    [HttpPost("{groupId:guid}/leave")]
+    public async Task<IActionResult> Leave(Guid groupId, CancellationToken ct)
+    {
+        await _userGroupService.LeaveAsync(groupId, ct);
+        return NoContent();
     }
 
     [HttpPost]

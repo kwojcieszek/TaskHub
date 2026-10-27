@@ -33,6 +33,6 @@
 
   <div class="dialog-actions">
     <p-button [label]="'common.cancel' | translate" severity="secondary" [outlined]="true" type="button" (onClick)="cancel()" />
-    <p-button [label]="'common.save' | translate" icon="pi pi-check" type="submit" [disabled]="form.invalid" />
+    <p-button [label]="'common.save' | translate" icon="pi pi-check" type="submit" [disabled]="form.invalid || save.pending()" [loading]="save.pending()" />
   </div>
 </form>

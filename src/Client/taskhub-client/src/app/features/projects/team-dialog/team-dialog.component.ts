@@ -1,3 +1,4 @@
+import { DialogSave } from '../../../shared/dialog-save';
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Button } from 'primeng/button';
@@ -17,6 +18,7 @@ export class TeamDialogComponent {
   private readonly fb = inject(FormBuilder);
   private readonly projectService = inject(ProjectService);
   private readonly dialogRef = inject(DynamicDialogRef);
+  readonly save = new DialogSave(this.dialogRef);
   private readonly config = inject(DynamicDialogConfig);
 
   readonly roles: ProjectTeamRole[] = ['Viewer', 'Editor'];
@@ -49,7 +51,7 @@ export class TeamDialogComponent {
       return;
     }
 
-    this.dialogRef.close({ userGroupId, role });
+    this.save.submit(this.projectService.addTeam(this.config.data.projectId, { userGroupId, role }));
   }
 
   cancel(): void {

@@ -45,7 +45,23 @@
     "verify": "Zweryfikuj",
     "invalidCredentials": "Nieprawidłowa nazwa użytkownika lub hasło.",
     "tooManyRequests": "Zbyt wiele prób. Spróbuj ponownie za chwilę.",
-    "registerSuccess": "Konto zostało utworzone. Możesz się teraz zalogować."
+    "registerSuccess": "Konto zostało utworzone. Możesz się teraz zalogować.",
+    "forgotPassword": "Nie pamiętasz hasła?",
+    "forgotTitle": "Resetowanie hasła",
+    "forgotHint": "Podaj adres email swojego konta. Wyślemy link do ustawienia nowego hasła.",
+    "sendResetLink": "Wyślij link",
+    "resetLinkSent": "Jeśli to konto istnieje, link został wysłany. Sprawdź skrzynkę; link działa jeden raz.",
+    "resetTitle": "Ustaw nowe hasło",
+    "resetHint": "Wybierz nowe hasło do konta. Wszystkie otwarte sesje zostaną wylogowane.",
+    "newPassword": "Nowe hasło",
+    "repeatPassword": "Powtórz nowe hasło",
+    "passwordsDiffer": "Hasła nie są takie same.",
+    "setPassword": "Ustaw hasło",
+    "resetSuccess": "Hasło zostało zmienione. Możesz się teraz zalogować.",
+    "resetLinkInvalid": "Link jest nieprawidłowy lub wygasł. Poproś o nowy.",
+    "resetFailed": "Nie udało się zmienić hasła. Sprawdź, czy spełnia wymagania.",
+    "requestNewLink": "Poproś o nowy link",
+    "backToLogin": "Wróć do logowania"
   },
   "settings": {
     "title": "Ustawienia",
@@ -125,7 +141,8 @@
       "createError": "Nie udało się utworzyć tokenu.",
       "revokeError": "Nie udało się odwołać tokenu.",
       "limitReached": "Osiągnięto limit tokenów. Odwołaj któryś z nieużywanych."
-    }
+    },
+    "googleConfirm": "Potwierdź hasło i kod 2FA (jeżeli włączony), zanim połączysz konto Google."
   },
   "projects": {
     "title": "Projekty",
@@ -134,6 +151,7 @@
     "statTasks": "Wszystkie zadania",
     "newProject": "Nowy projekt",
     "selectPrompt": "Wybierz projekt po lewej stronie, aby zobaczyć jego zadania.",
+    "resizeSidebar": "Przeciągnij, aby zmienić szerokość listy projektów. Dwuklik przywraca domyślną.",
     "name": "Nazwa",
     "description": "Opis",
     "icon": "Ikona",
@@ -156,11 +174,13 @@
     "noProjects": "Brak projektów. Utwórz swój pierwszy projekt.",
     "loadError": "Nie udało się wczytać projektów. Sprawdź, czy backend działa.",
     "deleteConfirm": "Usunąć ten projekt? Tej operacji nie można cofnąć.",
+    "removeMemberConfirm": "Usunąć użytkownika „{{name}}” z projektu? Straci dostęp do projektu.",
     "role": "Rola",
     "teams": {
       "title": "Zespoły",
       "hint": "Każdy członek zespołu ma w projekcie rolę zespołu, dopóki do niego należy.",
       "add": "Dodaj zespół",
+      "removeConfirm": "Odebrać zespołowi „{{name}}” dostęp do projektu? Stracą go wszyscy członkowie zespołu, którzy nie są dodani osobno.",
       "team": "Zespół",
       "choose": "Wybierz zespół",
       "memberCount": "osób: {{count}}",
@@ -216,7 +236,30 @@
     "completedOn": "Wykonano",
     "startedOn": "Rozpoczęto",
     "subTaskProgress": "Zrealizowane podzadania",
-    "statusFromSubTasks": "Stan wynika z podzadań — zadanie rozpoczyna się i kończy przez podzadania."
+    "statusFromSubTasks": "Stan wynika z podzadań — zadanie rozpoczyna się i kończy przez podzadania.",
+    "recurrence": {
+      "repeats": "Zadanie cykliczne",
+      "every": "Co",
+      "unitLabel": "Jednostka",
+      "basisLabel": "Licz odstęp od",
+      "hint": "Po zakończeniu zadania zostanie utworzone nowe z kolejnym terminem. Podzadania też są kopiowane.",
+      "unit": {
+        "Day": "Dni",
+        "Week": "Tygodnie",
+        "Month": "Miesiące",
+        "Year": "Lata"
+      },
+      "basis": {
+        "CompletionDate": "Dnia zakończenia zadania",
+        "DueDate": "Terminu zadania (stały harmonogram)"
+      },
+      "short": {
+        "Day": "co {{count}} dni",
+        "Week": "co {{count}} tyg.",
+        "Month": "co {{count}} mies.",
+        "Year": "co {{count}} lat"
+      }
+    }
   },
   "attachments": {
     "title": "Załączniki",
@@ -322,13 +365,22 @@
   },
   "userGroups": {
     "deleteConfirm": "Usunąć ten zespół? Jego członkowie stracą dostęp do projektów, które mieli dzięki niemu. Tej operacji nie można cofnąć.",
+    "removeMemberConfirm": "Usunąć użytkownika „{{name}}” z zespołu? Straci dostęp do projektów, które miał dzięki zespołowi.",
     "title": "Zespoły",
     "newGroup": "Nowy zespół",
     "name": "Nazwa",
     "description": "Opis",
     "members": "Członkowie",
     "addMember": "Dodaj członka",
-    "editGroup": "Zmień nazwę"
+    "editGroup": "Zmień nazwę",
+    "owner": "Właściciel",
+    "adminOwner": "Administracja",
+    "newOwner": "Wybierz nowego właściciela",
+    "transfer": "Przekaż zespół",
+    "transferConfirm": "Przekazać zarządzanie zespołem wybranej osobie?",
+    "leave": "Opuść zespół",
+    "leaveConfirm": "Opuścić zespół? Możesz utracić dostęp do jego projektów.",
+    "empty": "Nie ma jeszcze żadnego zespołu. Utwórz pierwszy."
   },
   "passwordPolicy": {
     "minLength": "Co najmniej {{count}} znaków",
@@ -358,6 +410,10 @@
     "passwordRequireLowercase": "Wymagaj małej litery",
     "passwordRequireDigit": "Wymagaj cyfry",
     "passwordRequireNonAlphanumeric": "Wymagaj znaku specjalnego",
+    "grantAdminHeader": "Nadanie uprawnień administratora",
+    "grantAdminConfirm": "Czy na pewno nadać użytkownikowi „{{name}}” rolę administratora? Będzie mieć pełny dostęp do wszystkich projektów, kont użytkowników i ustawień.",
+    "grantAdmin": "Nadaj rolę",
+    "deleteUserConfirm": "Usunąć konto użytkownika „{{name}}”? Tej operacji nie można cofnąć.",
     "lock": "Zablokuj",
     "unlock": "Odblokuj",
     "delete": "Usuń",
@@ -417,6 +473,13 @@
   "dictation": {
     "start": "Dyktuj",
     "stop": "Zatrzymaj dyktowanie",
+    "starting": "Uruchamianie mikrofonu… Jeśli pojawi się monit, zezwól na dostęp.",
+    "listening": "Słucham… Mów, a po zdaniu zrób krótką przerwę. Rozpoznany tekst trafi do pola.",
+    "noSpeech": "Nie rozpoznano mowy. Sprawdź wybrany mikrofon i jego poziom głośności, a następnie spróbuj ponownie.",
+    "audioCapture": "Nie można odczytać dźwięku z mikrofonu. Sprawdź, czy jest podłączony i dostępny w ustawieniach przeglądarki.",
+    "network": "Nie udało się połączyć z usługą rozpoznawania mowy. Sprawdź połączenie z internetem; jeśli błąd się powtarza, spróbuj w Google Chrome.",
+    "serviceNotAllowed": "Przeglądarka nie zezwala na usługę rozpoznawania mowy. Sprawdź jej ustawienia lub spróbuj w Google Chrome.",
+    "languageNotSupported": "Usługa rozpoznawania mowy nie obsługuje wybranego języka.",
     "notAllowed": "Brak dostępu do mikrofonu. Zezwól na niego w ustawieniach przeglądarki.",
     "failed": "Dyktowanie nie powiodło się. Spróbuj ponownie."
   },
@@ -432,5 +495,77 @@
     "loadError": "Nie udało się wczytać komentarzy.",
     "saveError": "Nie udało się zapisać komentarza.",
     "deleteError": "Nie udało się usunąć komentarza."
+  },
+  "serverErrors": {
+    "alreadyProjectMember": "Ten użytkownik jest już członkiem projektu.",
+    "alreadyTeamMember": "Ten użytkownik jest już członkiem zespołu.",
+    "teamAlreadyAdded": "Ten zespół ma już dostęp do projektu.",
+    "ownerCannotBeRemoved": "Właściciela projektu nie można usunąć.",
+    "teamRole": "Zespół można dodać z rolą Editor albo Viewer.",
+    "assigneeNotMember": "Zadanie można przypisać tylko członkowi projektu.",
+    "taskAlreadyCompleted": "To zadanie jest już zakończone.",
+    "taskAlreadyStarted": "Rozpocząć można tylko zadanie, które nie zostało jeszcze rozpoczęte.",
+    "taskFollowsSubTasks": "Zadanie z podzadaniami rozpoczyna się i kończy przez podzadania.",
+    "commentEmpty": "Komentarz nie może być pusty.",
+    "fileEmpty": "Plik jest pusty.",
+    "invalidAuthenticatorCode": "Nieprawidłowy kod z aplikacji uwierzytelniającej.",
+    "invalidPassword": "Nieprawidłowe hasło.",
+    "passwordUnchanged": "Nowe hasło musi różnić się od obecnego.",
+    "twoFactorAlreadyEnabled": "Weryfikacja dwuetapowa jest już włączona. Wyłącz ją, aby skonfigurować ponownie.",
+    "confirmBeforeGoogle": "Potwierdź hasło i kod 2FA, zanim połączysz konto Google.",
+    "googleLinkedElsewhere": "To konto Google jest już powiązane z innym użytkownikiem.",
+    "googleAlreadyLinked": "Konto Google jest już powiązane z tym użytkownikiem.",
+    "googleNotVerified": "Nie udało się zweryfikować konta Google.",
+    "googleEmailNotVerified": "Konto Google nie ma potwierdzonego adresu e-mail.",
+    "transferBeforeLeaving": "Przekaż zespół innej osobie, zanim go opuścisz.",
+    "newOwnerNotMember": "Nowy właściciel musi być członkiem zespołu.",
+    "ownAdminRole": "Nie możesz odebrać roli administratora własnemu kontu.",
+    "ownLock": "Nie możesz zablokować własnego konta.",
+    "ownDelete": "Nie możesz usunąć własnego konta.",
+    "userOwnsProjects": "Najpierw przekaż lub usuń projekty i zespoły tego użytkownika.",
+    "userHasAttachments": "Najpierw usuń załączniki tego użytkownika."
+  },
+  "feedback": {
+    "saved": "Zapisano zmiany.",
+    "failed": "Nie udało się wykonać operacji.",
+    "offline": "Brak połączenia z serwerem.",
+    "rateLimit": "Za dużo prób. Spróbuj ponownie za chwilę.",
+    "working": "Trwa operacja…"
+  },
+  "sessions": {
+    "title": "Aktywne sesje",
+    "current": "Ta sesja",
+    "device": "Inne urządzenie",
+    "unknown": "Nieznane urządzenie",
+    "revoke": "Wyloguj sesję",
+    "logoutAll": "Wyloguj wszystkie urządzenia"
+  },
+  "filters": {
+    "search": "Szukaj zadań",
+    "project": "Projekt",
+    "priority": "Priorytet",
+    "all": "Wszystkie",
+    "name": "Nazwa filtra",
+    "save": "Zapisz filtr",
+    "tooLong": "Filtry są za długie. Skróć wyszukiwanie lub usuń filtr."
+  },
+  "history": {
+    "title": "Historia zmian",
+    "system": "System",
+    "empty": "Brak zmian. Historia jest zapisywana od aktualizacji aplikacji.",
+    "retry": "Ponów",
+    "more": "Pokaż więcej",
+    "formerMember": "Były członek projektu",
+    "parent": "Zadanie nadrzędne",
+    "fields": {
+      "Created": "Utworzono zadanie",
+      "Title": "Tytuł",
+      "Description": "Opis",
+      "DueDate": "Termin",
+      "Status": "Status",
+      "Priority": "Priorytet",
+      "AssignedUserId": "Przypisanie",
+      "ParentTaskId": "Zadanie nadrzędne"
+    }
   }
 }

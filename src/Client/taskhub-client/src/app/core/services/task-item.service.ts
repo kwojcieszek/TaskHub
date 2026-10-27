@@ -65,7 +65,8 @@ export class TaskItemService {
       dueDate: task.dueDate,
       status,
       priority: task.priority,
-      assignedUserId: task.assignedUserId
+      assignedUserId: task.assignedUserId,
+      recurrence: task.recurrence
     });
   }
 
@@ -78,7 +79,8 @@ export class TaskItemService {
       dueDate: task.dueDate,
       status: task.startedAt ? 'InProgress' : 'ToDo',
       priority: task.priority,
-      assignedUserId: task.assignedUserId
+      assignedUserId: task.assignedUserId,
+      recurrence: task.recurrence
     });
   }
 }

@@ -11,6 +11,8 @@ public static class ApiRoutes
     public const string Register = Root + "/auth/register";
     public const string Me = Root + "/auth/me";
     public const string Password = Root + "/auth/password";
+    public const string ForgotPassword = Root + "/auth/password/forgot";
+    public const string ResetPassword = Root + "/auth/password/reset";
     public const string Providers = Root + "/auth/providers";
     public const string MyLogins = Root + "/auth/logins";
     public const string TwoFactorSetup = Root + "/auth/2fa/setup";

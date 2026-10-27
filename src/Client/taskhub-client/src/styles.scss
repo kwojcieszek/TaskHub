@@ -170,6 +170,17 @@ body {
   }
 }
 
+// PrimeNG renders the navigation links inside its own component.
+.app-menubar .p-menubar-item-link {
+  min-height: 2.25rem;
+  padding: 0.45rem 0.75rem;
+  align-items: center;
+
+  .p-menubar-item-icon {
+    font-size: 1.1rem;
+  }
+}
+
 .dictation {
   position: relative;
   display: block;
@@ -178,6 +189,21 @@ body {
 
 .dictation__field {
   padding-right: 2.5rem !important;
+}
+
+.dictation__status {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: var(--p-text-muted-color);
+  overflow-wrap: anywhere;
+
+  &[hidden] { display: none; }
+}
+
+.dictation__status--error {
+  color: var(--tone-red-fg);
 }
 
 .dictation__button {
@@ -203,6 +229,29 @@ body {
 
   i {
     font-size: 0.9rem;
+  }
+}
+
+.dictation:has(> input) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+
+  > input,
+  > .dictation__button {
+    grid-area: 1 / 1;
+  }
+
+  > .dictation__button {
+    position: relative;
+    top: auto;
+    right: auto;
+    align-self: center;
+    justify-self: end;
+    margin-right: 0.3rem;
+  }
+
+  > .dictation__status {
+    grid-area: 2 / 1;
   }
 }
 
@@ -573,6 +622,19 @@ body {
     &:hover {
       text-decoration: underline;
     }
+  }
+}
+
+.auth-forgot {
+  align-self: flex-end;
+  margin-top: -0.5rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--p-primary-color);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
   }
 }
 

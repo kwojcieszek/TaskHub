@@ -1,6 +1,8 @@
+import { UserGroupService } from '../../core/services/user-group.service';
+import { DialogSave } from '../../shared/dialog-save';
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { DynamicDialogRef } from 'primeng/dynamicdialog';
+import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { InputText } from 'primeng/inputtext';
 import { Listbox } from 'primeng/listbox';
 import { Button } from 'primeng/button';
@@ -22,6 +24,9 @@ export class AddUserDialogComponent {
   private readonly fb = inject(FormBuilder);
   private readonly userDirectory = inject(UserDirectoryService);
   private readonly dialogRef = inject(DynamicDialogRef);
+  readonly save = new DialogSave(this.dialogRef);
+  private readonly config = inject(DynamicDialogConfig);
+  private readonly persistence = inject(UserGroupService);
 
   readonly results = signal<UserSummary[]>([]);
   readonly selectedUser = signal<UserSummary | null>(null);
@@ -42,7 +47,7 @@ export class AddUserDialogComponent {
     if (!user) {
       return;
     }
-    this.dialogRef.close({ userId: user.id });
+    this.save.submit(this.persistence.addMember(this.config.data.groupId, { userId: user.id }));
   }
 
   cancel(): void {

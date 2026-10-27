@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, NgZone, inject } from '@angular/core';
 import {
   DictationHandlers,
   SpeechRecognitionFactory,
@@ -16,6 +16,7 @@ const RECOGNITION_LOCALES: Record<AppLanguage, string> = { pl: 'pl-PL', en: 'en-
 @Injectable({ providedIn: 'root' })
 export class DictationService {
   private readonly language = inject(LanguageService);
+  private readonly zone = inject(NgZone);
   private readonly factory: SpeechRecognitionFactory | null = this.resolveFactory();
 
   private active: SpeechRecognitionLike | null = null;
@@ -34,32 +35,73 @@ export class DictationService {
     const recognition = new this.factory();
     recognition.lang = RECOGNITION_LOCALES[this.language.current()];
     recognition.continuous = true;
-    recognition.interimResults = false;
+    recognition.interimResults = true;
+    let ended = false;
+    let stopped = false;
+    let failed = false;
+    let receivedText = false;
+    const delivered = new Set<number>();
 
-    recognition.onresult = (event) => {
+    recognition.onstart = () => this.zone.run(() => {
+      if (!ended) handlers.onListening?.();
+    });
+
+    // Speech recognition callbacks are not patched by Zone.js in every browser.
+    recognition.onresult = (event) => this.zone.run(() => {
+      if (ended || this.active !== recognition) return;
+
       for (let index = event.resultIndex; index < event.results.length; index++) {
         const result = event.results[index];
 
-        if (result.isFinal) {
-          handlers.onText(result[0].transcript.trim());
+        if (result.isFinal && !delivered.has(index)) {
+          delivered.add(index);
+          const text = result[0].transcript.trim();
+          if (text) {
+            receivedText = true;
+            handlers.onText(text);
+          }
         }
       }
-    };
 
-    recognition.onerror = (event) => handlers.onError(event.error);
+      const interim = Array.from(event.results)
+        .filter(result => !result.isFinal)
+        .map(result => result[0].transcript.trim())
+        .join(' ');
+      handlers.onInterim?.(interim);
+    });
 
-    recognition.onend = () => {
+    recognition.onerror = (event) => this.zone.run(() => {
+      if (ended) return;
+      failed = true;
+      handlers.onError(event.error);
+    });
+
+    recognition.onend = () => this.zone.run(() => {
+      if (ended) return;
+      ended = true;
       if (this.active === recognition) {
         this.active = null;
       }
 
+      if (!receivedText && !failed && !stopped) handlers.onError('no-speech');
+      handlers.onInterim?.('');
       handlers.onEnd();
-    };
+    });
 
     this.active = recognition;
-    recognition.start();
+    try {
+      recognition.start();
+    } catch (error) {
+      const name = error instanceof DOMException ? error.name : '';
+      recognition.onerror({ error: name === 'NotAllowedError' || name === 'SecurityError' ? 'not-allowed' : 'start-failed' });
+      recognition.onend();
+    }
 
-    return () => recognition.stop();
+    return () => {
+      if (ended || stopped) return;
+      stopped = true;
+      recognition.stop();
+    };
   }
 
   private resolveFactory(): SpeechRecognitionFactory | null {

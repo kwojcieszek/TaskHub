@@ -12,6 +12,7 @@ using TaskHub.Api.Controllers;
 using TaskHub.Application.Common;
 using TaskHub.Application.Dtos.Admin;
 using TaskHub.Application.Dtos.Auth;
+using TaskHub.Application.Interfaces;
 using TaskHub.Application.Options;
 
 namespace TaskHub.IntegrationTests.Support;
@@ -65,6 +66,7 @@ public class TaskHubApiFactory : WebApplicationFactory<ApiControllerBase>
             ["Security:PasswordPolicy:RequireDigit"] = "true",
             ["Security:PasswordPolicy:RequireNonAlphanumeric"] = "false",
             ["GoogleAuth:ClientId"] = "",
+            ["PasswordReset:ResetUrl"] = "https://taskhub.test/reset-password",
             // Off by default, so signing many users in does not trip the limiter; the rate limiting tests switch it on.
             ["RateLimiting:Enabled"] = "false",
             ["ReverseProxy:Enabled"] = "false",
@@ -77,6 +79,8 @@ public class TaskHubApiFactory : WebApplicationFactory<ApiControllerBase>
     public string DatabasePath => Path.Combine(_workDirectory, "taskhub.db");
 
     public string AttachmentsPath => Path.Combine(_workDirectory, "attachments");
+
+    public CapturingEmailSender Email { get; } = new();
 
     public JwtOptions Jwt => Services.GetRequiredService<IOptions<JwtOptions>>().Value;
 
@@ -220,6 +224,7 @@ public class TaskHubApiFactory : WebApplicationFactory<ApiControllerBase>
         {
             // Hashing with the production work factor would make up most of the run time of the suite.
             services.Configure<PasswordHasherOptions>(options => options.IterationCount = 1000);
+            services.AddSingleton<IEmailSender>(Email);
         });
     }
 

@@ -21,4 +21,7 @@ public class UpdateTaskItemRequest
     public TaskItemPriority Priority { get; set; }
 
     public Guid? AssignedUserId { get; set; }
+
+    // Null for a task that does not repeat.
+    public TaskRecurrenceDto? Recurrence { get; set; }
 }

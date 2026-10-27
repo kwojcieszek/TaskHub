@@ -6,14 +6,23 @@ src/Backend/TaskHub.Api/*.db
 src/Backend/TaskHub.Api/*.db-shm
 src/Backend/TaskHub.Api/*.db-wal
 src/Backend/TaskHub.Api/*.bak-*
+src/Backend/TaskHub.Api/*.db.v*.bak
 src/Backend/TaskHub.Api/attachments/
 
 # Angular
 src/Client/taskhub-client/node_modules/
 src/Client/taskhub-client/dist/
 src/Client/taskhub-client/.angular/
+src/Client/taskhub-client/obj/
 
 # IDE
 .vs/
 .vscode/
 *.user
+
+# Local verification output
+TestResults/
+
+# Browser verification artifacts
+.playwright-cli/
+output/playwright/

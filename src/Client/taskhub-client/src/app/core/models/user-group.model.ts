@@ -3,6 +3,9 @@ export interface UserGroup {
   name: string;
   description: string | null;
   memberCount: number;
+  canManage: boolean;
+  ownerId: string | null;
+  ownerDisplayName: string | null;
 }
 
 export interface CreateUserGroupRequest {

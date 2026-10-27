@@ -4,6 +4,7 @@
   [class.task-row--sub]="isNested"
   [class.task-row--closed]="isClosed"
   [class.task-row--clickable]="isClickable"
+  [class.task-row--stacked]="stacked"
   (click)="onRowClick()"
 >
   @if (isNested) {
@@ -44,6 +45,11 @@
     @if (task.subTasks.length > 0) {
       <span class="task-row__meta" [title]="'tasks.subTaskProgress' | translate">
         <i class="pi pi-sitemap"></i>{{ doneSubTaskCount }}/{{ activeSubTaskCount }}
+      </span>
+    }
+    @if (task.recurrence) {
+      <span class="task-row__meta" [title]="'tasks.recurrence.repeats' | translate">
+        <i class="pi pi-sync"></i>{{ 'tasks.recurrence.short.' + task.recurrence.unit | translate: { count: task.recurrence.interval } }}
       </span>
     }
     @if (task.attachmentCount > 0) {

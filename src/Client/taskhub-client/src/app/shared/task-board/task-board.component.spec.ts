@@ -24,6 +24,7 @@ function task(id: string, overrides: Partial<TaskItem> = {}): TaskItem {
     startedAt: null,
     completedAt: null,
     attachmentCount: 0,
+    recurrence: null,
     subTasks: [],
     ...overrides
   };

@@ -91,9 +91,8 @@ public class AccountSafetyRulesTests : IDisposable
     }
 
     [Fact]
-    public async Task Task_KeepsAnAssigneeWhoLeftTheProject_UntilTheAssigneeIsChanged()
+    public async Task Task_ClearsAnAssigneeWhoLosesAccessAndRecordsTheChange()
     {
-        // Only a change of the assignee is checked, so an old task can still be edited after its assignee left.
         var owner = await _host.CreateUserAsync("owner");
         var member = await _host.CreateUserAsync("member");
         var project = await _host.CreateProjectAsync(owner);
@@ -101,12 +100,10 @@ public class AccountSafetyRulesTests : IDisposable
         var tasks = _host.Get<ITaskItemService>();
         var task = await tasks.CreateAsync(project.Id, new CreateTaskItemRequest { Title = "Assigned", AssignedUserId = member.Id });
         await _host.Get<IProjectService>().RemoveMemberAsync(project.Id, member.Id);
-
-        var renamed = await tasks.UpdateAsync(project.Id, task.Id, new UpdateTaskItemRequest { Title = "Renamed", AssignedUserId = member.Id });
-        var cleared = await tasks.UpdateAsync(project.Id, task.Id, new UpdateTaskItemRequest { Title = "Renamed", AssignedUserId = null });
-
+        Assert.Null((await tasks.GetByIdAsync(project.Id, task.Id)).AssignedUserId);
+        Assert.Contains(await tasks.GetHistoryAsync(project.Id, task.Id), h => h.Field == "AssignedUserId" && h.OldValue == member.Id.ToString() && h.NewValue == null);
+        var renamed = await tasks.UpdateAsync(project.Id, task.Id, new UpdateTaskItemRequest { Title = "Renamed" });
         Assert.Equal("Renamed", renamed.Title);
-        Assert.Null(cleared.AssignedUserId);
         await Assert.ThrowsAsync<ValidationFailedException>(() => tasks.UpdateAsync(project.Id, task.Id, new UpdateTaskItemRequest { Title = "Renamed", AssignedUserId = member.Id }));
     }
 

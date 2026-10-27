@@ -23,7 +23,7 @@ public class JwtTokenService : IJwtTokenService
         _options = options.Value;
     }
 
-    public (string Token, DateTimeOffset ExpiresAt) CreateAccessToken(User user, IReadOnlyCollection<string> roles)
+    public (string Token, DateTimeOffset ExpiresAt) CreateAccessToken(User user, IReadOnlyCollection<string> roles, Guid? sessionId = null)
     {
         var expiresAt = DateTimeOffset.UtcNow.AddMinutes(_options.AccessTokenMinutes);
 
@@ -37,6 +37,7 @@ public class JwtTokenService : IJwtTokenService
         };
 
         claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
+        if (sessionId.HasValue) claims.Add(new Claim(AppClaimTypes.SessionId, sessionId.Value.ToString()));
 
         var token = CreateToken(claims, expiresAt);
 
@@ -50,7 +51,8 @@ public class JwtTokenService : IJwtTokenService
         var claims = new List<Claim>
         {
             new(ClaimTypes.NameIdentifier, userId.ToString()),
-            new(TwoFactorPurposeClaim, TwoFactorPurposeValue)
+            new(TwoFactorPurposeClaim, TwoFactorPurposeValue),
+            new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
 
         return CreateToken(claims, expiresAt);

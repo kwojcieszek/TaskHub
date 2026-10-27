@@ -1,7 +1,13 @@
+import { FormsModule } from '@angular/forms';
+import { UserSettingService } from '../../core/services/user-setting.service';
+import { ApiFeedbackService } from '../../core/services/api-feedback.service';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { DialogService } from 'primeng/dynamicdialog';
 import { ConfirmationService } from 'primeng/api';
 import { ConfirmDialog } from 'primeng/confirmdialog';
+import { Button } from 'primeng/button';
+import { InputText } from 'primeng/inputtext';
+import { Select } from 'primeng/select';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { catchError, forkJoin, of } from 'rxjs';
 import { TaskItemService } from '../../core/services/task-item.service';
@@ -20,6 +26,8 @@ type TasksView = 'list' | 'board';
 const VIEW_STORAGE_KEY = 'taskhub.tasksView';
 const BOARD_STATUSES_STORAGE_KEY = 'taskhub.boardStatuses';
 
+interface SavedFilter { name: string; search: string; project: string; priority: string; status: TaskStatusFilter; }
+
 interface TaskSection {
   key: string;
   icon: string;
@@ -30,7 +38,7 @@ interface TaskSection {
 @Component({
   selector: 'app-tasks-overview',
   standalone: true,
-  imports: [ConfirmDialog, TranslateModule, TaskRowComponent, TaskBoardComponent, StatusFilterComponent],
+  imports: [FormsModule, ConfirmDialog, Button, InputText, Select, TranslateModule, TaskRowComponent, TaskBoardComponent, StatusFilterComponent],
   providers: [DialogService, ConfirmationService],
   templateUrl: './tasks-overview.component.html',
   styleUrl: './tasks-overview.component.scss'
@@ -42,6 +50,43 @@ export class TasksOverviewComponent implements OnInit {
   private readonly confirmationService = inject(ConfirmationService);
   private readonly translate = inject(TranslateService);
 
+  private readonly settings = inject(UserSettingService);
+  private readonly feedback = inject(ApiFeedbackService);
+  readonly search = signal(''); readonly projectFilter = signal(''); readonly priorityFilter = signal('');
+  readonly filterName = signal(''); readonly savedFilters = signal<SavedFilter[]>([]);
+  readonly projectOptions = computed(() => Object.entries(this.projectNames()).map(([id, name]) => ({id, name})));
+
+  // An empty value means no filter; it is the first choice of both lists.
+  readonly projectFilterOptions = computed(() => [
+    { label: this.translate.instant('filters.all'), value: '' },
+    ...this.projectOptions().map((project) => ({ label: project.name, value: project.id }))
+  ]);
+
+  readonly priorityFilterOptions = [
+    { label: this.translate.instant('filters.all'), value: '' },
+    ...['Low', 'Medium', 'High', 'Critical'].map((priority) => ({
+      label: this.translate.instant('tasks.priority.' + priority),
+      value: priority
+    }))
+  ];
+  readonly filteredTasks = computed(() => {
+    const query = this.search().trim().toLocaleLowerCase();
+    return this.tasks().filter(task => (!this.projectFilter() || task.projectId === this.projectFilter()) &&
+      (!this.priorityFilter() || task.priority === this.priorityFilter()) &&
+      (!query || [task.title, task.description, task.assignedUserDisplayName, this.projectName(task)].join(' ').toLocaleLowerCase().includes(query)));
+  });
+  saveFilter(): void {
+    const name = this.filterName().trim().slice(0, 60); if (!name) return;
+    const filter: SavedFilter = {name, search: this.search().slice(0, 200), project: this.projectFilter(), priority: this.priorityFilter(), status: this.statusFilter()};
+    this.persistFilters([...this.savedFilters().filter(f => f.name !== name), filter].slice(-10));
+  }
+  applyFilter(filter: SavedFilter): void { this.search.set(filter.search); this.projectFilter.set(filter.project); this.priorityFilter.set(filter.priority); this.statusFilter.set(filter.status); }
+  deleteFilter(filter: SavedFilter): void { this.persistFilters(this.savedFilters().filter(f => f.name !== filter.name)); }
+  private persistFilters(filters: SavedFilter[]): void {
+    const value = JSON.stringify(filters);
+    if(value.length > 4000) {this.feedback.show('error', 'filters.tooLong'); return;}
+    this.settings.set('taskFilters', value).subscribe({next: () => {this.savedFilters.set(filters); this.filterName.set('');}, error: () => {}});
+  }
   private readonly tasks = signal<TaskItem[]>([]);
   readonly projectNames = signal<Record<string, string>>({});
   readonly loading = signal(false);
@@ -53,7 +98,7 @@ export class TasksOverviewComponent implements OnInit {
   readonly view = signal<TasksView>(localStorage.getItem(VIEW_STORAGE_KEY) === 'board' ? 'board' : 'list');
 
   // The board decides by its columns which tasks it shows, so it gets all of them.
-  readonly boardTasks = computed(() => this.tasks());
+  readonly boardTasks = computed(() => this.filteredTasks());
 
   // The statuses that have a column on the board; any combination with at least one. The choice is remembered.
   readonly boardStatusOptions = TASK_BOARD_STATUSES;
@@ -69,7 +114,7 @@ export class TasksOverviewComponent implements OnInit {
   readonly upcoming = computed(() => this.bucket((date, today) => date.getTime() > today.getTime(), true));
 
   readonly noDueDate = computed(() =>
-    this.tasks()
+    this.filteredTasks()
       .filter((task) => !task.dueDate && this.matchesStatus(task, true))
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
   );
@@ -82,6 +127,12 @@ export class TasksOverviewComponent implements OnInit {
   ]);
 
   ngOnInit(): void {
+    this.settings.getAll().subscribe({next: settings => {
+      try {
+        const parsed: unknown = JSON.parse(settings.find(s => s.key === 'taskFilters')?.value ?? '[]');
+        if (Array.isArray(parsed)) this.savedFilters.set(parsed.filter(f => f && typeof f.name === 'string' && typeof f.search === 'string' && typeof f.project === 'string' && ['', 'Low', 'Medium', 'High', 'Critical'].includes(f.priority) && ['All', 'ToDo', 'InProgress', 'Done'].includes(f.status)).slice(0, 10));
+      } catch { this.savedFilters.set([]); }
+    }, error: () => {}});
     this.load();
   }
 
@@ -175,7 +226,8 @@ export class TasksOverviewComponent implements OnInit {
     members$.subscribe((members) => {
       const ref = this.dialogService.open(TaskDialogComponent, {
         header: this.translate.instant('common.edit'),
-        width: 'min(1040px, 96vw)',
+        width: 'min(620px, 96vw)',
+        style: { maxHeight: 'calc(100dvh - 2rem)' },
         data: { task, members, statusDerived: this.parentTaskIds().has(task.id) }
       });
       ref?.onClose.subscribe((result) => {
@@ -184,7 +236,7 @@ export class TasksOverviewComponent implements OnInit {
           this.load();
           return;
         }
-        this.taskItemService.update(task.projectId, task.id, result).subscribe(() => this.load());
+        this.load();
       });
     });
   }
@@ -252,7 +304,7 @@ export class TasksOverviewComponent implements OnInit {
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
 
-    return this.tasks()
+    return this.filteredTasks()
       .filter((task) => task.dueDate && this.matchesStatus(task, excludeDone))
       .filter((task) => {
         const dueDate = new Date(task.dueDate!);

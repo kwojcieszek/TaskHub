@@ -16,6 +16,14 @@ import { ProjectGroupDialogComponent } from '../project-group-dialog/project-gro
 import { ProjectDetailComponent } from '../project-detail/project-detail.component';
 import { ProjectAvatarComponent } from '../../../shared/project-avatar/project-avatar.component';
 
+const SIDEBAR_WIDTH_STORAGE_KEY = 'taskhub.projectsSidebarWidth';
+const DEFAULT_SIDEBAR_WIDTH = 360;
+const MIN_SIDEBAR_WIDTH = 220;
+const MAX_SIDEBAR_WIDTH = 640;
+// The tasks keep at least this share of the layout, however far the divider is dragged.
+const MAX_SIDEBAR_SHARE = 0.6;
+const KEYBOARD_RESIZE_STEP = 16;
+
 interface ProjectStat {
   labelKey: string;
   icon: string;
@@ -49,6 +57,11 @@ export class ProjectListComponent implements OnInit {
   readonly loading = signal(false);
   readonly loadError = signal(false);
   readonly selectedProjectId = signal<string | null>(null);
+  readonly sidebarWidth = signal(this.readStoredSidebarWidth());
+  readonly resizing = signal(false);
+
+  readonly minSidebarWidth = MIN_SIDEBAR_WIDTH;
+  readonly maxSidebarWidth = MAX_SIDEBAR_WIDTH;
 
   readonly manageableGroups = computed(() => this.groups().filter((group) => this.canManageGroup(group)));
 
@@ -127,10 +140,8 @@ export class ProjectListComponent implements OnInit {
       if (!result) {
         return;
       }
-      this.projectService.create(result).subscribe((project) => {
-        this.selectedProjectId.set(project.id);
-        this.load();
-      });
+      this.selectedProjectId.set(result.id);
+      this.load();
     });
   }
 
@@ -144,7 +155,7 @@ export class ProjectListComponent implements OnInit {
       if (!result) {
         return;
       }
-      this.projectGroupService.create(result).subscribe(() => this.load());
+      this.load();
     });
   }
 
@@ -158,7 +169,7 @@ export class ProjectListComponent implements OnInit {
       if (!result) {
         return;
       }
-      this.projectGroupService.update(group.id, result).subscribe(() => this.load());
+      this.load();
     });
   }
 
@@ -172,6 +183,57 @@ export class ProjectListComponent implements OnInit {
     this.selectedProjectId.set(project.id);
   }
 
+  // The divider captures the pointer, so it keeps receiving the moves while dragged over the panels.
+  startResize(event: PointerEvent): void {
+    if (event.button !== 0) {
+      return;
+    }
+
+    (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
+    this.resizing.set(true);
+    event.preventDefault();
+  }
+
+  resize(event: PointerEvent): void {
+    if (!this.resizing()) {
+      return;
+    }
+
+    const divider = event.currentTarget as HTMLElement;
+    const layout = divider.parentElement!.getBoundingClientRect();
+    const width = event.clientX - layout.left - divider.offsetWidth / 2;
+
+    this.sidebarWidth.set(this.clampSidebarWidth(width, layout.width));
+  }
+
+  endResize(event: PointerEvent): void {
+    if (!this.resizing()) {
+      return;
+    }
+
+    (event.currentTarget as HTMLElement).releasePointerCapture(event.pointerId);
+    this.resizing.set(false);
+    this.storeSidebarWidth();
+  }
+
+  resizeWithKeyboard(event: KeyboardEvent): void {
+    const step = event.key === 'ArrowLeft' ? -KEYBOARD_RESIZE_STEP : event.key === 'ArrowRight' ? KEYBOARD_RESIZE_STEP : 0;
+
+    if (step === 0) {
+      return;
+    }
+
+    const layoutWidth = (event.currentTarget as HTMLElement).parentElement!.getBoundingClientRect().width;
+    this.sidebarWidth.set(this.clampSidebarWidth(this.sidebarWidth() + step, layoutWidth));
+    this.storeSidebarWidth();
+    event.preventDefault();
+  }
+
+  resetSidebarWidth(): void {
+    this.sidebarWidth.set(DEFAULT_SIDEBAR_WIDTH);
+    this.storeSidebarWidth();
+  }
+
   onDetailChanged(): void {
     this.load();
   }
@@ -179,6 +241,30 @@ export class ProjectListComponent implements OnInit {
   onDetailDeleted(): void {
     this.selectedProjectId.set(null);
     this.load();
+  }
+
+  private clampSidebarWidth(width: number, layoutWidth: number): number {
+    const max = Math.max(MIN_SIDEBAR_WIDTH, Math.min(MAX_SIDEBAR_WIDTH, layoutWidth * MAX_SIDEBAR_SHARE));
+
+    return Math.round(Math.min(max, Math.max(MIN_SIDEBAR_WIDTH, width)));
+  }
+
+  private readStoredSidebarWidth(): number {
+    try {
+      const stored = Number(localStorage.getItem(SIDEBAR_WIDTH_STORAGE_KEY));
+
+      return stored >= MIN_SIDEBAR_WIDTH && stored <= MAX_SIDEBAR_WIDTH ? stored : DEFAULT_SIDEBAR_WIDTH;
+    } catch {
+      return DEFAULT_SIDEBAR_WIDTH;
+    }
+  }
+
+  private storeSidebarWidth(): void {
+    try {
+      localStorage.setItem(SIDEBAR_WIDTH_STORAGE_KEY, String(this.sidebarWidth()));
+    } catch {
+      // The width then simply falls back to the default next time.
+    }
   }
 
   private confirmDelete(messageKey: string, accept: () => void): void {

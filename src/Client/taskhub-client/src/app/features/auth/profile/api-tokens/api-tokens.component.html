@@ -40,7 +40,7 @@
         <input pInputText id="tokenDays" type="number" formControlName="customDays" min="1" [max]="maxLifetimeDays" class="w-full" />
       </div>
     }
-    <p-button [label]="'profile.tokens.create' | translate" icon="pi pi-plus" type="submit" [loading]="saving()" [disabled]="form.invalid" />
+    <p-button [label]="'profile.tokens.create' | translate" icon="pi pi-plus" type="submit" [loading]="saving()" />
   </form>
 
   @if (form.controls.lifetime.value === 'never') {

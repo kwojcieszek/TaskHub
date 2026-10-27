@@ -4,6 +4,7 @@ public static class AppClaimTypes
 {
     // Version of the user's sessions; a token carrying an older value than the user has now is rejected.
     public const string TokenVersion = "tv";
+    public const string SessionId = "sid";
 
     // Marks a short-lived token that only proves the first login step; it is never a valid access token.
     public const string Purpose = "purpose";

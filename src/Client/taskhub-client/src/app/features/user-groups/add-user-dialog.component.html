@@ -5,6 +5,7 @@
     <small class="field-hint">{{ 'users.searchHint' | translate }}</small>
   </div>
 
+  @if (results().length > 0) {
   <p-listbox
     [options]="results()"
     [ngModel]="selectedUser()"
@@ -17,9 +18,10 @@
       <span>{{ user.displayName }}@if (user.userName) { ({{ user.userName }}) }</span>
     </ng-template>
   </p-listbox>
+  }
 
   <div class="dialog-actions">
     <p-button [label]="'common.cancel' | translate" severity="secondary" [outlined]="true" type="button" (onClick)="cancel()" />
-    <p-button [label]="'common.save' | translate" icon="pi pi-check" type="button" [disabled]="!selectedUser()" (onClick)="submit()" />
+    <p-button [label]="'common.save' | translate" icon="pi pi-check" type="button" [disabled]="!selectedUser() || save.pending()" [loading]="save.pending()" (onClick)="submit()" />
   </div>
 </div>

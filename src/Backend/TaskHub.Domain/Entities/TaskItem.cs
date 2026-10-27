@@ -39,4 +39,11 @@ public class TaskItem
     public DateTime? StartedAt { get; set; }
 
     public DateTime? CompletedAt { get; set; }
+
+    // Set together on a repeating task: completing it creates the next occurrence, which takes the settings over.
+    public int? RecurrenceInterval { get; set; }
+
+    public RecurrenceUnit? RecurrenceUnit { get; set; }
+
+    public RecurrenceBasis? RecurrenceBasis { get; set; }
 }

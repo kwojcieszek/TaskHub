@@ -9,4 +9,8 @@ public class UserGroupDto
     public string? Description { get; set; }
 
     public int MemberCount { get; set; }
+
+    public bool CanManage { get; set; }
+    public Guid? OwnerId { get; set; }
+    public string? OwnerDisplayName { get; set; }
 }

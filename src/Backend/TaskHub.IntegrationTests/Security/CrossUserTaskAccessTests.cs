@@ -213,7 +213,7 @@ public class CrossUserTaskAccessTests : IClassFixture<TaskOwnersFixture>
         Assert.Equal(TaskItemStatus.InProgress, kept.Status);
     }
 
-    [Fact(Skip = KnownDefects.RemovedMemberStaysAssigned)]
+    [Fact]
     public async Task RemovedMember_IsNoLongerTheAssigneeOfTheProjectsTasks()
     {
         var owner = await _fixture.CreateOwnerAsync("unassignowner");

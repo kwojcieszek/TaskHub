@@ -22,6 +22,7 @@ function task(overrides: Partial<TaskItem> = {}): TaskItem {
     startedAt: null,
     completedAt: null,
     attachmentCount: 0,
+    recurrence: null,
     subTasks: [],
     ...overrides
   };
@@ -60,7 +61,8 @@ describe('TaskItemService', () => {
   });
 
   it('updates the task for any other move and keeps the rest of it', () => {
-    service.setStatus(task({ status: 'Done', startedAt: '2026-02-01T00:00:00Z' }), 'InProgress').subscribe();
+    const recurrence = { interval: 2, unit: 'Week' as const, basis: 'DueDate' as const };
+    service.setStatus(task({ status: 'Done', startedAt: '2026-02-01T00:00:00Z', recurrence }), 'InProgress').subscribe();
 
     const request = http.expectOne(`${tasksUrl}/t1`);
     expect(request.request.method).toBe('PUT');
@@ -71,7 +73,8 @@ describe('TaskItemService', () => {
       dueDate: '2026-05-01T00:00:00Z',
       status: 'InProgress',
       priority: 'High',
-      assignedUserId: 'u1'
+      assignedUserId: 'u1',
+      recurrence
     });
     request.flush(task({ status: 'InProgress' }));
   });

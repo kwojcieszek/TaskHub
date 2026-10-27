@@ -1,3 +1,5 @@
+<p-confirmdialog key="adminUsers" appendTo="body" [style]="{ width: 'min(480px, 94vw)' }" />
+
 <div class="admin-users-toolbar">
   <p-button [label]="'admin.newUser' | translate" icon="pi pi-user-plus" (onClick)="createUser()" />
   @if (errorKey(); as key) {
@@ -25,8 +27,8 @@
       <td>
         <div class="role-checks">
           @for (role of availableRoles; track role) {
-            <label class="role-check chip" [attr.data-role]="role">
-              <p-checkbox [binary]="true" [ngModel]="hasRole(user, role)" (onChange)="toggleRole(user, role)" />
+            <label class="role-check" (click)="onRoleClick($event, user, role)">
+              <p-checkbox [binary]="true" [ngModel]="hasRole(user, role)" />
               {{ role }}
             </label>
           }
@@ -45,22 +47,26 @@
         }
       </td>
       <td>
-        <p-button
-          [label]="(user.lockedOut ? 'admin.unlock' : 'admin.lock') | translate"
-          [icon]="user.lockedOut ? 'pi pi-lock-open' : 'pi pi-lock'"
-          [severity]="user.lockedOut ? 'success' : 'warn'"
-          [outlined]="true"
-          size="small"
-          (onClick)="toggleLockout(user)"
-        />
+        @if (!isSelf(user)) {
+          <p-button
+            [label]="(user.lockedOut ? 'admin.unlock' : 'admin.lock') | translate"
+            [icon]="user.lockedOut ? 'pi pi-lock-open' : 'pi pi-lock'"
+            [severity]="user.lockedOut ? 'success' : 'warn'"
+            [outlined]="true"
+            size="small"
+            (onClick)="toggleLockout(user)"
+          />
+        }
       </td>
       <td class="nowrap">
         <button type="button" class="icon-btn icon-btn--primary" [title]="'admin.resetPassword' | translate" (click)="resetPassword(user)">
           <i class="pi pi-key"></i>
         </button>
-        <button type="button" class="icon-btn icon-btn--danger" [title]="'common.delete' | translate" (click)="deleteUser(user)">
-          <i class="pi pi-trash"></i>
-        </button>
+        @if (!isSelf(user)) {
+          <button type="button" class="icon-btn icon-btn--danger" [title]="'common.delete' | translate" (click)="deleteUser(user)">
+            <i class="pi pi-trash"></i>
+          </button>
+        }
       </td>
     </tr>
   </ng-template>

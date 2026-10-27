@@ -4,27 +4,20 @@ using Microsoft.Extensions.Options;
 using TaskHub.Application.Common;
 using TaskHub.Application.Options;
 using TaskHub.Domain.Entities;
-using TaskHub.Infrastructure.Persistence;
 
 namespace TaskHub.Infrastructure.Seed;
 
 public class DbSeeder
 {
-    private readonly ApplicationDbContext _dbContext;
-    private readonly DatabaseSchemaUpdater _schemaUpdater;
     private readonly UserManager<User> _userManager;
     private readonly RoleManager<Role> _roleManager;
     private readonly DefaultAdminOptions _defaultAdmin;
 
     public DbSeeder(
-        ApplicationDbContext dbContext,
-        DatabaseSchemaUpdater schemaUpdater,
         UserManager<User> userManager,
         RoleManager<Role> roleManager,
         IOptions<DefaultAdminOptions> defaultAdmin)
     {
-        _dbContext = dbContext;
-        _schemaUpdater = schemaUpdater;
         _userManager = userManager;
         _roleManager = roleManager;
         _defaultAdmin = defaultAdmin.Value;
@@ -32,14 +25,6 @@ public class DbSeeder
 
     public async Task SeedAsync()
     {
-        var created = await _dbContext.Database.EnsureCreatedAsync();
-
-        // A database that was already there may come from an earlier version of the application.
-        if (!created)
-        {
-            await _schemaUpdater.UpdateAsync();
-        }
-
         await EnsureRoleAsync(Roles.Admin);
         await EnsureRoleAsync(Roles.User);
 

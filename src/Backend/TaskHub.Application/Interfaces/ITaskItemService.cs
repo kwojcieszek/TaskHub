@@ -4,6 +4,7 @@ namespace TaskHub.Application.Interfaces;
 
 public interface ITaskItemService
 {
+    Task<IReadOnlyCollection<TaskChangeDto>> GetHistoryAsync(Guid projectId, Guid taskId, int page = 1, CancellationToken cancellationToken = default);
     Task<IReadOnlyCollection<TaskItemDto>> GetByProjectAsync(Guid projectId, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyCollection<TaskItemDto>> GetSubTasksAsync(Guid projectId, Guid taskId, CancellationToken cancellationToken = default);
