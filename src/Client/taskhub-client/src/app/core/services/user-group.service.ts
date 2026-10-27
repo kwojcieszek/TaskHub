@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { environment } from '../../../environments/environment';
+import { appSettings } from '../config/app-settings';
 import {
   AddUserGroupMemberRequest,
   CreateUserGroupRequest,
@@ -12,7 +12,7 @@ import {
 
 @Injectable({ providedIn: 'root' })
 export class UserGroupService {
-  private readonly baseUrl = `${environment.apiUrl}/user-groups`;
+  private readonly baseUrl = `${appSettings.apiUrl}/user-groups`;
 
   constructor(private readonly http: HttpClient) {}
 

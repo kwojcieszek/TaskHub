@@ -1,11 +1,11 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { environment } from '../../../environments/environment';
+import { appSettings } from '../config/app-settings';
 import { ApiTokenService } from './api-token.service';
 
 describe('ApiTokenService', () => {
-  const tokensUrl = `${environment.apiUrl}/tokens`;
+  const tokensUrl = `${appSettings.apiUrl}/tokens`;
 
   let service: ApiTokenService;
   let http: HttpTestingController;

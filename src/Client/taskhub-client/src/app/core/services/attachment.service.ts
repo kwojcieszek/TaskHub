@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { environment } from '../../../environments/environment';
+import { appSettings } from '../config/app-settings';
 import { Attachment, AttachmentLimits } from '../models/attachment.model';
 
 @Injectable({ providedIn: 'root' })
@@ -9,11 +9,11 @@ export class AttachmentService {
   constructor(private readonly http: HttpClient) {}
 
   private attachmentsUrl(projectId: string, taskId: string): string {
-    return `${environment.apiUrl}/projects/${projectId}/tasks/${taskId}/attachments`;
+    return `${appSettings.apiUrl}/projects/${projectId}/tasks/${taskId}/attachments`;
   }
 
   getLimits(): Observable<AttachmentLimits> {
-    return this.http.get<AttachmentLimits>(`${environment.apiUrl}/attachments/limits`);
+    return this.http.get<AttachmentLimits>(`${appSettings.apiUrl}/attachments/limits`);
   }
 
   getByTask(projectId: string, taskId: string): Observable<Attachment[]> {
@@ -35,10 +35,10 @@ export class AttachmentService {
   }
 
   findBySha256(taskId: string, sha256: string): Observable<Attachment[]> {
-    return this.http.get<Attachment[]>(`${environment.apiUrl}/attachments/${sha256}`, { params: { taskId } });
+    return this.http.get<Attachment[]>(`${appSettings.apiUrl}/attachments/${sha256}`, { params: { taskId } });
   }
 
   downloadBySha256(taskId: string, sha256: string): Observable<Blob> {
-    return this.http.get(`${environment.apiUrl}/attachments/${sha256}/content`, { params: { taskId }, responseType: 'blob' });
+    return this.http.get(`${appSettings.apiUrl}/attachments/${sha256}/content`, { params: { taskId }, responseType: 'blob' });
   }
 }

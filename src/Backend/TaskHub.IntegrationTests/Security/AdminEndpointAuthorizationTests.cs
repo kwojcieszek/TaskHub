@@ -24,16 +24,16 @@ public class AdminEndpointAuthorizationTests : IClassFixture<TaskHubApiFactory>
 
     public static TheoryData<string, string> AdminEndpoints => new()
     {
-        { "GET", "/api/v1/admin/users" },
-        { "POST", "/api/v1/admin/users" },
-        { "PUT", $"/api/v1/admin/users/{Id}/password" },
-        { "PUT", $"/api/v1/admin/users/{Id}/roles" },
-        { "PUT", $"/api/v1/admin/users/{Id}/lockout" },
-        { "DELETE", $"/api/v1/admin/users/{Id}" },
-        { "GET", "/api/v1/admin/logs/logins" },
-        { "GET", "/api/v1/admin/logs/activity" },
-        { "GET", "/api/v1/admin/security" },
-        { "PUT", "/api/v1/admin/security" }
+        { "GET", "/v1/admin/users" },
+        { "POST", "/v1/admin/users" },
+        { "PUT", $"/v1/admin/users/{Id}/password" },
+        { "PUT", $"/v1/admin/users/{Id}/roles" },
+        { "PUT", $"/v1/admin/users/{Id}/lockout" },
+        { "DELETE", $"/v1/admin/users/{Id}" },
+        { "GET", "/v1/admin/logs/logins" },
+        { "GET", "/v1/admin/logs/activity" },
+        { "GET", "/v1/admin/security" },
+        { "PUT", "/v1/admin/security" }
     };
 
     [Theory]
@@ -62,14 +62,14 @@ public class AdminEndpointAuthorizationTests : IClassFixture<TaskHubApiFactory>
     }
 
     [Theory]
-    [InlineData("/api/v1/ADMIN/users")]
-    [InlineData("/api/v1/Admin/Users")]
-    [InlineData("/api/v1/admin/users/")]
-    [InlineData("/api/v1.0/admin/users")]
-    [InlineData("/api/v1/admin//users")]
-    [InlineData("/api/v1/admin/users?role=Admin")]
-    [InlineData("/api/v1/admin/users;admin=true")]
-    [InlineData("/api/v1/admin/%75sers")]
+    [InlineData("/v1/ADMIN/users")]
+    [InlineData("/v1/Admin/Users")]
+    [InlineData("/v1/admin/users/")]
+    [InlineData("/v1.0/admin/users")]
+    [InlineData("/v1/admin//users")]
+    [InlineData("/v1/admin/users?role=Admin")]
+    [InlineData("/v1/admin/users;admin=true")]
+    [InlineData("/v1/admin/%75sers")]
     public async Task AdminEndpoint_CannotBeReachedThroughAnotherSpellingOfItsAddress(string url)
     {
         var user = await _factory.CreateUserAsync();
@@ -82,8 +82,8 @@ public class AdminEndpointAuthorizationTests : IClassFixture<TaskHubApiFactory>
 
     [Theory]
     [InlineData("X-Forwarded-For", "127.0.0.1")]
-    [InlineData("X-Original-URL", "/api/v1/auth/me")]
-    [InlineData("X-Rewrite-URL", "/api/v1/auth/me")]
+    [InlineData("X-Original-URL", "/v1/auth/me")]
+    [InlineData("X-Rewrite-URL", "/v1/auth/me")]
     [InlineData("X-HTTP-Method-Override", "GET")]
     [InlineData("X-User-Role", "Admin")]
     [InlineData("X-Roles", "Admin")]

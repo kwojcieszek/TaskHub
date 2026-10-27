@@ -21,32 +21,32 @@ public class PasswordChangeRequiredTests : IClassFixture<TaskHubApiFactory>
 
     public static TheoryData<string, string> BlockedEndpoints => new()
     {
-        { "GET", "/api/v1/projects" },
-        { "POST", "/api/v1/projects" },
-        { "GET", $"/api/v1/projects/{Id}" },
-        { "DELETE", $"/api/v1/projects/{Id}" },
-        { "GET", "/api/v1/project-groups" },
-        { "GET", "/api/v1/tasks" },
-        { "GET", $"/api/v1/projects/{Id}/tasks" },
-        { "GET", "/api/v1/users" },
-        { "GET", "/api/v1/settings" },
-        { "PUT", "/api/v1/settings/theme" },
-        { "GET", "/api/v1/attachments/limits" },
-        { "GET", "/api/v1/admin/users" },
-        { "GET", "/api/v1/user-groups" },
-        { "GET", "/api/v1/tokens" },
-        { "POST", "/api/v1/tokens" },
-        { "GET", $"/api/v1/projects/{Id}/teams" },
-        { "GET", $"/api/v1/projects/{Id}/comments" },
-        { "POST", $"/api/v1/projects/{Id}/comments" },
+        { "GET", "/v1/projects" },
+        { "POST", "/v1/projects" },
+        { "GET", $"/v1/projects/{Id}" },
+        { "DELETE", $"/v1/projects/{Id}" },
+        { "GET", "/v1/project-groups" },
+        { "GET", "/v1/tasks" },
+        { "GET", $"/v1/projects/{Id}/tasks" },
+        { "GET", "/v1/users" },
+        { "GET", "/v1/settings" },
+        { "PUT", "/v1/settings/theme" },
+        { "GET", "/v1/attachments/limits" },
+        { "GET", "/v1/admin/users" },
+        { "GET", "/v1/user-groups" },
+        { "GET", "/v1/tokens" },
+        { "POST", "/v1/tokens" },
+        { "GET", $"/v1/projects/{Id}/teams" },
+        { "GET", $"/v1/projects/{Id}/comments" },
+        { "POST", $"/v1/projects/{Id}/comments" },
 
         // Addresses that merely mention the account area must not pass for it.
-        { "GET", "/api/v1/projects?next=/api/v1/auth/" },
-        { "GET", "/api/v1/settings/auth" },
-        { "GET", "/api/v1/settings/%2Fapi%2Fv1%2Fauth%2Fme" },
-        { "GET", "/api/v1/users?q=/api/v1/auth/me" },
-        { "GET", "/api/v1/auth/../projects" },
-        { "GET", "/api/v1/projects#/api/v1/auth/" }
+        { "GET", "/v1/projects?next=/v1/auth/" },
+        { "GET", "/v1/settings/auth" },
+        { "GET", "/v1/settings/%2Fapi%2Fv1%2Fauth%2Fme" },
+        { "GET", "/v1/users?q=/v1/auth/me" },
+        { "GET", "/v1/auth/../projects" },
+        { "GET", "/v1/projects#/v1/auth/" }
     };
 
     [Theory]

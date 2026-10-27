@@ -1,7 +1,7 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { environment } from '../../../environments/environment';
+import { appSettings } from '../config/app-settings';
 import { TaskItem } from '../models/task.model';
 import { TaskItemService } from './task-item.service';
 
@@ -29,7 +29,7 @@ function task(overrides: Partial<TaskItem> = {}): TaskItem {
 }
 
 describe('TaskItemService', () => {
-  const tasksUrl = `${environment.apiUrl}/projects/p1/tasks`;
+  const tasksUrl = `${appSettings.apiUrl}/projects/p1/tasks`;
 
   let service: TaskItemService;
   let http: HttpTestingController;
@@ -101,12 +101,12 @@ describe('TaskItemService', () => {
 
   it('asks for the tasks of every project, with the date range when one is given', () => {
     service.getAcrossProjects().subscribe();
-    const all = http.expectOne(`${environment.apiUrl}/tasks`);
+    const all = http.expectOne(`${appSettings.apiUrl}/tasks`);
     expect(all.request.params.keys().length).toBe(0);
     all.flush([]);
 
     service.getAcrossProjects({ from: '2026-01-01', to: '2026-01-31' }).subscribe();
-    const ranged = http.expectOne((request) => request.url === `${environment.apiUrl}/tasks`);
+    const ranged = http.expectOne((request) => request.url === `${appSettings.apiUrl}/tasks`);
     expect(ranged.request.params.get('from')).toBe('2026-01-01');
     expect(ranged.request.params.get('to')).toBe('2026-01-31');
     ranged.flush([]);

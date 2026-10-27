@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { environment } from '../../../environments/environment';
+import { appSettings } from '../config/app-settings';
 import {
   AddProjectMemberRequest,
   AddProjectTeamRequest,
@@ -14,7 +14,7 @@ import {
 
 @Injectable({ providedIn: 'root' })
 export class ProjectService {
-  private readonly baseUrl = `${environment.apiUrl}/projects`;
+  private readonly baseUrl = `${appSettings.apiUrl}/projects`;
 
   constructor(private readonly http: HttpClient) {}
 

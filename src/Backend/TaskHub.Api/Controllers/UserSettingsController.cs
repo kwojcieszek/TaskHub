@@ -8,7 +8,7 @@ namespace TaskHub.Api.Controllers;
 
 [Authorize]
 [ApiVersion("1.0")]
-[Route("api/v{version:apiVersion}/settings")]
+[Route("v{version:apiVersion}/settings")]
 public class UserSettingsController : ApiControllerBase
 {
     private readonly IUserSettingService _userSettingService;

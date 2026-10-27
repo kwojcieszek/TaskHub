@@ -420,15 +420,15 @@ public class InputHardeningTests : IClassFixture<TaskHubApiFactory>
     }
 
     [Theory]
-    [InlineData("/api/v1/projects/not-a-guid")]
-    [InlineData("/api/v1/projects/123")]
-    [InlineData("/api/v1/projects/11111111-2222-3333-4444-555555555555/tasks/not-a-guid")]
-    [InlineData("/api/v1/project-groups/%27%20OR%201%3D1")]
-    [InlineData("/api/v1/nothing-here")]
-    [InlineData("/api/v2/projects")]
-    [InlineData("/api/v0/projects")]
-    [InlineData("/api/vX/projects")]
-    [InlineData("/api/projects")]
+    [InlineData("/v1/projects/not-a-guid")]
+    [InlineData("/v1/projects/123")]
+    [InlineData("/v1/projects/11111111-2222-3333-4444-555555555555/tasks/not-a-guid")]
+    [InlineData("/v1/project-groups/%27%20OR%201%3D1")]
+    [InlineData("/v1/nothing-here")]
+    [InlineData("/v2/projects")]
+    [InlineData("/v0/projects")]
+    [InlineData("/vX/projects")]
+    [InlineData("/projects")]
     public async Task UnknownAddress_IsNotFoundOrBadRequest(string url)
     {
         var user = await _factory.CreateUserAsync();
@@ -439,12 +439,12 @@ public class InputHardeningTests : IClassFixture<TaskHubApiFactory>
     }
 
     [Theory]
-    [InlineData("PATCH", "/api/v1/projects")]
-    [InlineData("DELETE", "/api/v1/projects")]
-    [InlineData("PUT", "/api/v1/projects")]
-    [InlineData("TRACE", "/api/v1/projects")]
-    [InlineData("DELETE", "/api/v1/auth/me")]
-    [InlineData("PUT", "/api/v1/users")]
+    [InlineData("PATCH", "/v1/projects")]
+    [InlineData("DELETE", "/v1/projects")]
+    [InlineData("PUT", "/v1/projects")]
+    [InlineData("TRACE", "/v1/projects")]
+    [InlineData("DELETE", "/v1/auth/me")]
+    [InlineData("PUT", "/v1/users")]
     public async Task UnsupportedMethod_IsNotAllowed(string method, string url)
     {
         var user = await _factory.CreateUserAsync();

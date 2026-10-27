@@ -8,7 +8,7 @@ namespace TaskHub.Api.Controllers;
 
 [Authorize]
 [ApiVersion("1.0")]
-[Route("api/v{version:apiVersion}/projects/{projectId:guid}/tasks/{taskId:guid}/attachments")]
+[Route("v{version:apiVersion}/projects/{projectId:guid}/tasks/{taskId:guid}/attachments")]
 public class TaskAttachmentsController : ApiControllerBase
 {
     private readonly IAttachmentService _attachmentService;

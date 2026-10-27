@@ -5,7 +5,7 @@ namespace TaskHub.IntegrationTests.Support;
 /// </summary>
 public static class ApiRoutes
 {
-    public const string Root = "/api/v1";
+    public const string Root = "/v1";
 
     public const string Login = Root + "/auth/login";
     public const string Register = Root + "/auth/register";

@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, computed, signal } from '@angular/core';
 import { Observable, tap } from 'rxjs';
-import { environment } from '../../../environments/environment';
+import { appSettings } from '../config/app-settings';
 import {
   AuthProviders,
   LoginRequest,
@@ -20,7 +20,7 @@ const STORAGE_USER_KEY = 'taskhub.user';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private readonly baseUrl = `${environment.apiUrl}/auth`;
+  private readonly baseUrl = `${appSettings.apiUrl}/auth`;
 
   private readonly currentUserSignal = signal<User | null>(this.readStoredUser());
   private readonly accessTokenSignal = signal<string | null>(localStorage.getItem(STORAGE_TOKEN_KEY));

@@ -4,7 +4,7 @@ import { HttpClient } from '@angular/common/http';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { Button } from 'primeng/button';
 import { finalize } from 'rxjs';
-import { environment } from '../../../../environments/environment';
+import { appSettings } from '../../../core/config/app-settings';
 import { ProjectMember } from '../../../core/models/project.model';
 interface Change { id: string; changedAt: string; actorName: string; field: string; oldValue: string | null; newValue: string | null; }
 @Component({selector:'app-task-history', standalone:true, imports:[DatePipe, TranslateModule, Button], template:`
@@ -23,7 +23,7 @@ export class TaskHistoryComponent implements OnInit {
  private readonly http = inject(HttpClient); private readonly translate = inject(TranslateService); private page = 1;
  ngOnInit(): void { this.load(); }
  load(): void { if(this.busy()) return; this.busy.set(true); this.failed.set(false);
- this.http.get<Change[]>(`${environment.apiUrl}/projects/${this.projectId()}/tasks/${this.taskId()}/history?page=${this.page}`).pipe(finalize(() => this.busy.set(false))).subscribe({next: rows => {this.changes.update(old => [...old, ...rows]); this.more.set(rows.length === 50); this.page++;}, error: () => this.failed.set(true)}); }
+ this.http.get<Change[]>(`${appSettings.apiUrl}/projects/${this.projectId()}/tasks/${this.taskId()}/history?page=${this.page}`).pipe(finalize(() => this.busy.set(false))).subscribe({next: rows => {this.changes.update(old => [...old, ...rows]); this.more.set(rows.length === 50); this.page++;}, error: () => this.failed.set(true)}); }
  value(change: Change, value: string | null): string {
  if(!value) return '—';
  if(change.field === 'Status') return this.translate.instant('tasks.status.' + value);

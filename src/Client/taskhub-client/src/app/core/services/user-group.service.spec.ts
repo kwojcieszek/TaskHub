@@ -1,11 +1,11 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { environment } from '../../../environments/environment';
+import { appSettings } from '../config/app-settings';
 import { UserGroupService } from './user-group.service';
 
 describe('UserGroupService', () => {
-  const groupsUrl = `${environment.apiUrl}/user-groups`;
+  const groupsUrl = `${appSettings.apiUrl}/user-groups`;
 
   let service: UserGroupService;
   let http: HttpTestingController;

@@ -1,11 +1,11 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { environment } from '../../../environments/environment';
+import { appSettings } from '../config/app-settings';
 import { ProjectService } from './project.service';
 
 describe('ProjectService', () => {
-  const projectUrl = `${environment.apiUrl}/projects/p1`;
+  const projectUrl = `${appSettings.apiUrl}/projects/p1`;
 
   let service: ProjectService;
   let http: HttpTestingController;

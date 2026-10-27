@@ -2,6 +2,8 @@ import { Injectable, signal } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 import { PrimeNG } from 'primeng/config';
 
+import { appSettings } from '../config/app-settings';
+
 export type AppLanguage = 'en' | 'pl';
 
 const STORAGE_KEY = 'taskhub.language';
@@ -63,7 +65,11 @@ export class LanguageService {
       return stored;
     }
 
-    const browserLang = navigator.language?.slice(0, 2);
-    return browserLang === 'pl' ? 'pl' : 'en';
+    const browserLang = navigator.language?.slice(0, 2) as AppLanguage | undefined;
+    if (browserLang && SUPPORTED_LANGUAGES.includes(browserLang)) {
+      return browserLang;
+    }
+
+    return SUPPORTED_LANGUAGES.includes(appSettings.defaultLanguage) ? appSettings.defaultLanguage : 'en';
   }
 }

@@ -12,7 +12,7 @@ using TaskHub.Application.Interfaces;
 namespace TaskHub.Api.Controllers;
 
 [ApiVersion("1.0")]
-[Route("api/v{version:apiVersion}/auth")]
+[Route("v{version:apiVersion}/auth")]
 public class AuthController : ApiControllerBase
 {
     private readonly IAuthService _authService;

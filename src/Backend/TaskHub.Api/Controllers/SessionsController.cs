@@ -9,7 +9,7 @@ namespace TaskHub.Api.Controllers;
 
 [Authorize(Policy = AuthorizationPolicies.InteractiveSession)]
 [ApiVersion("1.0")]
-[Route("api/v{version:apiVersion}/auth/sessions")]
+[Route("v{version:apiVersion}/auth/sessions")]
 public class SessionsController(ISessionService sessions) : ApiControllerBase
 {
     [HttpGet]

@@ -9,7 +9,7 @@ namespace TaskHub.Api.Controllers;
 
 [Authorize]
 [ApiVersion("1.0")]
-[Route("api/v{version:apiVersion}/user-groups")]
+[Route("v{version:apiVersion}/user-groups")]
 public class UserGroupsController : ApiControllerBase
 {
     private readonly IUserGroupService _userGroupService;

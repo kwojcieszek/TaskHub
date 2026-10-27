@@ -10,7 +10,7 @@ namespace TaskHub.Api.Controllers;
 
 [Authorize(Roles = Roles.Admin)]
 [ApiVersion("1.0")]
-[Route("api/v{version:apiVersion}/admin/logs")]
+[Route("v{version:apiVersion}/admin/logs")]
 public class AdminLogsController : ApiControllerBase
 {
     private readonly IAuditLogService _auditLogService;

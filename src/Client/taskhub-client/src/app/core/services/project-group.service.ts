@@ -1,12 +1,12 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { environment } from '../../../environments/environment';
+import { appSettings } from '../config/app-settings';
 import { CreateProjectGroupRequest, ProjectGroup, UpdateProjectGroupRequest } from '../models/project-group.model';
 
 @Injectable({ providedIn: 'root' })
 export class ProjectGroupService {
-  private readonly baseUrl = `${environment.apiUrl}/project-groups`;
+  private readonly baseUrl = `${appSettings.apiUrl}/project-groups`;
 
   constructor(private readonly http: HttpClient) {}
 

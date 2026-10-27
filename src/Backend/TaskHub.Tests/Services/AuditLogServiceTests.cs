@@ -56,12 +56,12 @@ public class AuditLogServiceTests : IDisposable
     {
         var user = await _host.CreateUserAsync("anna");
 
-        await _audit.RecordActivityAsync(user.Id, "anna", "Projects.Create", "POST", "/api/v1/projects", 201);
+        await _audit.RecordActivityAsync(user.Id, "anna", "Projects.Create", "POST", "/v1/projects", 201);
         var entry = await _host.Db.UserActivityLogs.AsNoTracking().SingleAsync();
 
         Assert.Equal(UserActivityType.Request, entry.Type);
         Assert.Equal("Projects.Create", entry.Action);
-        Assert.Equal("/api/v1/projects", entry.Path);
+        Assert.Equal("/v1/projects", entry.Path);
         Assert.Equal(201, entry.StatusCode);
         Assert.Null(entry.FailureReason);
         Assert.Null(entry.UserAgent);
@@ -86,7 +86,7 @@ public class AuditLogServiceTests : IDisposable
         var user = await _host.CreateUserAsync("anna");
         await _audit.RecordLoginAsync(user.Id, "anna", null);
         await _audit.RecordLoginAsync(user.Id, "anna", LoginFailureReason.InvalidPassword);
-        await _audit.RecordActivityAsync(user.Id, "anna", "Projects.Create", "POST", "/api/v1/projects", 201);
+        await _audit.RecordActivityAsync(user.Id, "anna", "Projects.Create", "POST", "/v1/projects", 201);
 
         var logins = await _audit.GetLoginLogsAsync(new AuditLogQuery());
         var activity = await _audit.GetActivityLogsAsync(new AuditLogQuery());
@@ -106,7 +106,7 @@ public class AuditLogServiceTests : IDisposable
         await _audit.RecordLoginAsync(anna.Id, "anna", null);
         await _audit.RecordLoginAsync(bartek.Id, "bartek", null);
         await _audit.RecordLoginAsync(null, "anna", LoginFailureReason.UserNotFound);
-        await _audit.RecordActivityAsync(anna.Id, "anna", "Projects.Create", "POST", "/api/v1/projects", 201);
+        await _audit.RecordActivityAsync(anna.Id, "anna", "Projects.Create", "POST", "/v1/projects", 201);
 
         var mine = await _audit.GetLoginLogsForUserAsync(anna.Id, new AuditLogQuery { Search = "bartek" });
         var all = await _audit.GetLoginLogsForUserAsync(anna.Id, new AuditLogQuery());
@@ -121,8 +121,8 @@ public class AuditLogServiceTests : IDisposable
         var user = await _host.CreateUserAsync("anna");
         await _audit.RecordLoginAsync(user.Id, "anna", null);
         await _audit.RecordLoginAsync(null, "bartek", LoginFailureReason.UserNotFound);
-        await _audit.RecordActivityAsync(user.Id, "anna", "Projects.Create", "POST", "/api/v1/projects", 201);
-        await _audit.RecordActivityAsync(user.Id, "anna", "Tasks.Delete", "DELETE", "/api/v1/projects/1/tasks/2", 204);
+        await _audit.RecordActivityAsync(user.Id, "anna", "Projects.Create", "POST", "/v1/projects", 201);
+        await _audit.RecordActivityAsync(user.Id, "anna", "Tasks.Delete", "DELETE", "/v1/projects/1/tasks/2", 204);
 
         var loginsByName = await _audit.GetLoginLogsAsync(new AuditLogQuery { Search = " bart " });
         var loginsByAddress = await _audit.GetLoginLogsAsync(new AuditLogQuery { Search = "127.0" });

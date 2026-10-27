@@ -1,12 +1,12 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { environment } from '../../../environments/environment';
+import { appSettings } from '../config/app-settings';
 import { ApiToken, CreateApiTokenRequest, CreatedApiToken } from '../models/api-token.model';
 
 @Injectable({ providedIn: 'root' })
 export class ApiTokenService {
-  private readonly baseUrl = `${environment.apiUrl}/tokens`;
+  private readonly baseUrl = `${appSettings.apiUrl}/tokens`;
 
   constructor(private readonly http: HttpClient) {}
 

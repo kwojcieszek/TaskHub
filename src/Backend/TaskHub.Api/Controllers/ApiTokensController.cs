@@ -10,7 +10,7 @@ namespace TaskHub.Api.Controllers;
 // The tokens of the signed-in user. An API token cannot be used here, so a leaked one cannot mint others.
 [Authorize(Policy = AuthorizationPolicies.InteractiveSession)]
 [ApiVersion("1.0")]
-[Route("api/v{version:apiVersion}/tokens")]
+[Route("v{version:apiVersion}/tokens")]
 public class ApiTokensController : ApiControllerBase
 {
     private readonly IApiTokenService _apiTokenService;

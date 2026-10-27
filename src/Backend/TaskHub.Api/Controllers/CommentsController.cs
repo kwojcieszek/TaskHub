@@ -8,7 +8,7 @@ namespace TaskHub.Api.Controllers;
 
 [Authorize]
 [ApiVersion("1.0")]
-[Route("api/v{version:apiVersion}/projects/{projectId:guid}")]
+[Route("v{version:apiVersion}/projects/{projectId:guid}")]
 public class CommentsController : ApiControllerBase
 {
     private readonly ICommentService _commentService;

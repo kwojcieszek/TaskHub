@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { environment } from '../../../environments/environment';
+import { appSettings } from '../config/app-settings';
 import { Comment } from '../models/comment.model';
 
 @Injectable({ providedIn: 'root' })
@@ -30,6 +30,6 @@ export class CommentService {
   }
 
   private projectUrl(projectId: string): string {
-    return `${environment.apiUrl}/projects/${projectId}`;
+    return `${appSettings.apiUrl}/projects/${projectId}`;
   }
 }

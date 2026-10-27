@@ -1,7 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { environment } from '../../../environments/environment';
+import { appSettings } from '../config/app-settings';
 import { CreateTaskItemRequest, TaskItem, UpdateTaskItemRequest, TaskItemStatus } from '../models/task.model';
 
 @Injectable({ providedIn: 'root' })
@@ -9,7 +9,7 @@ export class TaskItemService {
   constructor(private readonly http: HttpClient) {}
 
   private tasksUrl(projectId: string): string {
-    return `${environment.apiUrl}/projects/${projectId}/tasks`;
+    return `${appSettings.apiUrl}/projects/${projectId}/tasks`;
   }
 
   getByProject(projectId: string): Observable<TaskItem[]> {
@@ -36,7 +36,7 @@ export class TaskItemService {
   getAcrossProjects(range?: { from: string; to: string }): Observable<TaskItem[]> {
     const params = range ? new HttpParams().set('from', range.from).set('to', range.to) : undefined;
 
-    return this.http.get<TaskItem[]>(`${environment.apiUrl}/tasks`, { params });
+    return this.http.get<TaskItem[]>(`${appSettings.apiUrl}/tasks`, { params });
   }
 
   start(projectId: string, taskId: string): Observable<TaskItem> {

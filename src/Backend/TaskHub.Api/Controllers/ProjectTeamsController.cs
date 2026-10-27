@@ -8,7 +8,7 @@ namespace TaskHub.Api.Controllers;
 
 [Authorize]
 [ApiVersion("1.0")]
-[Route("api/v{version:apiVersion}/projects/{projectId:guid}/teams")]
+[Route("v{version:apiVersion}/projects/{projectId:guid}/teams")]
 public class ProjectTeamsController : ApiControllerBase
 {
     private readonly IProjectTeamService _projectTeamService;

@@ -1,4 +1,4 @@
-import { environment } from '../../../environments/environment';
+import { appSettings } from '../config/app-settings';
 import { HttpClient, provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
@@ -32,9 +32,9 @@ describe('authInterceptor', () => {
   afterEach(() => backend.verify());
 
   it('sends the access token with a request', () => {
-    http.get(`${environment.apiUrl}/projects`).subscribe();
+    http.get(`${appSettings.apiUrl}/projects`).subscribe();
 
-    const request = backend.expectOne(`${environment.apiUrl}/projects`);
+    const request = backend.expectOne(`${appSettings.apiUrl}/projects`);
     expect(request.request.headers.get('Authorization')).toBe('Bearer token');
     request.flush([]);
   });
@@ -50,9 +50,9 @@ describe('authInterceptor', () => {
   it('sends no Authorization header when nobody is signed in', () => {
     auth.accessToken = null;
 
-    http.get(`${environment.apiUrl}/auth/providers`).subscribe();
+    http.get(`${appSettings.apiUrl}/auth/providers`).subscribe();
 
-    const request = backend.expectOne(`${environment.apiUrl}/auth/providers`);
+    const request = backend.expectOne(`${appSettings.apiUrl}/auth/providers`);
     expect(request.request.headers.has('Authorization')).toBeFalse();
     request.flush({});
   });
@@ -60,8 +60,8 @@ describe('authInterceptor', () => {
   it('signs the user out and goes to the login page when the session is refused', () => {
     let failed = false;
 
-    http.get(`${environment.apiUrl}/projects`).subscribe({ error: () => (failed = true) });
-    backend.expectOne(`${environment.apiUrl}/projects`).flush({ errors: ['expired'] }, { status: 401, statusText: 'Unauthorized' });
+    http.get(`${appSettings.apiUrl}/projects`).subscribe({ error: () => (failed = true) });
+    backend.expectOne(`${appSettings.apiUrl}/projects`).flush({ errors: ['expired'] }, { status: 401, statusText: 'Unauthorized' });
 
     expect(failed).toBeTrue();
     expect(auth.logout).toHaveBeenCalled();
@@ -72,8 +72,8 @@ describe('authInterceptor', () => {
     auth.accessToken = null;
     auth.isAuthenticated.and.returnValue(false);
 
-    http.post(`${environment.apiUrl}/auth/login`, {}).subscribe({ error: () => undefined });
-    backend.expectOne(`${environment.apiUrl}/auth/login`).flush({ errors: ['invalid'] }, { status: 401, statusText: 'Unauthorized' });
+    http.post(`${appSettings.apiUrl}/auth/login`, {}).subscribe({ error: () => undefined });
+    backend.expectOne(`${appSettings.apiUrl}/auth/login`).flush({ errors: ['invalid'] }, { status: 401, statusText: 'Unauthorized' });
 
     expect(auth.logout).not.toHaveBeenCalled();
     expect(router.navigate).not.toHaveBeenCalled();
@@ -82,8 +82,8 @@ describe('authInterceptor', () => {
   it('keeps the session on other errors and passes them on', () => {
     let status = 0;
 
-    http.get(`${environment.apiUrl}/projects/1`).subscribe({ error: (error) => (status = error.status) });
-    backend.expectOne(`${environment.apiUrl}/projects/1`).flush({ errors: ['forbidden'] }, { status: 403, statusText: 'Forbidden' });
+    http.get(`${appSettings.apiUrl}/projects/1`).subscribe({ error: (error) => (status = error.status) });
+    backend.expectOne(`${appSettings.apiUrl}/projects/1`).flush({ errors: ['forbidden'] }, { status: 403, statusText: 'Forbidden' });
 
     expect(status).toBe(403);
     expect(auth.logout).not.toHaveBeenCalled();

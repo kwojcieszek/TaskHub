@@ -1,7 +1,7 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { environment } from '../../../environments/environment';
+import { appSettings } from '../config/app-settings';
 import { User } from '../models/user.model';
 import { AuthService } from './auth.service';
 
@@ -24,7 +24,7 @@ function user(overrides: Partial<User> = {}): User {
 }
 
 describe('AuthService', () => {
-  const authUrl = `${environment.apiUrl}/auth`;
+  const authUrl = `${appSettings.apiUrl}/auth`;
 
   let http: HttpTestingController;
 
