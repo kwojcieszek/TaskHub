@@ -9,7 +9,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ProjectService } from '../../../core/services/project.service';
 import { TaskItemService } from '../../../core/services/task-item.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { Project, ProjectMember } from '../../../core/models/project.model';
+import { Project, ProjectMember, ProjectTeam } from '../../../core/models/project.model';
 import { ProjectGroup } from '../../../core/models/project-group.model';
 import { TaskItem, TaskItemStatus } from '../../../core/models/task.model';
 import { TaskStatusFilter } from '../../../core/models/task-status-filter.model';
@@ -20,11 +20,13 @@ import { ProjectAvatarComponent } from '../../../shared/project-avatar/project-a
 import { ProjectFormDialogComponent } from '../project-form-dialog/project-form-dialog.component';
 import { TaskDialogComponent } from '../task-dialog/task-dialog.component';
 import { MemberDialogComponent } from '../member-dialog/member-dialog.component';
+import { TeamDialogComponent } from '../team-dialog/team-dialog.component';
+import { CommentsComponent } from '../../../shared/comments/comments.component';
 
 @Component({
   selector: 'app-project-detail',
   standalone: true,
-  imports: [Button, Menu, ConfirmDialog, TranslateModule, TaskRowComponent, ProjectAvatarComponent, StatusFilterComponent],
+  imports: [Button, Menu, ConfirmDialog, TranslateModule, TaskRowComponent, ProjectAvatarComponent, StatusFilterComponent, CommentsComponent],
   providers: [DialogService, ConfirmationService],
   templateUrl: './project-detail.component.html',
   styleUrl: './project-detail.component.scss'
@@ -46,7 +48,8 @@ export class ProjectDetailComponent implements OnChanges {
   readonly tasks = signal<TaskItem[]>([]);
   readonly tasksLoadError = signal(false);
   readonly statusFilter = signal<TaskStatusFilter>('ToDo');
-  readonly view = signal<'tasks' | 'members'>('tasks');
+  readonly view = signal<'tasks' | 'members' | 'comments'>('tasks');
+  readonly commentCount = signal<number | null>(null);
 
   // A task stays visible when it matches the filter or when one of its subtasks does, so matches keep their context.
   readonly visibleTasks = computed(() => {
@@ -61,6 +64,7 @@ export class ProjectDetailComponent implements OnChanges {
       .filter((entry) => entry.task.status === filter || entry.subTasks.length > 0);
   });
   readonly members = signal<ProjectMember[]>([]);
+  readonly teams = signal<ProjectTeam[]>([]);
 
   readonly projectMenuItems: MenuItem[] = [
     { label: this.translate.instant('common.edit'), icon: 'pi pi-pencil', command: () => this.editProject() },
@@ -117,8 +121,13 @@ export class ProjectDetailComponent implements OnChanges {
     this.view.update((view) => (view === 'members' ? 'tasks' : 'members'));
   }
 
+  toggleComments(): void {
+    this.view.update((view) => (view === 'comments' ? 'tasks' : 'comments'));
+  }
+
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['projectId']) {
+      this.commentCount.set(null);
       this.loadAll();
     }
   }
@@ -131,6 +140,7 @@ export class ProjectDetailComponent implements OnChanges {
       error: () => this.tasksLoadError.set(true)
     });
     this.projectService.getMembers(this.projectId).subscribe((members) => this.members.set(members));
+    this.projectService.getTeams(this.projectId).subscribe((teams) => this.teams.set(teams));
   }
 
   editProject(): void {
@@ -147,20 +157,8 @@ export class ProjectDetailComponent implements OnChanges {
       if (!result) {
         return;
       }
-      const groupChanged = result.projectGroupId !== project.projectGroupId;
-      this.projectService
-        .update(this.projectId, {
-          name: result.name,
-          description: result.description,
-          icon: result.icon,
-          gitUrl: result.gitUrl,
-          isActive: result.isActive
-        })
-        .pipe(switchMap((updated) => (groupChanged ? this.projectService.setGroup(this.projectId, result.projectGroupId) : of(updated))))
-        .subscribe(() => {
-          this.loadAll();
-          this.changed.emit();
-        });
+      this.loadAll();
+      this.changed.emit();
     });
   }
 
@@ -173,24 +171,23 @@ export class ProjectDetailComponent implements OnChanges {
   addTask(parentTask: TaskItem | null): void {
     const ref = this.dialogService.open(TaskDialogComponent, {
       header: this.translate.instant(parentTask ? 'tasks.newSubTask' : 'tasks.newTask'),
-      width: '480px',
-      data: { members: this.members() }
+      width: 'min(620px, 96vw)',
+      data: { members: this.members(), projectId: this.projectId, parentTaskId: parentTask?.id ?? null }
     });
     ref?.onClose.subscribe((result) => {
       if (!result) {
         return;
       }
-      this.taskItemService.create(this.projectId, { ...result, parentTaskId: parentTask?.id ?? null }).subscribe(() => {
-        this.loadAll();
-        this.changed.emit();
-      });
+      this.loadAll();
+      this.changed.emit();
     });
   }
 
   editTask(task: TaskItem): void {
     const ref = this.dialogService.open(TaskDialogComponent, {
       header: this.translate.instant('common.edit'),
-      width: '480px',
+      width: 'min(620px, 96vw)',
+      style: { maxHeight: 'calc(100dvh - 2rem)' },
       data: { task, members: this.members(), statusDerived: task.subTasks.length > 0 }
     });
     ref?.onClose.subscribe((result) => {
@@ -199,7 +196,7 @@ export class ProjectDetailComponent implements OnChanges {
         this.loadAll();
         return;
       }
-      this.taskItemService.update(this.projectId, task.id, result).subscribe(() => this.loadAll());
+      this.loadAll();
     });
   }
 
@@ -259,23 +256,49 @@ export class ProjectDetailComponent implements OnChanges {
   addMember(): void {
     const ref = this.dialogService.open(MemberDialogComponent, {
       header: this.translate.instant('projects.addMember'),
-      width: '420px'
+      width: '420px', data: { projectId: this.projectId }
     });
     ref?.onClose.subscribe((result) => {
       if (!result) {
         return;
       }
-      this.projectService.addMember(this.projectId, result).subscribe(() => this.loadAll());
+      this.loadAll();
     });
   }
 
   removeMember(member: ProjectMember): void {
-    this.projectService.removeMember(this.projectId, member.userId).subscribe(() => this.loadAll());
+    this.confirmRemoval(this.translate.instant('projects.removeMemberConfirm', { name: member.displayName }), () => {
+      this.projectService.removeMember(this.projectId, member.userId).subscribe(() => this.loadAll());
+    });
+  }
+
+  addTeam(): void {
+    const ref = this.dialogService.open(TeamDialogComponent, {
+      header: this.translate.instant('projects.teams.add'),
+      width: '420px',
+      data: { projectId: this.projectId }
+    });
+    ref?.onClose.subscribe((result) => {
+      if (!result) {
+        return;
+      }
+      this.loadAll();
+    });
+  }
+
+  removeTeam(team: ProjectTeam): void {
+    this.confirmRemoval(this.translate.instant('projects.teams.removeConfirm', { name: team.name }), () => {
+      this.projectService.removeTeam(this.projectId, team.userGroupId).subscribe(() => this.loadAll());
+    });
   }
 
   private confirmDelete(messageKey: string, accept: () => void): void {
+    this.confirmRemoval(this.translate.instant(messageKey), accept);
+  }
+
+  private confirmRemoval(message: string, accept: () => void): void {
     this.confirmationService.confirm({
-      message: this.translate.instant(messageKey),
+      message,
       header: this.translate.instant('common.deleteConfirmHeader'),
       icon: 'pi pi-exclamation-triangle',
       acceptLabel: this.translate.instant('common.delete'),

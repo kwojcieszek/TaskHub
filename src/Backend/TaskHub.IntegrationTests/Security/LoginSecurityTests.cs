@@ -56,8 +56,8 @@ public class LoginSecurityTests : IClassFixture<TaskHubApiFactory>
     [InlineData("' OR '1'='1")]
     [InlineData("admin'--")]
     [InlineData("admin\" OR \"\"=\"")]
-    [InlineData("'; DROP TABLE AspNetUsers;--")]
-    [InlineData("admin' UNION SELECT * FROM AspNetUsers--")]
+    [InlineData("'; DROP TABLE Users;--")]
+    [InlineData("admin' UNION SELECT * FROM Users--")]
     [InlineData("*")]
     [InlineData("%")]
     [InlineData("admin%")]
@@ -272,14 +272,13 @@ public class LoginSecurityTests : IClassFixture<TaskHubApiFactory>
         await anonymous.PostAsync(ApiRoutes.Login, new LoginRequest { UserName = user.UserName, Password = user.Password });
 
         var admin = await _factory.AdminAsync();
-        var userLogs = await admin.GetAsync<PagedResultDto<LoginLogDto>>($"{ApiRoutes.AdminLoginLogs}?search={user.UserName}&pageSize=100");
-        var ghostLogs = await admin.GetAsync<PagedResultDto<LoginLogDto>>($"{ApiRoutes.AdminLoginLogs}?search={ghost}");
+        var userLogs = await admin.GetAsync<PagedResultDto<UserActivityLogDto>>($"{ApiRoutes.AdminLoginLogs}?search={user.UserName}&pageSize=100");
+        var ghostLogs = await admin.GetAsync<PagedResultDto<UserActivityLogDto>>($"{ApiRoutes.AdminLoginLogs}?search={ghost}");
 
-        Assert.Contains(userLogs.Items, log => !log.Succeeded && log.FailureReason == LoginFailureReason.InvalidPassword && log.UserId == user.UserId);
-        Assert.Contains(userLogs.Items, log => log.Succeeded && log.UserId == user.UserId);
+        Assert.Contains(userLogs.Items, log => log.FailureReason == LoginFailureReason.InvalidPassword && log.UserId == user.UserId);
+        Assert.Contains(userLogs.Items, log => log.FailureReason is null && log.UserId == user.UserId);
 
         var ghostLog = Assert.Single(ghostLogs.Items);
-        Assert.False(ghostLog.Succeeded);
         Assert.Equal(LoginFailureReason.UserNotFound, ghostLog.FailureReason);
         Assert.Null(ghostLog.UserId);
     }
@@ -291,13 +290,13 @@ public class LoginSecurityTests : IClassFixture<TaskHubApiFactory>
         var other = await _factory.CreateUserAsync("other");
         await _factory.LoginAsync(other);
 
-        var logins = await user.GetAsync<PagedResultDto<LoginLogDto>>($"{ApiRoutes.MyLogins}?pageSize=200");
+        var logins = await user.GetAsync<PagedResultDto<UserActivityLogDto>>($"{ApiRoutes.MyLogins}?pageSize=200");
 
         Assert.NotEmpty(logins.Items);
         Assert.All(logins.Items, log => Assert.Equal(user.UserId, log.UserId));
 
         // Asking for somebody else by name does not widen the result.
-        var searched = await user.GetAsync<PagedResultDto<LoginLogDto>>($"{ApiRoutes.MyLogins}?search={other.UserName}&userId={other.UserId}");
+        var searched = await user.GetAsync<PagedResultDto<UserActivityLogDto>>($"{ApiRoutes.MyLogins}?search={other.UserName}&userId={other.UserId}");
         Assert.All(searched.Items, log => Assert.Equal(user.UserId, log.UserId));
     }
 

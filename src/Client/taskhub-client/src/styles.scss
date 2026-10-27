@@ -26,16 +26,23 @@ $tones: (
   --app-bar-bg: var(--p-surface-0);
   --app-bar-shadow: 0 1px 0 var(--app-border), 0 4px 16px rgba(30, 41, 59, 0.05);
   --app-hero-bg: linear-gradient(135deg, #4c94f8 0%, #6eaefa 60%, #a3d0fd 100%);
+  --app-menu-active-bg: linear-gradient(135deg, #4c94f8 0%, #6eaefa 100%);
   --app-accent: var(--p-primary-color);
   --app-radius: 16px;
+  // Corners of everything that is clicked: the same as the buttons of the component library, and one step
+  // tighter for an option inside a switch.
+  --app-control-radius: var(--p-button-border-radius, 6px);
+  --app-control-radius-inner: 4px;
+  // Labels and counters are pills, so they are not mistaken for something to click.
+  --app-label-radius: 999px;
   // Tasks are light green wherever they are drawn as a tile or a calendar entry; projects are blue.
   --task-color: #4ade80;
-  --app-font-condensed: 'Inter', 'Segoe UI', sans-serif;
+  --app-font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 
   @each $name, $tone in $tones {
     --tone-#{$name}-solid: #{map.get($tone, solid)};
     --tone-#{$name}-fg: #{map.get($tone, fg)};
-    --tone-#{$name}-bg: color-mix(in srgb, #{map.get($tone, solid)} 14%, white);
+    --tone-#{$name}-bg: color-mix(in srgb, #{map.get($tone, solid)} 28%, white);
   }
 }
 
@@ -50,10 +57,11 @@ $tones: (
   --app-bar-bg: var(--p-surface-900);
   --app-bar-shadow: 0 1px 0 var(--app-border), 0 4px 16px rgba(0, 0, 0, 0.3);
   --app-hero-bg: linear-gradient(135deg, #111a2e 0%, #1e2f7a 60%, #2550e0 100%);
+  --app-menu-active-bg: linear-gradient(135deg, #232ea0 0%, #2f5be0 100%);
 
   @each $name, $tone in $tones {
     --tone-#{$name}-fg: #{map.get($tone, fg-dark)};
-    --tone-#{$name}-bg: color-mix(in srgb, #{map.get($tone, solid)} 22%, transparent);
+    --tone-#{$name}-bg: color-mix(in srgb, #{map.get($tone, solid)} 34%, transparent);
   }
 }
 
@@ -92,7 +100,8 @@ html, body {
 
 body {
   margin: 0;
-  font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: var(--app-font);
+  font-weight: 400;
   background: var(--app-bg);
   color: var(--p-text-color);
 }
@@ -105,7 +114,7 @@ body {
 .page-title {
   margin: 0 0 1.5rem;
   font-size: 1.4rem;
-  font-weight: 700;
+  font-weight: 500;
 
   i {
     margin-right: 0.5rem;
@@ -125,7 +134,7 @@ body {
 .page-header h1 {
   margin: 0;
   font-size: 1.5rem;
-  font-weight: 800;
+  font-weight: 600;
   letter-spacing: -0.01em;
 }
 
@@ -157,8 +166,122 @@ body {
 
   label {
     font-size: 0.875rem;
-    font-weight: 500;
+    font-weight: 400;
   }
+}
+
+// PrimeNG renders the navigation links inside its own component.
+.app-menubar .p-menubar-item-link {
+  min-height: 2.25rem;
+  padding: 0.45rem 0.75rem;
+  align-items: center;
+
+  .p-menubar-item-icon {
+    font-size: 1.1rem;
+  }
+}
+
+.dictation {
+  position: relative;
+  display: block;
+  width: 100%;
+}
+
+.dictation__field {
+  padding-right: 2.5rem !important;
+}
+
+.dictation__status {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: var(--p-text-muted-color);
+  overflow-wrap: anywhere;
+
+  &[hidden] { display: none; }
+}
+
+.dictation__status--error {
+  color: var(--tone-red-fg);
+}
+
+.dictation__button {
+  position: absolute;
+  top: 0.3rem;
+  right: 0.3rem;
+  width: 1.9rem;
+  height: 1.9rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--p-text-muted-color);
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    background: var(--app-hover);
+    color: var(--p-text-color);
+  }
+
+  i {
+    font-size: 0.9rem;
+  }
+}
+
+.dictation:has(> input) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+
+  > input,
+  > .dictation__button {
+    grid-area: 1 / 1;
+  }
+
+  > .dictation__button {
+    position: relative;
+    top: auto;
+    right: auto;
+    align-self: center;
+    justify-self: end;
+    margin-right: 0.3rem;
+  }
+
+  > .dictation__status {
+    grid-area: 2 / 1;
+  }
+}
+
+.dictation__button--active,
+.dictation__button--active:hover {
+  background: var(--tone-red-solid);
+  color: #ffffff;
+  animation: dictation-pulse 1.4s ease-in-out infinite;
+}
+
+.dictation__button--error,
+.dictation__button--error:hover {
+  background: var(--tone-amber-bg);
+  color: var(--tone-amber-fg);
+}
+
+@keyframes dictation-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--tone-red-solid) 55%, transparent);
+  }
+
+  50% {
+    box-shadow: 0 0 0 6px transparent;
+  }
+}
+
+.field-hint {
+  color: var(--p-text-muted-color);
+  font-size: 0.8rem;
 }
 
 .form-error {
@@ -222,12 +345,12 @@ body {
   &__label {
     font-size: 0.8rem;
     color: var(--p-text-muted-color);
-    font-weight: 500;
+    font-weight: 400;
   }
 
   &__value {
     font-size: 1.6rem;
-    font-weight: 800;
+    font-weight: 600;
     line-height: 1.1;
     color: var(--tone-fg, var(--p-text-color));
   }
@@ -253,8 +376,8 @@ body {
   align-items: center;
   gap: 0.35rem;
   font-size: 0.78rem;
-  font-weight: 600;
-  border-radius: 20px;
+  font-weight: 500;
+  border-radius: var(--app-label-radius);
   padding: 0.2rem 0.65rem;
   border: 1px solid var(--tone-bg, var(--app-border));
   background: var(--tone-bg, var(--app-hover));
@@ -268,8 +391,8 @@ body {
   align-items: center;
   gap: 0.4rem;
   font-size: 0.78rem;
-  font-weight: 700;
-  border-radius: 20px;
+  font-weight: 500;
+  border-radius: var(--app-label-radius);
   padding: 0.22rem 0.7rem;
   background: var(--tone-bg);
   color: var(--tone-fg);
@@ -291,9 +414,9 @@ body {
   gap: 0.3rem;
   padding: 0.15rem 0.6rem;
   border: 1px solid color-mix(in srgb, var(--tone-solid) 45%, transparent);
-  border-radius: 999px;
+  border-radius: var(--app-label-radius);
   font-size: 0.78rem;
-  font-weight: 700;
+  font-weight: 500;
   color: var(--tone-fg);
   white-space: nowrap;
 
@@ -315,7 +438,7 @@ body {
   justify-content: center;
   flex-shrink: 0;
   font-size: 0.8rem;
-  font-weight: 800;
+  font-weight: 600;
 
   &--lg {
     width: 3rem;
@@ -339,7 +462,7 @@ body {
   cursor: pointer;
   color: var(--p-text-muted-color);
   padding: 0.35rem;
-  border-radius: 8px;
+  border-radius: var(--app-control-radius);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -417,7 +540,7 @@ body {
     gap: 0.6rem;
     margin-bottom: 1.5rem;
     font-size: 1.15rem;
-    font-weight: 800;
+    font-weight: 600;
   }
 
   &__logo {
@@ -431,7 +554,7 @@ body {
     margin: 0;
     text-align: center;
     font-size: 1.6rem;
-    font-weight: 800;
+    font-weight: 600;
     color: var(--p-primary-color);
   }
 
@@ -443,7 +566,7 @@ body {
   }
 
   .field label {
-    font-weight: 700;
+    font-weight: 500;
   }
 
   .p-iconfield,
@@ -471,26 +594,12 @@ body {
   gap: 1.1rem;
 }
 
-// Soft orange button for secondary "create" actions that should stand apart from the primary blue one.
-.p-button.btn-soft-orange {
-  background: var(--tone-orange-bg);
-  border-color: color-mix(in srgb, var(--tone-orange-solid) 35%, transparent);
-  color: var(--tone-orange-fg);
-
-  &:not(:disabled):hover,
-  &:not(:disabled):active {
-    background: color-mix(in srgb, var(--tone-orange-solid) 24%, var(--app-surface));
-    border-color: color-mix(in srgb, var(--tone-orange-solid) 55%, transparent);
-    color: var(--tone-orange-fg);
-  }
-}
-
 .p-button.auth-submit {
   margin-top: 0.4rem;
   padding-block: 0.85rem;
   border: none;
-  border-radius: 12px;
-  font-weight: 700;
+  border-radius: var(--app-control-radius);
+  font-weight: 500;
   background: linear-gradient(90deg, #4c94f8 0%, #6eaefa 100%);
   box-shadow: 0 12px 20px -10px color-mix(in srgb, var(--p-primary-color) 80%, transparent);
 
@@ -506,13 +615,26 @@ body {
   color: var(--p-text-muted-color);
 
   a {
-    font-weight: 700;
+    font-weight: 500;
     color: var(--p-primary-color);
     text-decoration: none;
 
     &:hover {
       text-decoration: underline;
     }
+  }
+}
+
+.auth-forgot {
+  align-self: flex-end;
+  margin-top: -0.5rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--p-primary-color);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
   }
 }
 
@@ -526,7 +648,7 @@ body {
 .segmented {
   display: inline-flex;
   padding: 3px;
-  border-radius: 999px;
+  border-radius: var(--app-control-radius);
   background: var(--app-hover);
 }
 
@@ -536,12 +658,12 @@ body {
   gap: 0.4rem;
   padding: 0.4rem 0.9rem;
   border: none;
-  border-radius: 999px;
+  border-radius: var(--app-control-radius-inner);
   background: transparent;
   color: var(--p-text-muted-color);
   font: inherit;
   font-size: 0.88rem;
-  font-weight: 600;
+  font-weight: 500;
   white-space: nowrap;
   cursor: pointer;
 

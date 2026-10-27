@@ -1,12 +1,12 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { environment } from '../../../environments/environment';
+import { appSettings } from '../config/app-settings';
 import { UserSummary } from '../models/user.model';
 
 @Injectable({ providedIn: 'root' })
 export class UserDirectoryService {
-  private readonly baseUrl = `${environment.apiUrl}/users`;
+  private readonly baseUrl = `${appSettings.apiUrl}/users`;
 
   constructor(private readonly http: HttpClient) {}
 

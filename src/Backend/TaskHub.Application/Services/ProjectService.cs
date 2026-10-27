@@ -52,7 +52,7 @@ public class ProjectService : IProjectService
 
         if (!_currentUser.IsInRole(Roles.Admin))
         {
-            query = query.Where(p => p.Members.Any(m => m.UserId == _currentUser.UserId));
+            query = query.Where(ProjectAccess.VisibleTo(_currentUser.UserId));
         }
 
         var projects = await query.OrderByDescending(p => p.CreatedAt).ToListAsync(cancellationToken);
@@ -175,6 +175,11 @@ public class ProjectService : IProjectService
             .Select(a => a.Sha256)
             .ToListAsync(cancellationToken);
 
+        var comments = await _dbContext.Comments
+            .Where(c => c.ProjectId == projectId)
+            .ToListAsync(cancellationToken);
+
+        _dbContext.Comments.RemoveRange(comments);
         _dbContext.Tasks.RemoveRange(subTasks);
         _dbContext.Projects.Remove(project);
         await _dbContext.SaveChangesAsync(cancellationToken);
@@ -192,7 +197,56 @@ public class ProjectService : IProjectService
             .Where(m => m.ProjectId == projectId)
             .ToListAsync(cancellationToken);
 
-        return _mapper.Map<List<ProjectMemberDto>>(members);
+        var result = _mapper.Map<List<ProjectMemberDto>>(members);
+
+        foreach (var member in result)
+        {
+            member.Direct = true;
+        }
+
+        await AddTeamMembersAsync(projectId, result, cancellationToken);
+
+        return result;
+    }
+
+    // People who are in the project through a team are listed with the role the team gives them.
+    private async Task AddTeamMembersAsync(Guid projectId, List<ProjectMemberDto> result, CancellationToken cancellationToken)
+    {
+        var teams = await _dbContext.ProjectTeams
+            .AsNoTracking()
+            .Include(t => t.UserGroup!)
+            .ThenInclude(g => g.Members)
+            .ThenInclude(m => m.User)
+            .Where(t => t.ProjectId == projectId)
+            .OrderBy(t => t.UserGroup!.Name)
+            .ToListAsync(cancellationToken);
+
+        foreach (var team in teams)
+        {
+            foreach (var teamMember in team.UserGroup!.Members.Where(m => m.User is not null))
+            {
+                var entry = result.FirstOrDefault(member => member.UserId == teamMember.UserId);
+
+                if (entry is null)
+                {
+                    entry = new ProjectMemberDto
+                    {
+                        UserId = teamMember.UserId,
+                        UserName = teamMember.User!.UserName ?? string.Empty,
+                        DisplayName = teamMember.User.DisplayName,
+                        Role = team.Role.ToString()
+                    };
+
+                    result.Add(entry);
+                }
+                else if (Enum.TryParse<ProjectMemberRole>(entry.Role, out var current) && ProjectAccess.IsStronger(team.Role, current))
+                {
+                    entry.Role = team.Role.ToString();
+                }
+
+                entry.Teams.Add(team.UserGroup.Name);
+            }
+        }
     }
 
     public async Task<ProjectMemberDto> AddMemberAsync(Guid projectId, AddProjectMemberRequest request, CancellationToken cancellationToken = default)
@@ -200,6 +254,8 @@ public class ProjectService : IProjectService
         await _accessGuard.EnsureCanManageAsync(projectId, cancellationToken);
 
         // A number outside the enum would be stored as a role none of the access checks knows.
+        if (!await _dbContext.Users.AnyAsync(u => u.Id == request.UserId, cancellationToken))
+            throw new NotFoundException("User not found.");
         if (!Enum.IsDefined(request.Role))
         {
             throw new ValidationFailedException(new[] { "The role must be Owner, Editor or Viewer." });
@@ -248,6 +304,7 @@ public class ProjectService : IProjectService
 
         _dbContext.ProjectMembers.Remove(member);
         await _dbContext.SaveChangesAsync(cancellationToken);
+        await AssignmentCleanup.ClearInaccessibleAsync(_dbContext, new[] { projectId }, cancellationToken);
     }
 
     private static string? NormalizeIcon(string? icon)

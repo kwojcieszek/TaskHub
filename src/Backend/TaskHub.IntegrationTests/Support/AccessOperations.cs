@@ -1,6 +1,8 @@
 using System.Net;
+using TaskHub.Application.Dtos.Comments;
 using TaskHub.Application.Dtos.Projects;
 using TaskHub.Application.Dtos.Tasks;
+using TaskHub.Application.Dtos.UserGroups;
 using TaskHub.Domain.Enums;
 
 namespace TaskHub.IntegrationTests.Support;
@@ -83,7 +85,46 @@ public static class AccessOperations
             (caller, scenario) => caller.UploadAsync(ApiRoutes.Attachments(scenario.Project.Id, scenario.LeafTask.Id), "new.txt", Guid.NewGuid().ToByteArray())),
 
         new("DeleteAttachment", AccessArea.Attachment, AccessLevel.Edit, HttpStatusCode.NoContent,
-            (caller, scenario) => caller.DeleteAsync(ApiRoutes.Attachment(scenario.Project.Id, scenario.LeafTask.Id, scenario.Attachment.Id)))
+            (caller, scenario) => caller.DeleteAsync(ApiRoutes.Attachment(scenario.Project.Id, scenario.LeafTask.Id, scenario.Attachment.Id))),
+
+        new("ListTeams", AccessArea.Project, AccessLevel.View, HttpStatusCode.OK,
+            (caller, scenario) => caller.GetAsync(ApiRoutes.ProjectTeams(scenario.Project.Id))),
+
+        new("ListAvailableTeams", AccessArea.Project, AccessLevel.Manage, HttpStatusCode.OK,
+            (caller, scenario) => caller.GetAsync(ApiRoutes.AvailableProjectTeams(scenario.Project.Id))),
+
+        new("AddTeam", AccessArea.Project, AccessLevel.Manage, HttpStatusCode.OK,
+            async (caller, scenario) =>
+            {
+                var team = await scenario.Cast.Admin.PostAsync<UserGroupDto>(ApiRoutes.UserGroups, new CreateUserGroupRequest { Name = $"Matrix team {Guid.NewGuid():N}" });
+
+                return await caller.PostAsync(ApiRoutes.ProjectTeams(scenario.Project.Id), new AddProjectTeamRequest { UserGroupId = team.Id, Role = ProjectMemberRole.Editor });
+            }),
+
+        new("RemoveTeam", AccessArea.Project, AccessLevel.Manage, HttpStatusCode.NotFound,
+            (caller, scenario) => caller.DeleteAsync(ApiRoutes.ProjectTeam(scenario.Project.Id, Guid.NewGuid()))),
+
+        new("ListProjectComments", AccessArea.Comment, AccessLevel.View, HttpStatusCode.OK,
+            (caller, scenario) => caller.GetAsync(ApiRoutes.ProjectComments(scenario.Project.Id))),
+
+        new("AddProjectComment", AccessArea.Comment, AccessLevel.View, HttpStatusCode.OK,
+            (caller, scenario) => caller.PostAsync(ApiRoutes.ProjectComments(scenario.Project.Id), new SaveCommentRequest { Content = "Note" })),
+
+        new("ListTaskComments", AccessArea.Comment, AccessLevel.View, HttpStatusCode.OK,
+            (caller, scenario) => caller.GetAsync(ApiRoutes.TaskComments(scenario.Project.Id, scenario.LeafTask.Id))),
+
+        new("AddTaskComment", AccessArea.Comment, AccessLevel.View, HttpStatusCode.OK,
+            (caller, scenario) => caller.PostAsync(ApiRoutes.TaskComments(scenario.Project.Id, scenario.LeafTask.Id), new SaveCommentRequest { Content = "Note" })),
+
+        new("AddSubTaskComment", AccessArea.Comment, AccessLevel.View, HttpStatusCode.OK,
+            (caller, scenario) => caller.PostAsync(ApiRoutes.TaskComments(scenario.Project.Id, scenario.SubTask.Id), new SaveCommentRequest { Content = "Note" })),
+
+        // Nobody has written this comment, so whoever may look for it in the project is told it is not there.
+        new("UpdateMissingComment", AccessArea.Comment, AccessLevel.View, HttpStatusCode.NotFound,
+            (caller, scenario) => caller.PutAsync(ApiRoutes.Comment(scenario.Project.Id, Guid.NewGuid()), new SaveCommentRequest { Content = "Note" })),
+
+        new("DeleteMissingComment", AccessArea.Comment, AccessLevel.View, HttpStatusCode.NotFound,
+            (caller, scenario) => caller.DeleteAsync(ApiRoutes.Comment(scenario.Project.Id, Guid.NewGuid())))
     };
 
     public static AccessOperation Get(string name)

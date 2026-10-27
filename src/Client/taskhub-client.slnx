@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="taskhub-client/taskhub-client.esproj">
+    <Build />
+    <Deploy />
+  </Project>
+</Solution>

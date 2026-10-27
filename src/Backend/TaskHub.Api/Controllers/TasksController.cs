@@ -9,7 +9,7 @@ namespace TaskHub.Api.Controllers;
 
 [Authorize]
 [ApiVersion("1.0")]
-[Route("api/v{version:apiVersion}/projects/{projectId:guid}/tasks")]
+[Route("v{version:apiVersion}/projects/{projectId:guid}/tasks")]
 public class TasksController : ApiControllerBase
 {
     private readonly ITaskItemService _taskItemService;
@@ -21,7 +21,7 @@ public class TasksController : ApiControllerBase
 
     // Tasks across every project the caller can see, outside the per-project route of this controller.
     // With a date range it returns the tasks due in that range (the calendar); without one, all of them.
-    [HttpGet("~/api/v{version:apiVersion}/tasks")]
+    [HttpGet("~/v{version:apiVersion}/tasks")]
     public async Task<ActionResult<IReadOnlyCollection<TaskItemDto>>> GetAcrossProjects(
         [FromQuery] DateTime? from,
         [FromQuery] DateTime? to,
@@ -95,6 +95,10 @@ public class TasksController : ApiControllerBase
         var task = await _taskItemService.StartAsync(projectId, taskId, cancellationToken);
         return Ok(task);
     }
+
+    [HttpGet("{taskId:guid}/history")]
+    public async Task<ActionResult<IReadOnlyCollection<TaskChangeDto>>> History(Guid projectId, Guid taskId, [FromQuery] int page = 1, CancellationToken ct = default)
+        => Ok(await _taskItemService.GetHistoryAsync(projectId, taskId, page, ct));
 
     [HttpPost("{taskId:guid}/complete")]
     public async Task<ActionResult<TaskItemDto>> Complete(Guid projectId, Guid taskId, CancellationToken cancellationToken)

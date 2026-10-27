@@ -7,6 +7,7 @@ using TaskHub.Application.Dtos.Tasks;
 using TaskHub.Application.Dtos.UserGroups;
 using TaskHub.Application.Dtos.UserSettings;
 using TaskHub.Domain.Entities;
+using TaskHub.Domain.Enums;
 
 namespace TaskHub.Application.Mapping;
 
@@ -32,6 +33,14 @@ public class MappingProfile : Profile
         CreateMap<TaskItem, TaskItemDto>()
             .ForMember(dest => dest.AssignedUserDisplayName, opt => opt.MapFrom(src => src.AssignedUser != null ? src.AssignedUser.DisplayName : null))
             .ForMember(dest => dest.AttachmentCount, opt => opt.MapFrom(src => src.Attachments.Count))
+            .ForMember(dest => dest.Recurrence, opt => opt.MapFrom(src => src.RecurrenceInterval.HasValue && src.RecurrenceUnit.HasValue
+                ? new TaskRecurrenceDto
+                {
+                    Interval = src.RecurrenceInterval.Value,
+                    Unit = src.RecurrenceUnit.Value,
+                    Basis = src.RecurrenceBasis ?? RecurrenceBasis.CompletionDate
+                }
+                : null))
             .ForMember(dest => dest.SubTasks, opt => opt.MapFrom(src => src.SubTasks.OrderBy(s => s.CreatedAt)));
 
         CreateMap<Attachment, AttachmentDto>()
@@ -41,13 +50,12 @@ public class MappingProfile : Profile
         CreateMap<UserSetting, UserSettingDto>();
 
         // Timestamps are stored in UTC; marking the kind makes the API emit them with a "Z" suffix.
-        CreateMap<LoginLog, LoginLogDto>()
-            .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.SpecifyKind(src.CreatedAt, DateTimeKind.Utc)));
-
         CreateMap<UserActivityLog, UserActivityLogDto>()
             .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.SpecifyKind(src.CreatedAt, DateTimeKind.Utc)));
 
         CreateMap<UserGroup, UserGroupDto>()
+            .ForMember(dest => dest.CanManage, opt => opt.Ignore())
+            .ForMember(dest => dest.OwnerDisplayName, opt => opt.Ignore())
             .ForMember(dest => dest.MemberCount, opt => opt.MapFrom(src => src.Members.Count));
 
         CreateMap<UserGroupMember, UserGroupMemberDto>()

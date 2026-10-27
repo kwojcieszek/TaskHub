@@ -94,7 +94,7 @@
 </ng-template>
 
 <ng-template #taskTable let-rows let-showCompleted="showCompleted">
-  <p-table [value]="rows" [paginator]="rows.length > taskPageSize" [rows]="taskPageSize" styleClass="report-table">
+  <p-table [value]="rows" [paginator]="rows.length > taskPageSize" [rows]="taskPageSize" styleClass="report-table report-table--tasks">
     <ng-template #header>
       <tr>
         <th>{{ 'reports.task' | translate }}</th>
@@ -114,16 +114,60 @@
     </ng-template>
     <ng-template #body let-row>
       <tr>
-        <td class="report-label">{{ row.title }}</td>
-        <td>{{ row.project }}</td>
+        <td class="report-label">
+          <span class="report-copy">
+            {{ row.title }}
+            @if (row.title) {
+              <button
+                type="button"
+                class="report-copy__button"
+                [title]="'reports.copy' | translate"
+                [attr.aria-label]="'reports.copy' | translate"
+                (click)="copy(row.title, row.id + ':title')"
+              >
+                <i [class]="copiedKey() === row.id + ':title' ? 'pi pi-check' : 'pi pi-copy'"></i>
+              </button>
+            }
+          </span>
+        </td>
+        <td>
+          <span class="report-copy">
+            {{ row.project }}
+            @if (row.project) {
+              <button
+                type="button"
+                class="report-copy__button"
+                [title]="'reports.copy' | translate"
+                [attr.aria-label]="'reports.copy' | translate"
+                (click)="copy(row.project, row.id + ':project')"
+              >
+                <i [class]="copiedKey() === row.id + ':project' ? 'pi pi-check' : 'pi pi-copy'"></i>
+              </button>
+            }
+          </span>
+        </td>
         <td>{{ row.assignee }}</td>
         @if (!showCompleted) {
           <td><span class="badge" [attr.data-status]="row.status">{{ 'tasks.status.' + row.status | translate }}</span></td>
         }
         <td class="nowrap">{{ row.dueDate ? (row.dueDate | date: 'yyyy-MM-dd') : '—' }}</td>
         @if (showCompleted) {
-          <td class="nowrap">{{ row.startedAt ? (row.startedAt | date: 'yyyy-MM-dd HH:mm:ss') : '—' }}</td>
-          <td class="nowrap">{{ row.completedAt | date: 'yyyy-MM-dd HH:mm:ss' }}</td>
+          <td class="nowrap">
+            @if (row.startedAt) {
+              <span class="report-datetime">
+                <span>{{ row.startedAt | date: 'yyyy-MM-dd' }}</span>
+                <span class="secondary">{{ row.startedAt | date: 'HH:mm:ss' }}</span>
+              </span>
+            } @else {
+              —
+            }
+          </td>
+          <td class="nowrap">
+            <span class="report-datetime">
+              <span>{{ row.completedAt | date: 'yyyy-MM-dd' }}</span>
+              <span class="secondary">{{ row.completedAt | date: 'HH:mm:ss' }}</span>
+            </span>
+          </td>
           <td class="nowrap report-duration">
             @if (row.durationMs !== null) {
               {{ formatDuration(row.durationMs) }}

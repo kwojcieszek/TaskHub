@@ -10,7 +10,7 @@ namespace TaskHub.Api.Controllers;
 
 [Authorize(Roles = Roles.Admin)]
 [ApiVersion("1.0")]
-[Route("api/v{version:apiVersion}/admin/logs")]
+[Route("v{version:apiVersion}/admin/logs")]
 public class AdminLogsController : ApiControllerBase
 {
     private readonly IAuditLogService _auditLogService;
@@ -21,7 +21,7 @@ public class AdminLogsController : ApiControllerBase
     }
 
     [HttpGet("logins")]
-    public async Task<ActionResult<PagedResultDto<LoginLogDto>>> GetLogins([FromQuery] AuditLogQuery query, CancellationToken cancellationToken)
+    public async Task<ActionResult<PagedResultDto<UserActivityLogDto>>> GetLogins([FromQuery] AuditLogQuery query, CancellationToken cancellationToken)
     {
         var logs = await _auditLogService.GetLoginLogsAsync(query, cancellationToken);
         return Ok(logs);

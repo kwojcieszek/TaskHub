@@ -1,21 +1,21 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { environment } from '../../../environments/environment';
-import { AuditLogQuery, LoginLog, PagedResult, UserActivityLog } from '../models/audit-log.model';
+import { appSettings } from '../config/app-settings';
+import { AuditLogQuery, PagedResult, UserActivityLog } from '../models/audit-log.model';
 
 @Injectable({ providedIn: 'root' })
 export class AuditLogService {
-  private readonly baseUrl = `${environment.apiUrl}/admin/logs`;
+  private readonly baseUrl = `${appSettings.apiUrl}/admin/logs`;
 
   constructor(private readonly http: HttpClient) {}
 
-  getLogins(query: AuditLogQuery): Observable<PagedResult<LoginLog>> {
-    return this.http.get<PagedResult<LoginLog>>(`${this.baseUrl}/logins`, { params: this.toParams(query) });
+  getLogins(query: AuditLogQuery): Observable<PagedResult<UserActivityLog>> {
+    return this.http.get<PagedResult<UserActivityLog>>(`${this.baseUrl}/logins`, { params: this.toParams(query) });
   }
 
-  getMyLogins(query: AuditLogQuery): Observable<PagedResult<LoginLog>> {
-    return this.http.get<PagedResult<LoginLog>>(`${environment.apiUrl}/auth/logins`, { params: this.toParams(query) });
+  getMyLogins(query: AuditLogQuery): Observable<PagedResult<UserActivityLog>> {
+    return this.http.get<PagedResult<UserActivityLog>>(`${appSettings.apiUrl}/auth/logins`, { params: this.toParams(query) });
   }
 
   getActivity(query: AuditLogQuery): Observable<PagedResult<UserActivityLog>> {

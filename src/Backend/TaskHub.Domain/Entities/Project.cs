@@ -20,7 +20,7 @@ public class Project
 
     public Guid OwnerId { get; set; }
 
-    public ApplicationUser? Owner { get; set; }
+    public User? Owner { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
@@ -29,4 +29,6 @@ public class Project
     public ICollection<TaskItem> Tasks { get; set; } = new List<TaskItem>();
 
     public ICollection<ProjectMember> Members { get; set; } = new List<ProjectMember>();
+
+    public ICollection<ProjectTeam> Teams { get; set; } = new List<ProjectTeam>();
 }

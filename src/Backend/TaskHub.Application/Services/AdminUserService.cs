@@ -4,19 +4,20 @@ using TaskHub.Application.Common;
 using TaskHub.Application.Dtos.Admin;
 using TaskHub.Application.Interfaces;
 using TaskHub.Domain.Entities;
+using TaskHub.Domain.Enums;
 
 namespace TaskHub.Application.Services;
 
 public class AdminUserService : IAdminUserService
 {
-    private readonly UserManager<ApplicationUser> _userManager;
-    private readonly RoleManager<ApplicationRole> _roleManager;
+    private readonly UserManager<User> _userManager;
+    private readonly RoleManager<Role> _roleManager;
     private readonly IApplicationDbContext _dbContext;
     private readonly ICurrentUserService _currentUser;
 
     public AdminUserService(
-        UserManager<ApplicationUser> userManager,
-        RoleManager<ApplicationRole> roleManager,
+        UserManager<User> userManager,
+        RoleManager<Role> roleManager,
         IApplicationDbContext dbContext,
         ICurrentUserService currentUser)
     {
@@ -31,9 +32,9 @@ public class AdminUserService : IAdminUserService
         var users = _userManager.Users.AsNoTracking().ToList();
         var result = new List<AdminUserDto>();
 
-        var lastLogins = await _dbContext.LoginLogs
+        var lastLogins = await _dbContext.UserActivityLogs
             .AsNoTracking()
-            .Where(l => l.Succeeded && l.UserId != null)
+            .Where(l => l.Type == UserActivityType.Login && l.FailureReason == null && l.UserId != null)
             .GroupBy(l => l.UserId!.Value)
             .Select(g => new { UserId = g.Key, LastLoginAt = g.Max(l => l.CreatedAt) })
             .ToDictionaryAsync(l => l.UserId, l => l.LastLoginAt, cancellationToken);
@@ -100,7 +101,7 @@ public class AdminUserService : IAdminUserService
 
     public async Task<AdminUserDto> CreateUserAsync(CreateUserRequest request, CancellationToken cancellationToken = default)
     {
-        var user = new ApplicationUser
+        var user = new User
         {
             Id = Guid.NewGuid(),
             UserName = request.UserName,
@@ -151,6 +152,13 @@ public class AdminUserService : IAdminUserService
             throw new ConflictException("You cannot delete your own account.");
         }
 
+        if (await _dbContext.Projects.AnyAsync(p => p.OwnerId == userId, cancellationToken) ||
+            await _dbContext.ProjectGroups.AnyAsync(g => g.OwnerId == userId, cancellationToken) ||
+            await _dbContext.UserGroups.AnyAsync(g => g.OwnerId == userId, cancellationToken))
+            throw new ConflictException("Transfer or remove the user's projects and teams before deleting this account.");
+        if (await _dbContext.Attachments.AnyAsync(a => a.UploadedById == userId, cancellationToken))
+            throw new ConflictException("Remove the user's attachments before deleting this account.");
+
         var result = await _userManager.DeleteAsync(user);
 
         if (!result.Succeeded)
@@ -159,13 +167,13 @@ public class AdminUserService : IAdminUserService
         }
     }
 
-    private async Task<ApplicationUser> GetUserOrThrowAsync(Guid userId)
+    private async Task<User> GetUserOrThrowAsync(Guid userId)
     {
         return await _userManager.FindByIdAsync(userId.ToString())
             ?? throw new NotFoundException("User not found.");
     }
 
-    private async Task<AdminUserDto> MapToDtoAsync(ApplicationUser user)
+    private async Task<AdminUserDto> MapToDtoAsync(User user)
     {
         var roles = await _userManager.GetRolesAsync(user);
         var lockedOut = await _userManager.IsLockedOutAsync(user);

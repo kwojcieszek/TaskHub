@@ -5,11 +5,14 @@ import { MenuItem } from 'primeng/api';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import { AuthService } from '../../core/services/auth.service';
 import { ThemeSwitchComponent } from '../theme-switch/theme-switch.component';
+import { ApiFeedbackComponent } from '../api-feedback/api-feedback.component';
+import { ApiFeedbackService } from '../../core/services/api-feedback.service';
+import { inject } from '@angular/core';
 
 @Component({
   selector: 'app-shell',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, Menubar, TranslateModule, ThemeSwitchComponent],
+  imports: [RouterOutlet, RouterLink, Menubar, TranslateModule, ThemeSwitchComponent, ApiFeedbackComponent],
   templateUrl: './shell.component.html',
   styleUrl: './shell.component.scss'
 })
@@ -19,6 +22,7 @@ export class ShellComponent implements OnInit {
   menuItems: MenuItem[] = [];
 
   readonly userMenuOpen = signal(false);
+  readonly feedback = inject(ApiFeedbackService);
 
   constructor(
     readonly auth: AuthService,
@@ -43,13 +47,16 @@ export class ShellComponent implements OnInit {
       { label: this.translate.instant('nav.tasks'), icon: 'pi pi-check-square', routerLink: '/app/tasks' },
       { label: this.translate.instant('nav.calendar'), icon: 'pi pi-calendar', routerLink: '/app/calendar' },
       { label: this.translate.instant('nav.reports'), icon: 'pi pi-chart-bar', routerLink: '/app/reports' },
-      {
-        label: this.translate.instant('nav.admin'),
-        icon: this.auth.isAdmin() ? 'pi pi-shield' : 'pi pi-lock',
-        routerLink: this.auth.isAdmin() ? '/app/admin' : undefined,
-        disabled: !this.auth.isAdmin()
-      }
+      { label: this.translate.instant('nav.userGroups'), icon: 'pi pi-users', routerLink: '/app/user-groups' }
     ];
+
+    if (this.auth.isAdmin()) {
+      this.menuItems.push({
+        label: this.translate.instant('nav.admin'),
+        icon: 'pi pi-shield',
+        routerLink: '/app/admin'
+      });
+    }
   }
 
   toggleUserMenu(): void {
@@ -74,7 +81,6 @@ export class ShellComponent implements OnInit {
 
   logout(): void {
     this.closeUserMenu();
-    this.auth.logout();
-    this.router.navigate(['/login']);
+    this.auth.endSession().subscribe({ next: () => this.router.navigate(['/login']), error: () => {} });
   }
 }

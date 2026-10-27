@@ -1,4 +1,62 @@
 <p-confirmdialog />
+<div class="search-filters">
+  <div class="field">
+    <label for="taskSearch">{{ 'filters.search' | translate }}</label>
+    <input pInputText type="search" id="taskSearch" class="w-full" [ngModel]="search()" (ngModelChange)="search.set($event)" maxlength="200" />
+  </div>
+
+  <div class="field">
+    <label for="projectFilter">{{ 'filters.project' | translate }}</label>
+    <p-select
+      inputId="projectFilter"
+      [options]="projectFilterOptions()"
+      optionLabel="label"
+      optionValue="value"
+      [ngModel]="projectFilter()"
+      (ngModelChange)="projectFilter.set($event)"
+      styleClass="w-full"
+    />
+  </div>
+
+  <div class="field">
+    <label for="priorityFilter">{{ 'filters.priority' | translate }}</label>
+    <p-select
+      inputId="priorityFilter"
+      [options]="priorityFilterOptions"
+      optionLabel="label"
+      optionValue="value"
+      [ngModel]="priorityFilter()"
+      (ngModelChange)="priorityFilter.set($event)"
+      styleClass="w-full"
+    />
+  </div>
+
+  <div class="field">
+    <label for="filterName">{{ 'filters.name' | translate }}</label>
+    <div class="search-filters__save">
+      <input pInputText id="filterName" class="w-full" [ngModel]="filterName()" (ngModelChange)="filterName.set($event)" maxlength="60" />
+      <p-button
+        icon="pi pi-save"
+        severity="secondary"
+        [outlined]="true"
+        [disabled]="!filterName().trim()"
+        [ariaLabel]="'filters.save' | translate"
+        (onClick)="saveFilter()"
+      />
+    </div>
+  </div>
+</div>
+
+@if (savedFilters().length > 0) {
+  <div class="saved-filters">
+    @for (filter of savedFilters(); track filter.name) {
+      <span class="chip saved-filter">
+        <button type="button" (click)="applyFilter(filter)">{{ filter.name }}</button>
+        <button type="button" (click)="deleteFilter(filter)" [attr.aria-label]="'common.delete' | translate"><i class="pi pi-times"></i></button>
+      </span>
+    }
+  </div>
+}
 
 <div class="page-header">
   <div>
@@ -11,7 +69,34 @@
       }
     </div>
   </div>
-  <app-status-filter [value]="statusFilter()" (valueChange)="statusFilter.set($event)" />
+  <div class="task-toolbar">
+    @if (view() === 'list') {
+      <app-status-filter [value]="statusFilter()" (valueChange)="statusFilter.set($event)" />
+    } @else {
+      <div class="board-statuses" role="group" [attr.aria-label]="'tasksOverview.boardStatuses' | translate">
+        @for (status of boardStatusOptions; track status) {
+          <button
+            type="button"
+            class="board-statuses__button"
+            [attr.data-status]="status"
+            [class.board-statuses__button--active]="showsBoardStatus(status)"
+            [attr.aria-pressed]="showsBoardStatus(status)"
+            (click)="toggleBoardStatus(status)"
+          >
+            <i [class]="showsBoardStatus(status) ? 'pi pi-check' : 'pi pi-plus'"></i>{{ 'tasks.status.' + status | translate }}
+          </button>
+        }
+      </div>
+    }
+    <div class="view-switch" role="group" [attr.aria-label]="'tasksOverview.view' | translate">
+      <button type="button" class="view-switch__button" [class.view-switch__button--active]="view() === 'list'" [attr.aria-pressed]="view() === 'list'" (click)="setView('list')">
+        <i class="pi pi-list"></i>{{ 'tasksOverview.viewList' | translate }}
+      </button>
+      <button type="button" class="view-switch__button" [class.view-switch__button--active]="view() === 'board'" [attr.aria-pressed]="view() === 'board'" (click)="setView('board')">
+        <i class="pi pi-th-large"></i>{{ 'tasksOverview.viewBoard' | translate }}
+      </button>
+    </div>
+  </div>
 </div>
 
 @if (loadError()) {
@@ -22,6 +107,24 @@
   </div>
 }
 
+@if (moveError()) {
+  <div class="task-error">
+    <i class="pi pi-exclamation-triangle"></i>
+    <p>{{ 'tasksOverview.moveError' | translate }}</p>
+  </div>
+}
+
+@if (view() === 'board') {
+  <p class="board-hint">{{ 'tasksOverview.boardHint' | translate }}</p>
+  <app-task-board
+    [tasks]="boardTasks()"
+    [statuses]="boardStatuses()"
+    [lockedTaskIds]="parentTaskIds()"
+    [projectNames]="projectNames()"
+    (open)="edit($event)"
+    (move)="moveTask($event)"
+  />
+} @else {
 <div class="task-sections">
   @for (section of sections(); track section.key) {
     <section [class]="'task-section tone-' + section.tone">
@@ -51,3 +154,4 @@
     </section>
   }
 </div>
+}

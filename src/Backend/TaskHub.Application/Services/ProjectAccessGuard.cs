@@ -23,11 +23,9 @@ public class ProjectAccessGuard : IProjectAccessGuard
             return;
         }
 
-        var isMember = await _dbContext.ProjectMembers
-            .AsNoTracking()
-            .AnyAsync(m => m.ProjectId == projectId && m.UserId == _currentUser.UserId, cancellationToken);
+        var role = await FindRoleAsync(projectId, cancellationToken);
 
-        if (!isMember)
+        if (role is null)
         {
             throw new ForbiddenAccessException("You do not have access to this project.");
         }
@@ -40,11 +38,7 @@ public class ProjectAccessGuard : IProjectAccessGuard
             return;
         }
 
-        var role = await _dbContext.ProjectMembers
-            .AsNoTracking()
-            .Where(m => m.ProjectId == projectId && m.UserId == _currentUser.UserId)
-            .Select(m => (ProjectMemberRole?)m.Role)
-            .FirstOrDefaultAsync(cancellationToken);
+        var role = await FindRoleAsync(projectId, cancellationToken);
 
         if (role is null || role == ProjectMemberRole.Viewer)
         {
@@ -59,16 +53,42 @@ public class ProjectAccessGuard : IProjectAccessGuard
             return;
         }
 
-        var role = await _dbContext.ProjectMembers
-            .AsNoTracking()
-            .Where(m => m.ProjectId == projectId && m.UserId == _currentUser.UserId)
-            .Select(m => (ProjectMemberRole?)m.Role)
-            .FirstOrDefaultAsync(cancellationToken);
+        var role = await FindRoleAsync(projectId, cancellationToken);
 
         if (role != ProjectMemberRole.Owner)
         {
             throw new ForbiddenAccessException("Only the project owner can perform this action.");
         }
+    }
+
+    public async Task<bool> CanManageAsync(Guid projectId, CancellationToken cancellationToken = default)
+    {
+        if (_currentUser.IsInRole(Roles.Admin))
+        {
+            return true;
+        }
+
+        return await FindRoleAsync(projectId, cancellationToken) == ProjectMemberRole.Owner;
+    }
+
+    // The strongest role the caller has in the project: their own membership or one of their teams'.
+    private async Task<ProjectMemberRole?> FindRoleAsync(Guid projectId, CancellationToken cancellationToken)
+    {
+        var userId = _currentUser.UserId;
+
+        var roles = await _dbContext.ProjectMembers
+            .AsNoTracking()
+            .Where(m => m.ProjectId == projectId && m.UserId == userId)
+            .Select(m => m.Role)
+            .ToListAsync(cancellationToken);
+
+        var teamRoles = await _dbContext.ProjectTeams
+            .AsNoTracking()
+            .Where(t => t.ProjectId == projectId && t.UserGroup!.Members.Any(m => m.UserId == userId))
+            .Select(t => t.Role)
+            .ToListAsync(cancellationToken);
+
+        return ProjectAccess.Strongest(roles.Concat(teamRoles));
     }
 
     public async Task EnsureCanManageGroupAsync(Guid projectGroupId, CancellationToken cancellationToken = default)

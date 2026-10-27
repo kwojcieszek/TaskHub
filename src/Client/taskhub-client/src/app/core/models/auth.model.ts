@@ -24,7 +24,14 @@ export interface LoginResponse {
 export interface AuthProviders {
   googleClientId: string | null;
   registrationEnabled: boolean;
+  passwordResetEnabled: boolean;
   passwordPolicy: PasswordPolicy;
+}
+
+export interface ResetPasswordRequest {
+  email: string;
+  token: string;
+  newPassword: string;
 }
 
 export interface TwoFactorVerifyRequest {

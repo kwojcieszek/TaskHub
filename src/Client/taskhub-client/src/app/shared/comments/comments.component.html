@@ -1,0 +1,77 @@
+<p-confirmdialog key="comments" appendTo="body" />
+
+<section class="comments">
+  <h3 class="comments__title"><i class="pi pi-comments"></i>{{ 'comments.title' | translate }} · {{ comments().length }}</h3>
+
+  @if (errorKey(); as key) {
+    <p class="error-text">{{ key | translate }}</p>
+  }
+
+  <div class="comments__list">
+    @for (comment of comments(); track comment.id) {
+      <article class="comment">
+        <span class="comment__avatar" [style.--project-color]="color(comment)">{{ initial(comment) }}</span>
+        <div class="comment__body">
+          <div class="comment__head">
+            <strong class="comment__author">{{ comment.authorDisplayName ?? ('comments.deletedUser' | translate) }}</strong>
+            <span class="comment__date">{{ comment.createdAt | date: 'yyyy-MM-dd HH:mm' }}</span>
+            @if (comment.updatedAt) {
+              <span class="comment__date">· {{ 'comments.edited' | translate }}</span>
+            }
+            <span class="comment__actions">
+              @if (comment.canEdit && editingId() !== comment.id) {
+                <button type="button" class="icon-btn" [title]="'common.edit' | translate" (click)="startEdit(comment)">
+                  <i class="pi pi-pencil"></i>
+                </button>
+              }
+              @if (comment.canDelete) {
+                <button type="button" class="icon-btn icon-btn--danger" [title]="'common.delete' | translate" (click)="remove(comment)">
+                  <i class="pi pi-trash"></i>
+                </button>
+              }
+            </span>
+          </div>
+
+          @if (editingId() === comment.id) {
+            <textarea pTextarea appDictation [formControl]="editControl" rows="3" [maxlength]="maxLength" class="w-full"></textarea>
+            <div class="comment__edit-actions">
+              <p-button [label]="'common.cancel' | translate" size="small" severity="secondary" [outlined]="true" type="button" (onClick)="cancelEdit()" />
+              <p-button [label]="'common.save' | translate" icon="pi pi-check" size="small" type="button" (onClick)="saveEdit(comment)" />
+            </div>
+          } @else {
+            <p class="comment__text">{{ comment.content }}</p>
+          }
+        </div>
+      </article>
+    } @empty {
+      @if (!loading()) {
+        <p class="comments__empty">{{ 'comments.empty' | translate }}</p>
+      }
+    }
+  </div>
+
+  <div class="comments__new">
+    <textarea
+      pTextarea
+      appDictation
+      [formControl]="newControl"
+      rows="2"
+      [maxlength]="maxLength"
+      class="w-full"
+      [placeholder]="'comments.placeholder' | translate"
+      (keydown)="onNewKeydown($event)"
+    ></textarea>
+    <div class="comments__new-actions">
+      <small class="field-hint">{{ 'comments.sendHint' | translate }}</small>
+      <p-button
+        [label]="'comments.send' | translate"
+        icon="pi pi-send"
+        size="small"
+        type="button"
+        [loading]="saving()"
+        [disabled]="!newControl.value.trim()"
+        (onClick)="add()"
+      />
+    </div>
+  </div>
+</section>

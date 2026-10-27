@@ -5,7 +5,7 @@ import { InputText } from 'primeng/inputtext';
 import { TableLazyLoadEvent, TableModule } from 'primeng/table';
 import { TranslateModule } from '@ngx-translate/core';
 import { AuditLogService } from '../../../core/services/audit-log.service';
-import { LoginLog } from '../../../core/models/audit-log.model';
+import { UserActivityLog } from '../../../core/models/audit-log.model';
 import { LocalizedDatePipe } from '../../../shared/pipes/localized-date.pipe';
 
 const DEFAULT_PAGE_SIZE = 25;
@@ -20,7 +20,7 @@ const DEFAULT_PAGE_SIZE = 25;
 export class LoginLogsComponent {
   private readonly auditLogService = inject(AuditLogService);
 
-  readonly logs = signal<LoginLog[]>([]);
+  readonly logs = signal<UserActivityLog[]>([]);
   readonly totalCount = signal(0);
   readonly loading = signal(false);
   readonly failed = signal(false);

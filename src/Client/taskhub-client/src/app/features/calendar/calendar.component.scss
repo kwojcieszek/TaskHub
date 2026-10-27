@@ -11,7 +11,7 @@
 .calendar-month {
   min-width: 9.5rem;
   text-align: center;
-  font-weight: 700;
+  font-weight: 500;
   font-size: 1.05rem;
 }
 
@@ -33,7 +33,7 @@
 .calendar-weekday {
   padding: 0.35rem 0.5rem;
   font-size: 0.74rem;
-  font-weight: 700;
+  font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--p-text-muted-color);
@@ -73,7 +73,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-weight: 700;
+  font-weight: 500;
   font-size: 1.05rem;
 }
 
@@ -103,7 +103,7 @@
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  font-weight: 600;
+  font-weight: 500;
   font-size: 0.85rem;
 }
 
@@ -121,7 +121,7 @@
 
 .calendar-task {
   font-size: 0.74rem;
-  font-weight: 600;
+  font-weight: 500;
   display: flex;
   align-items: center;
   gap: 4px;

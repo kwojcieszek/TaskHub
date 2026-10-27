@@ -1,12 +1,13 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, computed, signal } from '@angular/core';
 import { Observable, tap } from 'rxjs';
-import { environment } from '../../../environments/environment';
+import { appSettings } from '../config/app-settings';
 import {
   AuthProviders,
   LoginRequest,
   LoginResponse,
   RegisterRequest,
+  ResetPasswordRequest,
   TwoFactorSetupResponse,
   TwoFactorVerifyRequest
 } from '../models/auth.model';
@@ -19,7 +20,7 @@ const STORAGE_USER_KEY = 'taskhub.user';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private readonly baseUrl = `${environment.apiUrl}/auth`;
+  private readonly baseUrl = `${appSettings.apiUrl}/auth`;
 
   private readonly currentUserSignal = signal<User | null>(this.readStoredUser());
   private readonly accessTokenSignal = signal<string | null>(localStorage.getItem(STORAGE_TOKEN_KEY));
@@ -31,6 +32,9 @@ export class AuthService {
   // Whether the server lets visitors create their own account; false until the server says otherwise.
   readonly registrationEnabled = signal(false);
 
+  // Whether the server can e-mail password reset links; false until the server says otherwise.
+  readonly passwordResetEnabled = signal(false);
+
   // The rules a new password must meet; the server is the one that enforces them.
   readonly passwordPolicy = signal<PasswordPolicy>(DEFAULT_PASSWORD_POLICY);
 
@@ -40,12 +44,16 @@ export class AuthService {
     this.http.get<AuthProviders>(`${this.baseUrl}/providers`).subscribe({
       next: (providers) => {
         this.registrationEnabled.set(providers.registrationEnabled === true);
+        this.passwordResetEnabled.set(providers.passwordResetEnabled === true);
 
         if (providers.passwordPolicy) {
           this.passwordPolicy.set(providers.passwordPolicy);
         }
       },
-      error: () => this.registrationEnabled.set(false)
+      error: () => {
+        this.registrationEnabled.set(false);
+        this.passwordResetEnabled.set(false);
+      }
     });
   }
 
@@ -69,8 +77,8 @@ export class AuthService {
     );
   }
 
-  linkGoogle(idToken: string): Observable<User> {
-    return this.http.post<User>(`${this.baseUrl}/google/link`, { idToken }).pipe(tap((user) => this.storeCurrentUser(user)));
+  linkGoogle(idToken: string, password: string, code?: string): Observable<User> {
+    return this.http.post<User>(`${this.baseUrl}/google/link`, { idToken, password, code }).pipe(tap((user) => this.storeCurrentUser(user)));
   }
 
   unlinkGoogle(): Observable<User> {
@@ -106,6 +114,15 @@ export class AuthService {
     );
   }
 
+  // The server answers the same way whether or not the address belongs to an account.
+  requestPasswordReset(email: string): Observable<void> {
+    return this.http.post<void>(`${this.baseUrl}/password/forgot`, { email });
+  }
+
+  resetPassword(request: ResetPasswordRequest): Observable<void> {
+    return this.http.post<void>(`${this.baseUrl}/password/reset`, request);
+  }
+
   refreshCurrentUser(): Observable<User> {
     return this.http.get<User>(`${this.baseUrl}/me`).pipe(tap((user) => this.storeCurrentUser(user)));
   }
@@ -115,6 +132,10 @@ export class AuthService {
     this.accessTokenSignal.set(null);
     localStorage.removeItem(STORAGE_TOKEN_KEY);
     localStorage.removeItem(STORAGE_USER_KEY);
+  }
+
+  endSession(all = false): Observable<void> {
+    return this.http.post<void>(`${this.baseUrl}/sessions/logout?all=${all}`, {}).pipe(tap(() => this.logout()));
   }
 
   private storeCurrentUser(user: User): void {
@@ -135,6 +156,7 @@ export class AuthService {
 
   private readStoredUser(): User | null {
     const raw = localStorage.getItem(STORAGE_USER_KEY);
-    return raw ? (JSON.parse(raw) as User) : null;
+    try { return raw ? (JSON.parse(raw) as User) : null; }
+    catch { return null; }
   }
 }

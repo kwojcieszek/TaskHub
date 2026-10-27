@@ -7,9 +7,9 @@ using TaskHub.Application.Interfaces;
 
 namespace TaskHub.Api.Controllers;
 
-[Authorize(Roles = Roles.Admin)]
+[Authorize]
 [ApiVersion("1.0")]
-[Route("api/v{version:apiVersion}/user-groups")]
+[Route("v{version:apiVersion}/user-groups")]
 public class UserGroupsController : ApiControllerBase
 {
     private readonly IUserGroupService _userGroupService;
@@ -26,10 +26,28 @@ public class UserGroupsController : ApiControllerBase
         return Ok(groups);
     }
 
+    [HttpPut("{groupId:guid}/owner")]
+    public async Task<ActionResult<UserGroupDto>> TransferOwner(Guid groupId, TransferTeamOwnershipRequest request, CancellationToken ct)
+        => Ok(await _userGroupService.TransferOwnershipAsync(groupId, request.UserId, ct));
+
+    [HttpPost("{groupId:guid}/leave")]
+    public async Task<IActionResult> Leave(Guid groupId, CancellationToken ct)
+    {
+        await _userGroupService.LeaveAsync(groupId, ct);
+        return NoContent();
+    }
+
     [HttpPost]
     public async Task<ActionResult<UserGroupDto>> Create(CreateUserGroupRequest request, CancellationToken cancellationToken)
     {
         var group = await _userGroupService.CreateAsync(request, cancellationToken);
+        return Ok(group);
+    }
+
+    [HttpPut("{groupId:guid}")]
+    public async Task<ActionResult<UserGroupDto>> Update(Guid groupId, UpdateUserGroupRequest request, CancellationToken cancellationToken)
+    {
+        var group = await _userGroupService.UpdateAsync(groupId, request, cancellationToken);
         return Ok(group);
     }
 

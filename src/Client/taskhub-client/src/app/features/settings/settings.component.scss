@@ -45,7 +45,7 @@
 }
 
 .setting-row__title {
-  font-weight: 700;
+  font-weight: 500;
 }
 
 .setting-row__hint {
@@ -58,7 +58,7 @@
   align-items: center;
   gap: 0.4rem;
   font-size: 0.9rem;
-  font-weight: 700;
+  font-weight: 500;
   color: var(--p-primary-color);
   text-decoration: none;
 
@@ -70,7 +70,7 @@
 .segmented {
   display: inline-flex;
   padding: 3px;
-  border-radius: 999px;
+  border-radius: var(--app-control-radius);
   background: var(--app-hover);
 }
 
@@ -80,12 +80,12 @@
   gap: 0.4rem;
   padding: 0.4rem 0.9rem;
   border: none;
-  border-radius: 999px;
+  border-radius: var(--app-control-radius-inner);
   background: transparent;
   color: var(--p-text-muted-color);
   font: inherit;
   font-size: 0.88rem;
-  font-weight: 600;
+  font-weight: 500;
   cursor: pointer;
 
   &:hover {

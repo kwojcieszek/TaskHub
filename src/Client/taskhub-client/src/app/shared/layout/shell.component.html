@@ -51,6 +51,7 @@
   </ng-template>
 </p-menubar>
 
-<div class="app-content">
+<app-api-feedback />
+<div class="app-content" [attr.aria-busy]="feedback.pending() > 0">
   <router-outlet></router-outlet>
 </div>

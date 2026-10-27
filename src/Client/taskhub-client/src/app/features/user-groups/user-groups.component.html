@@ -2,12 +2,13 @@
 
 <div class="page-header">
   <h1>{{ 'userGroups.title' | translate }}</h1>
-  <p-button [label]="'userGroups.newGroup' | translate" icon="pi pi-plus" (onClick)="createGroup()" />
+  <p-button [label]="'userGroups.newGroup' | translate" icon="pi pi-plus" size="small" [outlined]="true" (onClick)="createGroup()" />
 </div>
 
 @if (groups().length === 0) {
   <div class="empty-state">
     <i class="pi pi-users"></i>
+    <p>{{ 'userGroups.empty' | translate }}</p>
   </div>
 }
 
@@ -17,7 +18,7 @@
       <p-accordion-header (click)="loadMembers(group)">
         <span class="group-header">
           <span class="group-header__name"><i class="pi pi-users"></i>{{ group.name }}</span>
-          <span class="chip tone-blue">{{ group.memberCount }} {{ 'userGroups.members' | translate }}</span>
+          <span class="chip tone-blue">{{ 'userGroups.members' | translate }} · {{ group.memberCount }}</span>
         </span>
       </p-accordion-header>
       <p-accordion-content>
@@ -25,26 +26,64 @@
           <p class="description">{{ group.description }}</p>
         }
 
-        <p-button
-          [label]="'userGroups.addMember' | translate"
-          icon="pi pi-user-plus"
-          severity="secondary"
-          [outlined]="true"
-          (onClick)="addMember(group)"
-        />
+        <div class="group-owner">
+          <span class="group-owner__name">
+            <i class="pi pi-crown"></i>{{ 'userGroups.owner' | translate }}: {{ group.ownerDisplayName || ('userGroups.adminOwner' | translate) }}
+          </span>
+          @if (group.canManage && (membersByGroup()[group.id] || []).length > 0) {
+            <p-select
+              [options]="membersByGroup()[group.id] || []"
+              optionLabel="displayName"
+              optionValue="userId"
+              [(ngModel)]="nextOwners[group.id]"
+              [placeholder]="'userGroups.newOwner' | translate"
+              size="small"
+              appendTo="body"
+            />
+            <p-button
+              [label]="'userGroups.transfer' | translate"
+              size="small"
+              severity="secondary"
+              [outlined]="true"
+              [disabled]="!nextOwners[group.id]"
+              (onClick)="transfer(group)"
+            />
+          }
+          @if (canLeave(group)) {
+            <p-button [label]="'userGroups.leave' | translate" size="small" severity="secondary" [outlined]="true" (onClick)="leave(group)" />
+          }
+        </div>
+
+        @if (group.canManage) {
+          <p-button
+            [label]="'userGroups.addMember' | translate"
+            icon="pi pi-user-plus"
+            size="small"
+            severity="secondary"
+            [outlined]="true"
+            (onClick)="addMember(group)"
+          />
+        }
 
         <div class="members-list">
           @for (member of membersByGroup()[group.id]; track member.userId) {
             <div class="member-row">
               <span><i class="pi pi-user member-row__icon"></i>{{ member.displayName }} ({{ member.userName }})</span>
-              <button type="button" class="icon-btn icon-btn--danger" (click)="removeMember(group, member)">
-                <i class="pi pi-times"></i>
-              </button>
+              @if (group.canManage) {
+                <button type="button" class="icon-btn icon-btn--danger" (click)="removeMember(group, member)">
+                  <i class="pi pi-times"></i>
+                </button>
+              }
             </div>
           }
         </div>
 
-        <p-button [label]="'common.delete' | translate" icon="pi pi-trash" severity="danger" [text]="true" (onClick)="deleteGroup(group)" />
+        @if (group.canManage) {
+          <div class="group-actions">
+            <p-button [label]="'userGroups.editGroup' | translate" icon="pi pi-pencil" size="small" severity="secondary" [text]="true" (onClick)="editGroup(group)" />
+            <p-button [label]="'common.delete' | translate" icon="pi pi-trash" size="small" severity="danger" [text]="true" (onClick)="deleteGroup(group)" />
+          </div>
+        }
       </p-accordion-content>
     </p-accordion-panel>
   }

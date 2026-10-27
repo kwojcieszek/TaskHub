@@ -5,12 +5,14 @@ namespace TaskHub.IntegrationTests.Support;
 /// </summary>
 public static class ApiRoutes
 {
-    public const string Root = "/api/v1";
+    public const string Root = "/v1";
 
     public const string Login = Root + "/auth/login";
     public const string Register = Root + "/auth/register";
     public const string Me = Root + "/auth/me";
     public const string Password = Root + "/auth/password";
+    public const string ForgotPassword = Root + "/auth/password/forgot";
+    public const string ResetPassword = Root + "/auth/password/reset";
     public const string Providers = Root + "/auth/providers";
     public const string MyLogins = Root + "/auth/logins";
     public const string TwoFactorSetup = Root + "/auth/2fa/setup";
@@ -32,6 +34,12 @@ public static class ApiRoutes
     public const string ProjectGroups = Root + "/project-groups";
     public const string AllTasks = Root + "/tasks";
     public const string AttachmentLimits = Root + "/attachments/limits";
+    public const string Tokens = Root + "/tokens";
+
+    public static string Token(Guid tokenId)
+    {
+        return $"{Tokens}/{tokenId}";
+    }
 
     public static string AdminUser(Guid userId)
     {
@@ -93,6 +101,21 @@ public static class ApiRoutes
         return $"{Projects}/{projectId}/members/{userId}";
     }
 
+    public static string ProjectTeams(Guid projectId)
+    {
+        return $"{Projects}/{projectId}/teams";
+    }
+
+    public static string AvailableProjectTeams(Guid projectId)
+    {
+        return $"{Projects}/{projectId}/teams/available";
+    }
+
+    public static string ProjectTeam(Guid projectId, Guid userGroupId)
+    {
+        return $"{Projects}/{projectId}/teams/{userGroupId}";
+    }
+
     public static string ProjectGroup(Guid projectGroupId)
     {
         return $"{ProjectGroups}/{projectGroupId}";
@@ -126,6 +149,21 @@ public static class ApiRoutes
     public static string CompleteTask(Guid projectId, Guid taskId)
     {
         return $"{Projects}/{projectId}/tasks/{taskId}/complete";
+    }
+
+    public static string ProjectComments(Guid projectId)
+    {
+        return $"{Projects}/{projectId}/comments";
+    }
+
+    public static string TaskComments(Guid projectId, Guid taskId)
+    {
+        return $"{Projects}/{projectId}/tasks/{taskId}/comments";
+    }
+
+    public static string Comment(Guid projectId, Guid commentId)
+    {
+        return $"{Projects}/{projectId}/comments/{commentId}";
     }
 
     public static string Attachments(Guid projectId, Guid taskId)

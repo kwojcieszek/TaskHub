@@ -16,6 +16,8 @@ public class TaskItemConfiguration : IEntityTypeConfiguration<TaskItem>
         builder.Property(t => t.Description).HasMaxLength(4000);
         builder.Property(t => t.Status).HasConversion<string>().HasMaxLength(20);
         builder.Property(t => t.Priority).HasConversion<string>().HasMaxLength(20);
+        builder.Property(t => t.RecurrenceUnit).HasConversion<string>().HasMaxLength(20);
+        builder.Property(t => t.RecurrenceBasis).HasConversion<string>().HasMaxLength(20);
 
         builder.HasOne(t => t.AssignedUser)
             .WithMany()

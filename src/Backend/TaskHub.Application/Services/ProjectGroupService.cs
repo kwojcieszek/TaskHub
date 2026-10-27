@@ -98,8 +98,10 @@ public class ProjectGroupService : IProjectGroupService
 
         if (!_currentUser.IsInRole(Roles.Admin))
         {
-            query = query.Where(g => g.OwnerId == _currentUser.UserId
-                || g.Projects.Any(p => p.Members.Any(m => m.UserId == _currentUser.UserId)));
+            var userId = _currentUser.UserId;
+            var visibleProjects = _dbContext.Projects.Where(ProjectAccess.VisibleTo(userId)).Select(p => p.Id);
+
+            query = query.Where(g => g.OwnerId == userId || g.Projects.Any(p => visibleProjects.Contains(p.Id)));
         }
 
         return query;

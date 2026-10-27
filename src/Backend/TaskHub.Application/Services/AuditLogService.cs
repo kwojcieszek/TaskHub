@@ -1,4 +1,5 @@
 using AutoMapper;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using TaskHub.Application.Dtos.Audit;
@@ -16,6 +17,7 @@ public class AuditLogService : IAuditLogService
     private const int MaxActionLength = 200;
     private const int MaxPathLength = 500;
     private const int MaxUserAgentLength = 500;
+    private const string LoginAction = "Auth.Login";
 
     private readonly IApplicationDbContext _dbContext;
     private readonly ICurrentUserService _currentUser;
@@ -38,20 +40,23 @@ public class AuditLogService : IAuditLogService
     {
         var userAgent = _currentUser.UserAgent;
 
-        var log = new LoginLog
+        var log = new UserActivityLog
         {
             Id = Guid.NewGuid(),
+            Type = UserActivityType.Login,
             UserId = userId,
             UserName = Truncate(userName, MaxUserNameLength),
+            Action = LoginAction,
+            HttpMethod = HttpMethods.Post,
+            StatusCode = failureReason is null ? StatusCodes.Status200OK : StatusCodes.Status401Unauthorized,
             IpAddress = _currentUser.IpAddress,
             UserAgent = userAgent is null ? null : Truncate(userAgent, MaxUserAgentLength),
-            Succeeded = failureReason is null,
             FailureReason = failureReason
         };
 
         try
         {
-            _dbContext.LoginLogs.Add(log);
+            _dbContext.UserActivityLogs.Add(log);
             await _dbContext.SaveChangesAsync(cancellationToken);
         }
         catch (Exception exception)
@@ -66,6 +71,7 @@ public class AuditLogService : IAuditLogService
         var log = new UserActivityLog
         {
             Id = Guid.NewGuid(),
+            Type = UserActivityType.Request,
             UserId = userId,
             UserName = Truncate(userName, MaxUserNameLength),
             Action = Truncate(action, MaxActionLength),
@@ -79,17 +85,17 @@ public class AuditLogService : IAuditLogService
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    public Task<PagedResultDto<LoginLogDto>> GetLoginLogsAsync(AuditLogQuery query, CancellationToken cancellationToken = default)
+    public Task<PagedResultDto<UserActivityLogDto>> GetLoginLogsAsync(AuditLogQuery query, CancellationToken cancellationToken = default)
     {
-        return GetLoginLogsAsync(_dbContext.LoginLogs.AsNoTracking(), query, cancellationToken);
+        return GetLoginLogsAsync(LoginLogs(), query, cancellationToken);
     }
 
-    public Task<PagedResultDto<LoginLogDto>> GetLoginLogsForUserAsync(Guid userId, AuditLogQuery query, CancellationToken cancellationToken = default)
+    public Task<PagedResultDto<UserActivityLogDto>> GetLoginLogsForUserAsync(Guid userId, AuditLogQuery query, CancellationToken cancellationToken = default)
     {
-        return GetLoginLogsAsync(_dbContext.LoginLogs.AsNoTracking().Where(l => l.UserId == userId), query, cancellationToken);
+        return GetLoginLogsAsync(LoginLogs().Where(l => l.UserId == userId), query, cancellationToken);
     }
 
-    private async Task<PagedResultDto<LoginLogDto>> GetLoginLogsAsync(IQueryable<LoginLog> logs, AuditLogQuery query, CancellationToken cancellationToken)
+    private async Task<PagedResultDto<UserActivityLogDto>> GetLoginLogsAsync(IQueryable<UserActivityLog> logs, AuditLogQuery query, CancellationToken cancellationToken)
     {
         if (!string.IsNullOrWhiteSpace(query.Search))
         {
@@ -108,9 +114,9 @@ public class AuditLogService : IAuditLogService
             .Take(pageSize)
             .ToListAsync(cancellationToken);
 
-        return new PagedResultDto<LoginLogDto>
+        return new PagedResultDto<UserActivityLogDto>
         {
-            Items = _mapper.Map<List<LoginLogDto>>(items),
+            Items = _mapper.Map<List<UserActivityLogDto>>(items),
             TotalCount = totalCount,
             Page = page,
             PageSize = pageSize
@@ -119,7 +125,7 @@ public class AuditLogService : IAuditLogService
 
     public async Task<PagedResultDto<UserActivityLogDto>> GetActivityLogsAsync(AuditLogQuery query, CancellationToken cancellationToken = default)
     {
-        var logs = _dbContext.UserActivityLogs.AsNoTracking();
+        var logs = _dbContext.UserActivityLogs.AsNoTracking().Where(l => l.Type == UserActivityType.Request);
 
         if (!string.IsNullOrWhiteSpace(query.Search))
         {
@@ -148,6 +154,11 @@ public class AuditLogService : IAuditLogService
             Page = page,
             PageSize = pageSize
         };
+    }
+
+    private IQueryable<UserActivityLog> LoginLogs()
+    {
+        return _dbContext.UserActivityLogs.AsNoTracking().Where(l => l.Type == UserActivityType.Login);
     }
 
     private static int NormalizePage(int page)

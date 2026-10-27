@@ -63,6 +63,17 @@
               "outputHashing": "all"
             },
             "development": {
+              "assets": [
+                {
+                  "glob": "**/*",
+                  "input": "public"
+                },
+                {
+                  "glob": "config.development.json",
+                  "input": "src/config",
+                  "output": "/"
+                }
+              ],
               "optimization": false,
               "extractLicenses": false,
               "sourceMap": true

@@ -7,5 +7,6 @@ public enum AccessArea
 {
     Project,
     Task,
-    Attachment
+    Attachment,
+    Comment
 }

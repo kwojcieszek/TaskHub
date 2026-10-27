@@ -8,7 +8,7 @@ namespace TaskHub.Application.Services;
 /// Checks a new password against the policy from the security settings, so a change made in the admin panel
 /// applies at once. Passwords that already exist are not affected until they are changed.
 /// </summary>
-public class ConfigurablePasswordValidator : IPasswordValidator<ApplicationUser>
+public class ConfigurablePasswordValidator : IPasswordValidator<User>
 {
     private readonly ISecuritySettingsService _securitySettingsService;
 
@@ -17,7 +17,7 @@ public class ConfigurablePasswordValidator : IPasswordValidator<ApplicationUser>
         _securitySettingsService = securitySettingsService;
     }
 
-    public async Task<IdentityResult> ValidateAsync(UserManager<ApplicationUser> manager, ApplicationUser user, string? password)
+    public async Task<IdentityResult> ValidateAsync(UserManager<User> manager, User user, string? password)
     {
         var policy = (await _securitySettingsService.GetAsync()).PasswordPolicy;
         var describer = manager.ErrorDescriber;

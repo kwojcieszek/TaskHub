@@ -22,7 +22,7 @@ public class ReferentialIntegrityTests : IClassFixture<TaskHubApiFactory>
         _factory = factory;
     }
 
-    [Fact(Skip = KnownDefects.MissingUserCausesServerError)]
+    [Fact]
     public async Task AddingAProjectMember_WhoDoesNotExist_IsRefused()
     {
         var scenario = await ProjectScenario.CreateAsync(_factory);
@@ -90,7 +90,7 @@ public class ReferentialIntegrityTests : IClassFixture<TaskHubApiFactory>
         await AssertClientErrorAsync(response);
     }
 
-    [Fact(Skip = KnownDefects.MissingUserCausesServerError)]
+    [Fact]
     public async Task UserGroupMember_ForAMissingGroupOrUser_IsRefused()
     {
         var admin = await _factory.AdminAsync();
@@ -104,7 +104,7 @@ public class ReferentialIntegrityTests : IClassFixture<TaskHubApiFactory>
         await AssertClientErrorAsync(missingUser);
     }
 
-    [Fact(Skip = KnownDefects.MissingUserGroupIsNotReported)]
+    [Fact]
     public async Task UserGroupMembers_OfAMissingGroup_AreNotFound()
     {
         var admin = await _factory.AdminAsync();
@@ -178,7 +178,7 @@ public class ReferentialIntegrityTests : IClassFixture<TaskHubApiFactory>
         Assert.Null(reloadedTask.AssignedUserId);
     }
 
-    [Fact(Skip = KnownDefects.DeletingUserWithOwnedDataCausesServerError)]
+    [Fact]
     public async Task DeletingAUser_WhoOwnsAProject_IsHandledCleanly()
     {
         // Either the deletion is refused with an explanation, or it succeeds; it must not end in an unhandled error.
@@ -191,7 +191,7 @@ public class ReferentialIntegrityTests : IClassFixture<TaskHubApiFactory>
         await AssertHandledAsync(response);
     }
 
-    [Fact(Skip = KnownDefects.DeletingUserWithOwnedDataCausesServerError)]
+    [Fact]
     public async Task DeletingAUser_WhoUploadedAttachmentsToSomeoneElsesProject_IsHandledCleanly()
     {
         var admin = await _factory.AdminAsync();
@@ -207,7 +207,7 @@ public class ReferentialIntegrityTests : IClassFixture<TaskHubApiFactory>
         await AssertHandledAsync(response);
     }
 
-    [Fact(Skip = KnownDefects.DeletingUserWithOwnedDataCausesServerError)]
+    [Fact]
     public async Task DeletingAUser_WhoOwnsAProjectGroup_IsHandledCleanly()
     {
         var admin = await _factory.AdminAsync();

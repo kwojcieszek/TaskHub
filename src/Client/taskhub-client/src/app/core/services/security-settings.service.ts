@@ -1,12 +1,12 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { environment } from '../../../environments/environment';
+import { appSettings } from '../config/app-settings';
 import { SecuritySettings } from '../models/security-settings.model';
 
 @Injectable({ providedIn: 'root' })
 export class SecuritySettingsService {
-  private readonly baseUrl = `${environment.apiUrl}/admin/security`;
+  private readonly baseUrl = `${appSettings.apiUrl}/admin/security`;
 
   constructor(private readonly http: HttpClient) {}
 

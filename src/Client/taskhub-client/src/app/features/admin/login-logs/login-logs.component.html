@@ -42,7 +42,7 @@
       <td>{{ log.userName }}</td>
       <td class="nowrap">{{ log.ipAddress ?? '—' }}</td>
       <td>
-        @if (log.succeeded) {
+        @if (!log.failureReason) {
           <span class="chip tone-green"><i class="pi pi-check"></i>{{ 'admin.loginSucceeded' | translate }}</span>
         } @else {
           <span class="chip tone-red">

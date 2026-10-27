@@ -1,12 +1,12 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { environment } from '../../../environments/environment';
+import { appSettings } from '../config/app-settings';
 import { AdminUser, CreateUserRequest, SetUserLockoutRequest, UpdateUserRolesRequest } from '../models/admin.model';
 
 @Injectable({ providedIn: 'root' })
 export class AdminService {
-  private readonly baseUrl = `${environment.apiUrl}/admin/users`;
+  private readonly baseUrl = `${appSettings.apiUrl}/admin/users`;
 
   constructor(private readonly http: HttpClient) {}
 

@@ -30,7 +30,7 @@ public class TaskItem
 
     public Guid? AssignedUserId { get; set; }
 
-    public ApplicationUser? AssignedUser { get; set; }
+    public User? AssignedUser { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
@@ -39,4 +39,11 @@ public class TaskItem
     public DateTime? StartedAt { get; set; }
 
     public DateTime? CompletedAt { get; set; }
+
+    // Set together on a repeating task: completing it creates the next occurrence, which takes the settings over.
+    public int? RecurrenceInterval { get; set; }
+
+    public RecurrenceUnit? RecurrenceUnit { get; set; }
+
+    public RecurrenceBasis? RecurrenceBasis { get; set; }
 }

@@ -27,6 +27,8 @@ export class TaskRowComponent {
   @Input() progressOnly = false;
   // Shows a subtask like an ordinary row, for lists where its parent is not displayed above it.
   @Input() flat = false;
+  // Places metadata beneath the title in dashboard cards.
+  @Input() stacked = false;
   // Flat task lists carry no nested subtasks, so the caller says whether the task has any.
   @Input() hasSubTasks: boolean | null = null;
 

@@ -31,7 +31,7 @@
   position: relative;
   margin-left: 2.6rem;
   padding: 0.45rem 0.75rem;
-  font-size: 0.88rem;
+  font-size: 0.8rem;
   border-style: dashed;
   border-radius: 10px;
   background: var(--app-subtle);
@@ -51,7 +51,7 @@
 
   .task-row__title {
     font-size: inherit;
-    font-weight: 600;
+    font-weight: 500;
   }
 }
 
@@ -97,8 +97,8 @@
 }
 
 .task-row__title {
-  font-size: 1.02rem;
-  font-weight: 700;
+  font-size: 0.82rem;
+  font-weight: 500;
   overflow-wrap: anywhere;
 }
 
@@ -124,9 +124,9 @@
   align-items: center;
   gap: 0.35rem;
   padding: 0.2rem 0.6rem;
-  border-radius: 999px;
+  border-radius: var(--app-label-radius);
   font-size: 0.78rem;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--p-text-muted-color);
   background: var(--app-hover);
   white-space: nowrap;
@@ -160,7 +160,7 @@
   align-items: center;
   justify-content: center;
   font-size: 0.68rem;
-  font-weight: 800;
+  font-weight: 600;
   color: #ffffff;
   background: var(--app-hero-bg);
 }
@@ -168,6 +168,60 @@
 .task-row__actions {
   display: inline-flex;
   flex-shrink: 0;
+}
+
+.task-row--stacked {
+  display: grid;
+  grid-template-columns: 2.5rem minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 0.65rem 0.85rem;
+
+  .task-row__tile {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .task-row__main {
+    grid-column: 2;
+    grid-row: 1;
+    min-width: 0;
+    gap: 0.3rem;
+  }
+
+  .task-row__title {
+    font-weight: 600;
+    line-height: 1.4;
+    overflow-wrap: break-word;
+  }
+
+  .task-row__project {
+    font-size: 0.82rem;
+    line-height: 1.4;
+  }
+
+  .task-row__info {
+    grid-column: 2 / -1;
+    grid-row: 2;
+    min-width: 0;
+    justify-content: flex-start;
+    gap: 0.4rem;
+  }
+
+  .task-row__actions {
+    grid-column: 3;
+    grid-row: 1;
+  }
+}
+
+.task-row--stacked.task-row--sub {
+  grid-template-columns: 0.55rem minmax(0, 1fr) auto;
+
+  .task-row__dot {
+    grid-column: 1;
+    grid-row: 1;
+    margin-top: 0.45rem;
+  }
+
 }
 
 @media (max-width: 640px) {
@@ -178,5 +232,17 @@
   .task-row__info {
     flex-basis: 100%;
     justify-content: flex-start;
+  }
+
+  .task-row--stacked {
+    .task-row__main {
+      grid-column: 2 / -1;
+    }
+
+    .task-row__actions {
+      grid-column: 2 / -1;
+      grid-row: 3;
+      justify-self: end;
+    }
   }
 }

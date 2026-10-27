@@ -9,7 +9,7 @@ namespace TaskHub.Api.Controllers;
 
 [Authorize(Roles = Roles.Admin)]
 [ApiVersion("1.0")]
-[Route("api/v{version:apiVersion}/admin/users")]
+[Route("v{version:apiVersion}/admin/users")]
 public class AdminController : ApiControllerBase
 {
     private readonly IAdminUserService _adminUserService;

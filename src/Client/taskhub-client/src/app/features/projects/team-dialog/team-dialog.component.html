@@ -1,0 +1,38 @@
+<form [formGroup]="form" (ngSubmit)="submit()" class="dialog-form">
+  @if (loadError()) {
+    <p class="error-text">{{ 'projects.teams.loadError' | translate }}</p>
+  } @else if (!loading() && teams().length === 0) {
+    <p class="field-hint">{{ 'projects.teams.noneAvailable' | translate }}</p>
+  }
+
+  <div class="field">
+    <label for="team">{{ 'projects.teams.team' | translate }}</label>
+    <p-select
+      appendTo="body"
+      inputId="team"
+      formControlName="userGroupId"
+      [options]="teams()"
+      optionValue="userGroupId"
+      optionLabel="name"
+      [loading]="loading()"
+      [filter]="teams().length > 8"
+      [placeholder]="'projects.teams.choose' | translate"
+      styleClass="w-full"
+    >
+      <ng-template #item let-team>
+        <span>{{ team.name }} · {{ 'projects.teams.memberCount' | translate: { count: team.memberCount } }}</span>
+      </ng-template>
+    </p-select>
+  </div>
+
+  <div class="field">
+    <label for="teamRole">{{ 'projects.role' | translate }}</label>
+    <p-select appendTo="body" inputId="teamRole" formControlName="role" [options]="roles" styleClass="w-full" />
+    <small class="field-hint">{{ 'projects.teams.roleHint' | translate }}</small>
+  </div>
+
+  <div class="dialog-actions">
+    <p-button [label]="'common.cancel' | translate" severity="secondary" [outlined]="true" type="button" (onClick)="cancel()" />
+    <p-button [label]="'common.save' | translate" icon="pi pi-check" type="submit" [disabled]="form.invalid || save.pending()" [loading]="save.pending()" />
+  </div>
+</form>

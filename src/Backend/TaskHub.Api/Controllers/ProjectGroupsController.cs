@@ -9,7 +9,7 @@ namespace TaskHub.Api.Controllers;
 
 [Authorize]
 [ApiVersion("1.0")]
-[Route("api/v{version:apiVersion}/project-groups")]
+[Route("v{version:apiVersion}/project-groups")]
 public class ProjectGroupsController : ApiControllerBase
 {
     private readonly IProjectGroupService _projectGroupService;

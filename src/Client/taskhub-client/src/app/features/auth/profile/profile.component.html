@@ -80,6 +80,17 @@
     />
   } @else if (google.clientId()) {
     <p class="profile-2fa">{{ 'profile.googleHint' | translate }}</p>
+    <form [formGroup]="googleConfirmForm" class="dialog-form">
+      <div class="field"><label for="googlePassword">{{ 'profile.currentPassword' | translate }}</label>
+        <p-password inputId="googlePassword" formControlName="password" [feedback]="false" [toggleMask]="true" styleClass="w-full" inputStyleClass="w-full" />
+      </div>
+      @if (auth.currentUser()?.twoFactorEnabled) {
+        <div class="field"><label for="googleCode">{{ 'profile.confirmCode' | translate }}</label>
+          <input pInputText id="googleCode" formControlName="code" inputmode="numeric" maxlength="6" />
+        </div>
+      }
+      <p class="setting-desc">{{ 'profile.googleConfirm' | translate }}</p>
+    </form>
     <app-google-button class="profile-google-button" text="continue_with" (credential)="linkGoogle($event)" />
   } @else {
     <p class="profile-2fa"><i class="pi pi-info-circle"></i> {{ 'profile.googleNotConfigured' | translate }}</p>
@@ -90,4 +101,9 @@
   }
 </p-card>
 
+@if (!auth.currentUser()?.mustChangePassword) {
+  <app-api-tokens />
+}
+
+<app-sessions />
 <app-login-history />

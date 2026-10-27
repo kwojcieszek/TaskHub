@@ -109,7 +109,7 @@ public class AttachmentQuotaTests : IDisposable
         Assert.Equal(600, (await attachments.GetLimitsAsync()).UsedBytes);
     }
 
-    private async Task<(ProjectDto Project, TaskItemDto Task, ApplicationUser Owner)> ArrangeTaskAsync()
+    private async Task<(ProjectDto Project, TaskItemDto Task, User Owner)> ArrangeTaskAsync()
     {
         var owner = await _host.CreateUserAsync("owner");
         var project = await _host.CreateProjectAsync(owner);

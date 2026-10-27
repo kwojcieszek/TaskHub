@@ -37,7 +37,9 @@ public class TokenSecurityTests : IClassFixture<TaskHubApiFactory>
     {
         // Proves the forged tokens below are refused for the reason under test, not because they are malformed.
         var user = await _factory.CreateUserAsync();
-        var token = Forge().Create(TokenForge.AccessClaims(user.UserId, user.UserName, 1, Roles.User));
+        var claims = TokenForge.AccessClaims(user.UserId, user.UserName, 1, Roles.User);
+        claims.Add(new Claim(AppClaimTypes.SessionId, new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler().ReadJwtToken(user.Token!).Claims.Single(c => c.Type == AppClaimTypes.SessionId).Value));
+        var token = Forge().Create(claims);
 
         var response = await _factory.WithToken(token).GetAsync(ApiRoutes.Me);
 

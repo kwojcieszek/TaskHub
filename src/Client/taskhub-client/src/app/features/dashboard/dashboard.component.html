@@ -58,6 +58,7 @@
             [progressOnly]="true"
             [hasSubTasks]="parentTaskIds().has(task.id)"
             [flat]="true"
+            [stacked]="true"
             (start)="start(task)"
             (complete)="complete(task)"
           />

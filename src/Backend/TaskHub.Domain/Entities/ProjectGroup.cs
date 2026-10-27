@@ -10,7 +10,7 @@ public class ProjectGroup
 
     public Guid OwnerId { get; set; }
 
-    public ApplicationUser? Owner { get; set; }
+    public User? Owner { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

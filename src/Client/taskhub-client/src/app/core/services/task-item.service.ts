@@ -1,15 +1,15 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { environment } from '../../../environments/environment';
-import { CreateTaskItemRequest, TaskItem, UpdateTaskItemRequest } from '../models/task.model';
+import { appSettings } from '../config/app-settings';
+import { CreateTaskItemRequest, TaskItem, UpdateTaskItemRequest, TaskItemStatus } from '../models/task.model';
 
 @Injectable({ providedIn: 'root' })
 export class TaskItemService {
   constructor(private readonly http: HttpClient) {}
 
   private tasksUrl(projectId: string): string {
-    return `${environment.apiUrl}/projects/${projectId}/tasks`;
+    return `${appSettings.apiUrl}/projects/${projectId}/tasks`;
   }
 
   getByProject(projectId: string): Observable<TaskItem[]> {
@@ -36,7 +36,7 @@ export class TaskItemService {
   getAcrossProjects(range?: { from: string; to: string }): Observable<TaskItem[]> {
     const params = range ? new HttpParams().set('from', range.from).set('to', range.to) : undefined;
 
-    return this.http.get<TaskItem[]>(`${environment.apiUrl}/tasks`, { params });
+    return this.http.get<TaskItem[]>(`${appSettings.apiUrl}/tasks`, { params });
   }
 
   start(projectId: string, taskId: string): Observable<TaskItem> {
@@ -45,6 +45,29 @@ export class TaskItemService {
 
   complete(projectId: string, taskId: string): Observable<TaskItem> {
     return this.http.post<TaskItem>(`${this.tasksUrl(projectId)}/${taskId}/complete`, {});
+  }
+
+  // Moves a task to another status the way the task buttons do: starting and completing have their own
+  // operations, which also record when they happened; any other change is an ordinary update.
+  setStatus(task: TaskItem, status: TaskItemStatus): Observable<TaskItem> {
+    if (status === 'InProgress' && task.status === 'ToDo') {
+      return this.start(task.projectId, task.id);
+    }
+
+    if (status === 'Done') {
+      return this.complete(task.projectId, task.id);
+    }
+
+    return this.update(task.projectId, task.id, {
+      parentTaskId: task.parentTaskId,
+      title: task.title,
+      description: task.description,
+      dueDate: task.dueDate,
+      status,
+      priority: task.priority,
+      assignedUserId: task.assignedUserId,
+      recurrence: task.recurrence
+    });
   }
 
   // Undoes a completion: back to "in progress" when the task had been started, otherwise to "to do".
@@ -56,7 +79,8 @@ export class TaskItemService {
       dueDate: task.dueDate,
       status: task.startedAt ? 'InProgress' : 'ToDo',
       priority: task.priority,
-      assignedUserId: task.assignedUserId
+      assignedUserId: task.assignedUserId,
+      recurrence: task.recurrence
     });
   }
 }

@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, signal } from '@angular/core';
-import { environment } from '../../../environments/environment';
+import { appSettings } from '../config/app-settings';
 import { AuthProviders } from '../models/auth.model';
 import { GoogleButtonOptions, GoogleIdentityApi } from '../models/google-identity.model';
 
@@ -23,7 +23,7 @@ export class GoogleIdentityService {
 
     this.configRequested = true;
 
-    this.http.get<AuthProviders>(`${environment.apiUrl}/auth/providers`).subscribe({
+    this.http.get<AuthProviders>(`${appSettings.apiUrl}/auth/providers`).subscribe({
       next: (providers) => this.clientId.set(providers.googleClientId),
       error: () => {
         this.configRequested = false;

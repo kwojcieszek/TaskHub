@@ -10,8 +10,8 @@ namespace TaskHub.Api.Middleware;
 /// </summary>
 public class PasswordChangeRequiredMiddleware
 {
-    // Only the account endpoints themselves (/api/v1/auth/...), not any path that merely contains "/auth/".
-    private static readonly Regex AccountPathPattern = new("^/api/v[0-9.]+/auth/", RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+    // Only the account endpoints themselves (/v1/auth/...), not any path that merely contains "/auth/".
+    private static readonly Regex AccountPathPattern = new("^/v[0-9.]+/auth/", RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 
     private readonly RequestDelegate _next;
 

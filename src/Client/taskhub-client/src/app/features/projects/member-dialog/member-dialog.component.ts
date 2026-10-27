@@ -1,15 +1,20 @@
+import { ProjectService } from '../../../core/services/project.service';
+import { DialogSave } from '../../../shared/dialog-save';
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { DynamicDialogRef } from 'primeng/dynamicdialog';
+import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { InputText } from 'primeng/inputtext';
 import { Listbox } from 'primeng/listbox';
 import { Select } from 'primeng/select';
 import { Button } from 'primeng/button';
 import { TranslateModule } from '@ngx-translate/core';
-import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
+import { debounceTime, distinctUntilChanged, of, switchMap } from 'rxjs';
 import { UserDirectoryService } from '../../../core/services/user-directory.service';
 import { UserSummary } from '../../../core/models/user.model';
 import { ProjectMemberRole } from '../../../core/models/project.model';
+
+// The server answers a shorter search with nothing, so the request is not sent at all.
+const MIN_SEARCH_LENGTH = 2;
 
 @Component({
   selector: 'app-member-dialog',
@@ -21,6 +26,9 @@ export class MemberDialogComponent {
   private readonly fb = inject(FormBuilder);
   private readonly userDirectory = inject(UserDirectoryService);
   private readonly dialogRef = inject(DynamicDialogRef);
+  readonly save = new DialogSave(this.dialogRef);
+  private readonly config = inject(DynamicDialogConfig);
+  private readonly persistence = inject(ProjectService);
 
   readonly roles: ProjectMemberRole[] = ['Viewer', 'Editor', 'Owner'];
   readonly roleOptions = this.roles.map((role) => ({ label: role, value: role }));
@@ -35,7 +43,7 @@ export class MemberDialogComponent {
       .pipe(
         debounceTime(250),
         distinctUntilChanged(),
-        switchMap((query) => this.userDirectory.search(query))
+        switchMap((query) => (query.trim().length < MIN_SEARCH_LENGTH ? of([]) : this.userDirectory.search(query.trim())))
       )
       .subscribe((users) => this.results.set(users));
   }
@@ -45,7 +53,7 @@ export class MemberDialogComponent {
     if (!user) {
       return;
     }
-    this.dialogRef.close({ userId: user.id, role: this.roleControl.value });
+    this.save.submit(this.persistence.addMember(this.config.data.projectId, { userId: user.id, role: this.roleControl.value }));
   }
 
   cancel(): void {

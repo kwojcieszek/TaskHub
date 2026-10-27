@@ -124,7 +124,7 @@ public class RegistrationSecurityTests : IDisposable
     [InlineData("validname", "valid@example.test", "NoDigitsAtAll")]
     [InlineData("name with spaces", "valid@example.test", "User-Passw0rd-1")]
     [InlineData("<script>alert(1)</script>", "valid@example.test", "User-Passw0rd-1")]
-    [InlineData("name'; DROP TABLE AspNetUsers;--", "valid@example.test", "User-Passw0rd-1")]
+    [InlineData("name'; DROP TABLE Users;--", "valid@example.test", "User-Passw0rd-1")]
     public async Task Registration_RejectsInvalidData(string userName, string email, string password)
     {
         await UpdateSecurityAsync(settings => settings.RegistrationEnabled = true);

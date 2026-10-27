@@ -12,6 +12,7 @@ export interface User {
 
 export interface UserSummary {
   id: string;
-  userName: string;
+  // Sent to administrators only.
+  userName: string | null;
   displayName: string;
 }

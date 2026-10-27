@@ -1,12 +1,17 @@
+using TaskHub.Domain.Enums;
+
 namespace TaskHub.Domain.Entities;
 
 public class UserActivityLog
 {
     public Guid Id { get; set; }
 
+    public UserActivityType Type { get; set; } = UserActivityType.Request;
+
+    // Empty for a login attempt that matched no account.
     public Guid? UserId { get; set; }
 
-    public ApplicationUser? User { get; set; }
+    public User? User { get; set; }
 
     public string UserName { get; set; } = string.Empty;
 
@@ -19,6 +24,12 @@ public class UserActivityLog
     public int StatusCode { get; set; }
 
     public string? IpAddress { get; set; }
+
+    // Recorded for login attempts only.
+    public string? UserAgent { get; set; }
+
+    // Set on a login attempt that was rejected; a login without it succeeded.
+    public LoginFailureReason? FailureReason { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

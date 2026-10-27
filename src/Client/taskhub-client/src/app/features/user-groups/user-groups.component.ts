@@ -1,4 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { Select } from 'primeng/select';
+import { AuthService } from '../../core/services/auth.service';
 import { Accordion, AccordionPanel, AccordionHeader, AccordionContent } from 'primeng/accordion';
 import { Button } from 'primeng/button';
 import { ConfirmationService } from 'primeng/api';
@@ -13,7 +16,7 @@ import { AddUserDialogComponent } from './add-user-dialog.component';
 @Component({
   selector: 'app-user-groups',
   standalone: true,
-  imports: [Accordion, AccordionPanel, AccordionHeader, AccordionContent, Button, ConfirmDialog, TranslateModule],
+  imports: [FormsModule, Select, Accordion, AccordionPanel, AccordionHeader, AccordionContent, Button, ConfirmDialog, TranslateModule],
   providers: [DialogService, ConfirmationService],
   templateUrl: './user-groups.component.html',
   styleUrl: './user-groups.component.scss'
@@ -24,6 +27,16 @@ export class UserGroupsComponent implements OnInit {
   private readonly confirmationService = inject(ConfirmationService);
   private readonly translate = inject(TranslateService);
 
+  readonly auth = inject(AuthService);
+  readonly nextOwners: Record<string, string | null> = {};
+  canLeave(group: UserGroup): boolean { return group.ownerId !== this.auth.currentUser()?.id && (this.membersByGroup()[group.id] ?? []).some(m => m.userId === this.auth.currentUser()?.id); }
+  transfer(group: UserGroup): void {
+    const userId = this.nextOwners[group.id]; if (!userId) return;
+    this.confirmationService.confirm({ message: this.translate.instant('userGroups.transferConfirm'), header: this.translate.instant('userGroups.transfer'), acceptLabel: this.translate.instant('common.yes'), rejectLabel: this.translate.instant('common.no'), accept: () => this.userGroupService.transferOwner(group.id, userId).subscribe({next: () => this.load(), error: () => {}}) });
+  }
+  leave(group: UserGroup): void {
+    this.confirmationService.confirm({ message: this.translate.instant('userGroups.leaveConfirm'), header: this.translate.instant('userGroups.leave'), acceptLabel: this.translate.instant('common.yes'), rejectLabel: this.translate.instant('common.no'), accept: () => this.userGroupService.leave(group.id).subscribe({next: () => this.load(), error: () => {}}) });
+  }
   readonly groups = signal<UserGroup[]>([]);
   readonly membersByGroup = signal<Record<string, UserGroupMember[]>>({});
 
@@ -50,7 +63,21 @@ export class UserGroupsComponent implements OnInit {
       if (!result) {
         return;
       }
-      this.userGroupService.create(result).subscribe(() => this.load());
+      this.load();
+    });
+  }
+
+  editGroup(group: UserGroup): void {
+    const ref = this.dialogService.open(UserGroupDialogComponent, {
+      header: this.translate.instant('userGroups.editGroup'),
+      width: '440px',
+      data: { group }
+    });
+    ref?.onClose.subscribe((result) => {
+      if (!result) {
+        return;
+      }
+      this.load();
     });
   }
 
@@ -63,29 +90,33 @@ export class UserGroupsComponent implements OnInit {
   addMember(group: UserGroup): void {
     const ref = this.dialogService.open(AddUserDialogComponent, {
       header: this.translate.instant('userGroups.addMember'),
-      width: '420px'
+      width: '420px', data: { groupId: group.id }
     });
     ref?.onClose.subscribe((result) => {
       if (!result) {
         return;
       }
-      this.userGroupService.addMember(group.id, result).subscribe(() => {
+      this.loadMembers(group);
+      this.load();
+    });
+  }
+
+  removeMember(group: UserGroup, member: UserGroupMember): void {
+    this.confirmRemoval(this.translate.instant('userGroups.removeMemberConfirm', { name: member.displayName }), () => {
+      this.userGroupService.removeMember(group.id, member.userId).subscribe(() => {
         this.loadMembers(group);
         this.load();
       });
     });
   }
 
-  removeMember(group: UserGroup, member: UserGroupMember): void {
-    this.userGroupService.removeMember(group.id, member.userId).subscribe(() => {
-      this.loadMembers(group);
-      this.load();
-    });
+  private confirmDelete(messageKey: string, accept: () => void): void {
+    this.confirmRemoval(this.translate.instant(messageKey), accept);
   }
 
-  private confirmDelete(messageKey: string, accept: () => void): void {
+  private confirmRemoval(message: string, accept: () => void): void {
     this.confirmationService.confirm({
-      message: this.translate.instant(messageKey),
+      message,
       header: this.translate.instant('common.deleteConfirmHeader'),
       icon: 'pi pi-exclamation-triangle',
       acceptLabel: this.translate.instant('common.delete'),

@@ -10,7 +10,7 @@
     "tasks": "Tasks",
     "calendar": "Calendar",
     "reports": "Reports",
-    "userGroups": "User groups",
+    "userGroups": "Teams",
     "admin": "Administration",
     "adminLocked": "Requires admin access",
     "logout": "Log out",
@@ -45,7 +45,23 @@
     "verify": "Verify",
     "invalidCredentials": "Invalid username or password.",
     "tooManyRequests": "Too many attempts. Try again in a moment.",
-    "registerSuccess": "Account created. You can now log in."
+    "registerSuccess": "Account created. You can now log in.",
+    "forgotPassword": "Forgot your password?",
+    "forgotTitle": "Reset your password",
+    "forgotHint": "Enter the email address of your account. We will send you a link to set a new password.",
+    "sendResetLink": "Send reset link",
+    "resetLinkSent": "If an account uses this address, a reset link is on its way. Check your inbox; the link works once.",
+    "resetTitle": "Set a new password",
+    "resetHint": "Choose a new password for your account. Every open session will be signed out.",
+    "newPassword": "New password",
+    "repeatPassword": "Repeat new password",
+    "passwordsDiffer": "The passwords do not match.",
+    "setPassword": "Set password",
+    "resetSuccess": "Your password has been changed. You can now log in.",
+    "resetLinkInvalid": "The reset link is invalid or has expired. Ask for a new one.",
+    "resetFailed": "The password could not be changed. Make sure it meets the requirements.",
+    "requestNewLink": "Ask for a new link",
+    "backToLogin": "Back to login"
   },
   "settings": {
     "title": "Settings",
@@ -89,7 +105,44 @@
     "loginHistoryHint": "Successful and failed attempts to log in to your account.",
     "loginHistoryEmpty": "No logins recorded yet.",
     "loginHistoryError": "Could not load the login history.",
-    "confirm": "Confirm"
+    "confirm": "Confirm",
+    "tokens": {
+      "title": "Access tokens",
+      "hint": "A token lets scripts and other programs use the API on your behalf, without your password. A token cannot change the password or two-step verification, or create further tokens.",
+      "name": "Name",
+      "namePlaceholder": "e.g. Backup script",
+      "lifetime": "Valid for",
+      "days": "Number of days",
+      "lifetimes": {
+        "7": "7 days",
+        "30": "30 days",
+        "90": "90 days",
+        "365": "1 year",
+        "custom": "Custom number of days",
+        "never": "No expiry"
+      },
+      "neverWarning": "A token without an expiry works until you revoke it. Choose it only when you have to.",
+      "create": "Create token",
+      "createdTitle": "Token \"{{name}}\" was created",
+      "createdHint": "Copy it now and keep it like a password. It cannot be read again after this message is closed.",
+      "copied": "Copied",
+      "token": "Token",
+      "createdAt": "Created",
+      "expiresAt": "Expires",
+      "lastUsedAt": "Last used",
+      "never": "No expiry",
+      "expired": "Expired",
+      "notUsed": "Not used",
+      "revoke": "Revoke",
+      "revokeHeader": "Revoke the token?",
+      "revokeConfirm": "Token \"{{name}}\" stops working at once. This cannot be undone.",
+      "empty": "You have no tokens.",
+      "loadError": "Could not load the tokens.",
+      "createError": "Could not create the token.",
+      "revokeError": "Could not revoke the token.",
+      "limitReached": "The token limit is reached. Revoke one you no longer use."
+    },
+    "googleConfirm": "Confirm your password and 2FA code (if enabled) before linking Google."
   },
   "projects": {
     "title": "Projects",
@@ -98,6 +151,7 @@
     "statTasks": "Total tasks",
     "newProject": "New project",
     "selectPrompt": "Select a project on the left to see its tasks.",
+    "resizeSidebar": "Drag to change the width of the project list. Double-click restores the default.",
     "name": "Name",
     "description": "Description",
     "icon": "Icon",
@@ -120,7 +174,21 @@
     "noProjects": "No projects yet. Create your first one.",
     "loadError": "Could not load projects. Check that the backend is running.",
     "deleteConfirm": "Delete this project? This cannot be undone.",
-    "role": "Role"
+    "removeMemberConfirm": "Remove \"{{name}}\" from the project? They lose access to it.",
+    "role": "Role",
+    "teams": {
+      "title": "Teams",
+      "hint": "Every member of a team has the role of the team in the project, for as long as they belong to it.",
+      "add": "Add team",
+      "removeConfirm": "Take the access to this project away from the team \"{{name}}\"? Every member who is not added separately loses it.",
+      "team": "Team",
+      "choose": "Choose a team",
+      "memberCount": "{{count}} members",
+      "roleHint": "A team can view (Viewer) or edit (Editor). One person remains the owner of the project.",
+      "empty": "No team has access to this project.",
+      "noneAvailable": "There are no teams to add. Teams are created by an administrator in the admin panel.",
+      "loadError": "Could not load the teams."
+    }
   },
   "projectGroups": {
     "deleteConfirm": "Delete this group? Its projects are kept and become ungrouped.",
@@ -168,7 +236,30 @@
     "completedOn": "Completed",
     "startedOn": "Started",
     "subTaskProgress": "Completed subtasks",
-    "statusFromSubTasks": "The status follows the subtasks — the task is started and completed through them."
+    "statusFromSubTasks": "The status follows the subtasks — the task is started and completed through them.",
+    "recurrence": {
+      "repeats": "Repeat this task",
+      "every": "Every",
+      "unitLabel": "Unit",
+      "basisLabel": "Count the interval from",
+      "hint": "When the task is completed, a new one is created with the next due date. Subtasks are copied too.",
+      "unit": {
+        "Day": "Day(s)",
+        "Week": "Week(s)",
+        "Month": "Month(s)",
+        "Year": "Year(s)"
+      },
+      "basis": {
+        "CompletionDate": "The day the task is completed",
+        "DueDate": "The due date (fixed schedule)"
+      },
+      "short": {
+        "Day": "every {{count}} d",
+        "Week": "every {{count}} wk",
+        "Month": "every {{count}} mo",
+        "Year": "every {{count}} yr"
+      }
+    }
   },
   "attachments": {
     "title": "Attachments",
@@ -199,7 +290,17 @@
     "noDueDate": "No due date",
     "noDueDateEmpty": "Nothing without a due date.",
     "loadError": "Couldn't load tasks. The API may need to be rebuilt/restarted to pick up the latest changes.",
-    "retry": "Retry"
+    "retry": "Retry",
+    "view": "Task view",
+    "viewList": "List",
+    "viewBoard": "Board",
+    "boardHint": "Drag a card to another column to change the status of the task. Click a card to open it.",
+    "boardEmpty": "No tasks.",
+    "boardMore": "and {{count}} older ones",
+    "moveError": "Could not change the status of the task. You may not be allowed to edit in this project.",
+    "boardStatuses": "Board columns",
+    "moveConfirmHeader": "Change the status of the task?",
+    "moveConfirm": "Move the task \"{{title}}\" to \"{{status}}\"?"
   },
   "dashboard": {
     "greeting": "Welcome, {{name}}",
@@ -244,6 +345,7 @@
     "duration": "Time taken",
     "durationMinutes": "Time taken (min)",
     "notStarted": "Not started",
+    "copy": "Copy",
     "delay": "Delay against the plan",
     "delayDays": "Delay (days)",
     "delayedBy": "{{days}} days late",
@@ -262,13 +364,23 @@
     }
   },
   "userGroups": {
-    "deleteConfirm": "Delete this user group? This cannot be undone.",
-    "title": "User groups",
-    "newGroup": "New group",
+    "deleteConfirm": "Delete this team? Its members lose the access to projects they had through it. This cannot be undone.",
+    "removeMemberConfirm": "Remove \"{{name}}\" from the team? They lose the access to projects they had through it.",
+    "title": "Teams",
+    "newGroup": "New team",
     "name": "Name",
     "description": "Description",
     "members": "Members",
-    "addMember": "Add member"
+    "addMember": "Add member",
+    "editGroup": "Rename",
+    "owner": "Owner",
+    "adminOwner": "Administration",
+    "newOwner": "Choose new owner",
+    "transfer": "Transfer team",
+    "transferConfirm": "Transfer team management to this person?",
+    "leave": "Leave team",
+    "leaveConfirm": "Leave the team? You may lose access to its projects.",
+    "empty": "There are no teams yet. Create the first one."
   },
   "passwordPolicy": {
     "minLength": "At least {{count}} characters",
@@ -298,6 +410,10 @@
     "passwordRequireLowercase": "Require a lowercase letter",
     "passwordRequireDigit": "Require a digit",
     "passwordRequireNonAlphanumeric": "Require a special character",
+    "grantAdminHeader": "Grant administrator rights",
+    "grantAdminConfirm": "Are you sure you want to make \"{{name}}\" an administrator? They will have full access to all projects, user accounts and settings.",
+    "grantAdmin": "Grant role",
+    "deleteUserConfirm": "Delete the account of \"{{name}}\"? This cannot be undone.",
     "lock": "Lock",
     "unlock": "Unlock",
     "delete": "Delete",
@@ -349,5 +465,107 @@
     "confirm": "Confirm",
     "yes": "Yes",
     "no": "No"
+  },
+  "users": {
+    "searchPlaceholder": "Name or the full login",
+    "searchHint": "Type at least 2 characters. A login is found only when it is typed in full."
+  },
+  "dictation": {
+    "start": "Dictate",
+    "stop": "Stop dictating",
+    "starting": "Starting the microphone… Allow access if prompted.",
+    "listening": "Listening… Speak and pause briefly after a sentence. Recognised text will be added to the field.",
+    "noSpeech": "No speech was recognised. Check the selected microphone and its volume, then try again.",
+    "audioCapture": "Cannot capture audio from the microphone. Check that it is connected and available in your browser settings.",
+    "network": "Could not connect to the speech recognition service. Check your internet connection; if the error persists, try Google Chrome.",
+    "serviceNotAllowed": "The browser does not allow the speech recognition service. Check its settings or try Google Chrome.",
+    "languageNotSupported": "The speech recognition service does not support the selected language.",
+    "notAllowed": "The microphone is blocked. Allow it in the browser settings.",
+    "failed": "Dictation failed. Please try again."
+  },
+  "comments": {
+    "title": "Comments",
+    "placeholder": "Write a comment…",
+    "send": "Add comment",
+    "sendHint": "Ctrl+Enter sends the comment.",
+    "empty": "There are no comments yet.",
+    "edited": "edited",
+    "deletedUser": "Deleted user",
+    "deleteConfirm": "Delete this comment? This cannot be undone.",
+    "loadError": "Could not load the comments.",
+    "saveError": "Could not save the comment.",
+    "deleteError": "Could not delete the comment."
+  },
+  "serverErrors": {
+    "alreadyProjectMember": "This user is already a member of the project.",
+    "alreadyTeamMember": "This user is already a member of the team.",
+    "teamAlreadyAdded": "The team already has access to this project.",
+    "ownerCannotBeRemoved": "The project owner cannot be removed.",
+    "teamRole": "A team can be added as Editor or Viewer.",
+    "assigneeNotMember": "A task can only be assigned to a member of the project.",
+    "taskAlreadyCompleted": "The task is already completed.",
+    "taskAlreadyStarted": "Only a task that has not been started yet can be started.",
+    "taskFollowsSubTasks": "A task with subtasks is started and completed through its subtasks.",
+    "commentEmpty": "The comment cannot be empty.",
+    "fileEmpty": "The file is empty.",
+    "invalidAuthenticatorCode": "Invalid authenticator code.",
+    "invalidPassword": "Invalid password.",
+    "passwordUnchanged": "The new password must differ from the current one.",
+    "twoFactorAlreadyEnabled": "Two-factor authentication is already enabled. Disable it first to set it up again.",
+    "confirmBeforeGoogle": "Confirm your password and authenticator code before linking Google.",
+    "googleLinkedElsewhere": "This Google account is already linked to another user.",
+    "googleAlreadyLinked": "A Google account is already linked to this user.",
+    "googleNotVerified": "The Google account could not be verified.",
+    "googleEmailNotVerified": "The Google account has no verified e-mail address.",
+    "transferBeforeLeaving": "Transfer team ownership before leaving.",
+    "newOwnerNotMember": "The new owner must be a member of the team.",
+    "ownAdminRole": "You cannot remove the administrator role from your own account.",
+    "ownLock": "You cannot lock your own account.",
+    "ownDelete": "You cannot delete your own account.",
+    "userOwnsProjects": "Transfer or remove the user's projects and teams before deleting this account.",
+    "userHasAttachments": "Remove the user's attachments before deleting this account."
+  },
+  "feedback": {
+    "saved": "Changes saved.",
+    "failed": "The operation failed.",
+    "offline": "Cannot connect to the server.",
+    "rateLimit": "Too many attempts. Please try again shortly.",
+    "working": "Working…"
+  },
+  "sessions": {
+    "title": "Active sessions",
+    "current": "This session",
+    "device": "Another device",
+    "unknown": "Unknown device",
+    "revoke": "Sign out session",
+    "logoutAll": "Sign out all devices"
+  },
+  "filters": {
+    "search": "Search tasks",
+    "project": "Project",
+    "priority": "Priority",
+    "all": "All",
+    "name": "Filter name",
+    "save": "Save filter",
+    "tooLong": "Filters are too long. Shorten the search or remove a filter."
+  },
+  "history": {
+    "title": "Change history",
+    "system": "System",
+    "empty": "No changes. History is recorded from this application update.",
+    "retry": "Retry",
+    "more": "Show more",
+    "formerMember": "Former project member",
+    "parent": "Parent task",
+    "fields": {
+      "Created": "Task created",
+      "Title": "Title",
+      "Description": "Description",
+      "DueDate": "Due date",
+      "Status": "Status",
+      "Priority": "Priority",
+      "AssignedUserId": "Assignee",
+      "ParentTaskId": "Parent task"
+    }
   }
 }

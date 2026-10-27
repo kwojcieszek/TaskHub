@@ -185,7 +185,7 @@ public class AttachmentServiceTests : IDisposable
         Assert.Equal(0, _host.Storage.Count);
     }
 
-    private async Task<(ProjectDto Project, TaskItemDto Task, ApplicationUser Owner)> ArrangeTaskAsync()
+    private async Task<(ProjectDto Project, TaskItemDto Task, User Owner)> ArrangeTaskAsync()
     {
         var owner = await _host.CreateUserAsync("owner");
         var project = await _host.CreateProjectAsync(owner);

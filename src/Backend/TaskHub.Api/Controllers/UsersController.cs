@@ -8,7 +8,7 @@ namespace TaskHub.Api.Controllers;
 
 [Authorize]
 [ApiVersion("1.0")]
-[Route("api/v{version:apiVersion}/users")]
+[Route("v{version:apiVersion}/users")]
 public class UsersController : ApiControllerBase
 {
     private readonly IUserDirectoryService _userDirectoryService;

@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using TaskHub.Application.Common;
 using TaskHub.Domain.Entities;
+using TaskHub.Application.Interfaces;
 
 namespace TaskHub.Api.Authentication;
 
@@ -14,11 +15,13 @@ namespace TaskHub.Api.Authentication;
 /// </summary>
 public class SessionJwtBearerEvents : JwtBearerEvents
 {
-    private readonly UserManager<ApplicationUser> _userManager;
+    private readonly UserManager<User> _userManager;
+    private readonly IApplicationDbContext _dbContext;
 
-    public SessionJwtBearerEvents(UserManager<ApplicationUser> userManager)
+    public SessionJwtBearerEvents(UserManager<User> userManager, IApplicationDbContext dbContext)
     {
         _userManager = userManager;
+        _dbContext = dbContext;
     }
 
     public override async Task TokenValidated(TokenValidatedContext context)
@@ -68,5 +71,22 @@ public class SessionJwtBearerEvents : JwtBearerEvents
         {
             identity.AddClaim(new Claim(AppClaimTypes.PasswordChangeRequired, bool.TrueString));
         }
+
+        if (!Guid.TryParse(principal.FindFirstValue(AppClaimTypes.SessionId), out var sessionId))
+        {
+            context.Fail("The token has no active session.");
+            return;
+        }
+        var now = DateTime.UtcNow;
+        var session = await _dbContext.UserSessions.AsNoTracking()
+            .FirstOrDefaultAsync(s => s.Id == sessionId && s.UserId == userId && s.TokenVersion == user.TokenVersion && s.ExpiresAt > now, context.HttpContext.RequestAborted);
+        if (session is null)
+        {
+            context.Fail("The session has ended.");
+            return;
+        }
+        if (session.LastUsedAt < now.AddMinutes(-5))
+            await _dbContext.UserSessions.Where(s => s.Id == sessionId)
+                .ExecuteUpdateAsync(update => update.SetProperty(s => s.LastUsedAt, now), context.HttpContext.RequestAborted);
     }
 }
