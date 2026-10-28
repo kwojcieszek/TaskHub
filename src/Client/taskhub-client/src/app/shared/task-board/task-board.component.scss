@@ -131,6 +131,11 @@
   }
 }
 
+.board-card__preview {
+  margin: -0.35rem 0;
+  font-size: 0.78rem;
+}
+
 .board-card__date--overdue {
   color: var(--tone-red-fg);
   font-weight: 500;

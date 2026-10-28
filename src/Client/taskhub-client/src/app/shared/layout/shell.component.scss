@@ -191,6 +191,13 @@
   }
 }
 
+.user-menu__version {
+  padding-top: 0.5rem;
+  font-size: 0.72rem;
+  color: var(--p-text-muted-color);
+  text-align: center;
+}
+
 .user-menu__item--logout {
   margin-top: 0.25rem;
   border-top: 1px solid var(--app-border);

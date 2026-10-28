@@ -42,36 +42,36 @@
 
 <div class="dashboard-sections">
   @for (section of sections(); track section.key) {
-    <section [class]="'dashboard-section panel tone-' + section.tone">
-      <h2 class="dashboard-section__title">
-        <span class="dashboard-section__icon"><i [class]="section.icon"></i></span>
-        {{ 'dashboard.' + section.key | translate }}
-        <span class="dashboard-section__count">{{ section.tasks.length }}</span>
-      </h2>
+    @if (section.tasks.length > 0) {
+      <section [class]="'dashboard-section panel tone-' + section.tone">
+        <h2 class="dashboard-section__title">
+          <span class="dashboard-section__icon"><i [class]="section.icon"></i></span>
+          {{ 'dashboard.' + section.key | translate }}
+          <span class="dashboard-section__count">{{ section.tasks.length }}</span>
+        </h2>
 
-      <div class="dashboard-section__rows">
-        @for (task of section.tasks.slice(0, sectionLimit); track task.id) {
-          <app-task-row
-            [task]="task"
-            [projectName]="projectName(task)"
-            [projectColor]="projectColor(task)"
-            [progressOnly]="true"
-            [hasSubTasks]="parentTaskIds().has(task.id)"
-            [flat]="true"
-            [stacked]="true"
-            (start)="start(task)"
-            (complete)="complete(task)"
-          />
-        } @empty {
-          <p class="dashboard-section__empty">{{ 'dashboard.' + section.key + 'Empty' | translate }}</p>
+        <div class="dashboard-section__rows">
+          @for (task of section.tasks.slice(0, sectionLimit); track task.id) {
+            <app-task-row
+              [task]="task"
+              [projectName]="projectName(task)"
+              [projectColor]="projectColor(task)"
+              [progressOnly]="true"
+              [hasSubTasks]="parentTaskIds().has(task.id)"
+              [flat]="true"
+              [stacked]="true"
+              (start)="start(task)"
+              (complete)="complete(task)"
+            />
+          }
+        </div>
+
+        @if (section.tasks.length > sectionLimit) {
+          <a class="dashboard-section__more" routerLink="/app/tasks">
+            {{ 'dashboard.showAll' | translate: { count: section.tasks.length } }}<i class="pi pi-arrow-right"></i>
+          </a>
         }
-      </div>
-
-      @if (section.tasks.length > sectionLimit) {
-        <a class="dashboard-section__more" routerLink="/app/tasks">
-          {{ 'dashboard.showAll' | translate: { count: section.tasks.length } }}<i class="pi pi-arrow-right"></i>
-        </a>
-      }
-    </section>
+      </section>
+    }
   }
 </div>

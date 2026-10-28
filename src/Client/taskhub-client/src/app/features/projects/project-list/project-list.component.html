@@ -5,7 +5,11 @@
     <h1>{{ 'projects.title' | translate }}</h1>
     <div class="projects-summary">
       @for (stat of stats(); track stat.labelKey) {
-        <span [class]="'chip tone-' + stat.tone"><i [class]="stat.icon"></i>{{ stat.labelKey | translate }} · {{ stat.value }}</span>
+        <span [class]="'summary-stat tone-' + stat.tone">
+          <span class="summary-stat__icon"><i [class]="stat.icon"></i></span>
+          {{ stat.labelKey | translate }}
+          <span class="summary-stat__value">{{ stat.value }}</span>
+        </span>
       }
     </div>
   </div>

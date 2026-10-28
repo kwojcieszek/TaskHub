@@ -1,0 +1,15 @@
+:host {
+  display: inline-flex;
+}
+
+// Wider than the other icon buttons, so the preview is easy to hit among the task details.
+.icon-btn {
+  padding: 0.35rem 0.75rem;
+}
+
+.description-preview {
+  margin: 0;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

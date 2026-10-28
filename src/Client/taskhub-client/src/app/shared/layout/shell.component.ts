@@ -8,6 +8,7 @@ import { ThemeSwitchComponent } from '../theme-switch/theme-switch.component';
 import { ApiFeedbackComponent } from '../api-feedback/api-feedback.component';
 import { ApiFeedbackService } from '../../core/services/api-feedback.service';
 import { inject } from '@angular/core';
+import { appVersion } from '../../core/config/app-version';
 
 @Component({
   selector: 'app-shell',
@@ -23,6 +24,7 @@ export class ShellComponent implements OnInit {
 
   readonly userMenuOpen = signal(false);
   readonly feedback = inject(ApiFeedbackService);
+  readonly version = appVersion;
 
   constructor(
     readonly auth: AuthService,

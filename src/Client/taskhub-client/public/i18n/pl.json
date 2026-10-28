@@ -1,6 +1,7 @@
 {
   "app": {
-    "name": "TaskHub"
+    "name": "TaskHub",
+    "version": "Wersja {{version}}"
   },
   "nav": {
     "sectionMain": "Główne",
@@ -207,6 +208,7 @@
     "title": "Zadania",
     "newTask": "Nowe zadanie",
     "newSubTask": "Nowe podzadanie",
+    "previewDescription": "Podgląd opisu",
     "noTasks": "Brak zadań w tym projekcie.",
     "titleField": "Tytuł",
     "description": "Opis",
@@ -282,13 +284,9 @@
     "title": "Zadania",
     "subtitle": "Wszystko, co wymaga uwagi we wszystkich projektach, w jednym miejscu.",
     "overdue": "Zaległe",
-    "overdueEmpty": "Brak zaległych zadań. Świetna robota.",
     "today": "Na dziś",
-    "todayEmpty": "Brak zadań na dziś.",
     "upcoming": "Kolejne w kolejce",
-    "upcomingEmpty": "Brak nadchodzących zadań.",
     "noDueDate": "Bez terminu",
-    "noDueDateEmpty": "Brak zadań bez terminu.",
     "loadError": "Nie udało się wczytać zadań. Backend może wymagać przebudowania/restartu, aby uwzględnić najnowsze zmiany.",
     "retry": "Spróbuj ponownie",
     "view": "Widok zadań",
@@ -308,13 +306,9 @@
     "scope.All": "Wszystkie",
     "scope.Mine": "Przypisane do mnie",
     "overdue": "Przeterminowane",
-    "overdueEmpty": "Brak przeterminowanych zadań.",
     "today": "Na dziś",
-    "todayEmpty": "Brak zadań na dziś.",
     "inProgress": "W realizacji",
-    "inProgressEmpty": "Żadne zadanie nie jest teraz w realizacji.",
     "upcoming": "Najbliższe 7 dni",
-    "upcomingEmpty": "Brak zadań z terminem w najbliższych 7 dniach.",
     "completedRecently": "Zakończone w ostatnich 7 dniach",
     "showAll": "Pokaż wszystkie ({{count}})"
   },
@@ -541,6 +535,8 @@
     "logoutAll": "Wyloguj wszystkie urządzenia"
   },
   "filters": {
+    "title": "Filtry",
+    "active": "Filtry aktywne",
     "search": "Szukaj zadań",
     "project": "Projekt",
     "priority": "Priorytet",

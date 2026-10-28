@@ -1,0 +1,23 @@
+<button
+  type="button"
+  class="icon-btn"
+  [title]="'tasks.previewDescription' | translate"
+  (click)="show($event)"
+  (mousedown)="$event.stopPropagation()"
+>
+  <i class="pi pi-eye"></i>
+</button>
+
+<p-dialog
+  [visible]="visible()"
+  (visibleChange)="visible.set($event)"
+  [header]="task.title"
+  [modal]="true"
+  [dismissableMask]="true"
+  [draggable]="false"
+  appendTo="body"
+  [style]="{ width: '620px' }"
+  [breakpoints]="{ '768px': '95vw' }"
+>
+  <p class="description-preview">{{ task.description }}</p>
+</p-dialog>

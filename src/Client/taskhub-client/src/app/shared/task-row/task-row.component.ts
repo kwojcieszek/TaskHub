@@ -2,6 +2,7 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { TranslateModule } from '@ngx-translate/core';
 import { TaskItem, TaskItemStatus } from '../../core/models/task.model';
 import { LocalizedDatePipe } from '../pipes/localized-date.pipe';
+import { TaskDescriptionPreviewComponent } from '../task-description-preview/task-description-preview.component';
 
 const STATUS_ICONS: Record<TaskItemStatus, string> = {
   ToDo: 'pi pi-circle',
@@ -13,7 +14,7 @@ const STATUS_ICONS: Record<TaskItemStatus, string> = {
 @Component({
   selector: 'app-task-row',
   standalone: true,
-  imports: [LocalizedDatePipe, TranslateModule],
+  imports: [LocalizedDatePipe, TaskDescriptionPreviewComponent, TranslateModule],
   templateUrl: './task-row.component.html',
   styleUrl: './task-row.component.scss'
 })
@@ -78,6 +79,10 @@ export class TaskRowComponent {
     today.setHours(0, 0, 0, 0);
 
     return new Date(this.task.dueDate) < today;
+  }
+
+  get hasDescription(): boolean {
+    return !!this.task.description?.trim();
   }
 
   get isClickable(): boolean {

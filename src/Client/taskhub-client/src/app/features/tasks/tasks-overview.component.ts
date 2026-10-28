@@ -54,6 +54,9 @@ export class TasksOverviewComponent implements OnInit {
   private readonly feedback = inject(ApiFeedbackService);
   readonly search = signal(''); readonly projectFilter = signal(''); readonly priorityFilter = signal('');
   readonly filterName = signal(''); readonly savedFilters = signal<SavedFilter[]>([]);
+  // Phones start with the filters folded away; wider screens always show them.
+  readonly filtersOpen = signal(false);
+  readonly hasActiveFilters = computed(() => !!this.search().trim() || !!this.projectFilter() || !!this.priorityFilter());
   readonly projectOptions = computed(() => Object.entries(this.projectNames()).map(([id, name]) => ({id, name})));
 
   // An empty value means no filter; it is the first choice of both lists.

@@ -44,6 +44,8 @@
             <button type="button" class="user-menu__item user-menu__item--logout" role="menuitem" (click)="logout()">
               <i class="pi pi-sign-out"></i>{{ 'nav.logout' | translate }}
             </button>
+
+            <div class="user-menu__version">{{ 'app.version' | translate: { version } }}</div>
           </div>
         }
       </div>

@@ -1,5 +1,19 @@
 <p-confirmdialog />
-<div class="search-filters">
+<button
+  type="button"
+  class="filters-toggle"
+  [attr.aria-expanded]="filtersOpen()"
+  aria-controls="taskFilters"
+  (click)="filtersOpen.set(!filtersOpen())"
+>
+  <i class="pi pi-filter"></i>{{ 'filters.title' | translate }}
+  @if (hasActiveFilters()) {
+    <span class="filters-toggle__dot" [attr.aria-label]="'filters.active' | translate"></span>
+  }
+  <i class="filters-toggle__chevron" [class]="filtersOpen() ? 'pi pi-chevron-up' : 'pi pi-chevron-down'"></i>
+</button>
+
+<div id="taskFilters" class="search-filters" [class.search-filters--collapsed]="!filtersOpen()">
   <div class="field">
     <label for="taskSearch">{{ 'filters.search' | translate }}</label>
     <input pInputText type="search" id="taskSearch" class="w-full" [ngModel]="search()" (ngModelChange)="search.set($event)" maxlength="200" />
@@ -48,7 +62,7 @@
 </div>
 
 @if (savedFilters().length > 0) {
-  <div class="saved-filters">
+  <div class="saved-filters" [class.search-filters--collapsed]="!filtersOpen()">
     @for (filter of savedFilters(); track filter.name) {
       <span class="chip saved-filter">
         <button type="button" (click)="applyFilter(filter)">{{ filter.name }}</button>
@@ -63,8 +77,10 @@
     <h1>{{ 'tasksOverview.title' | translate }}</h1>
     <div class="task-summary">
       @for (section of sections(); track section.key) {
-        <span [class]="'chip tone-' + section.tone">
-          <i [class]="section.icon"></i>{{ 'tasksOverview.' + section.key | translate }} · {{ section.tasks.length }}
+        <span [class]="'summary-stat tone-' + section.tone">
+          <span class="summary-stat__icon"><i [class]="section.icon"></i></span>
+          {{ 'tasksOverview.' + section.key | translate }}
+          <span class="summary-stat__value">{{ section.tasks.length }}</span>
         </span>
       }
     </div>
@@ -83,7 +99,7 @@
             [attr.aria-pressed]="showsBoardStatus(status)"
             (click)="toggleBoardStatus(status)"
           >
-            <i [class]="showsBoardStatus(status) ? 'pi pi-check' : 'pi pi-plus'"></i>{{ 'tasks.status.' + status | translate }}
+            <span class="board-statuses__check"><i class="pi pi-check"></i></span>{{ 'tasks.status.' + status | translate }}
           </button>
         }
       </div>
@@ -127,31 +143,31 @@
 } @else {
 <div class="task-sections">
   @for (section of sections(); track section.key) {
-    <section [class]="'task-section tone-' + section.tone">
-      <h2 class="task-section__title">
-        <span class="task-section__icon"><i [class]="section.icon"></i></span>
-        {{ 'tasksOverview.' + section.key | translate }}
-        <span class="task-section__count">{{ section.tasks.length }}</span>
-      </h2>
+    @if (section.tasks.length > 0) {
+      <section [class]="'task-section tone-' + section.tone">
+        <h2 class="task-section__title">
+          <span class="task-section__icon"><i [class]="section.icon"></i></span>
+          {{ 'tasksOverview.' + section.key | translate }}
+          <span class="task-section__count">{{ section.tasks.length }}</span>
+        </h2>
 
-      <div class="task-rows">
-        @for (task of section.tasks; track task.id) {
-          <app-task-row
-            [task]="task"
-            [projectName]="projectName(task)"
-            [projectColor]="projectColor(task)"
-            [hasSubTasks]="parentTaskIds().has(task.id)"
-            (edit)="edit(task)"
-            (start)="start(task)"
-            (complete)="complete(task)"
-            (reopen)="reopen(task)"
-            (remove)="delete(task)"
-          />
-        } @empty {
-          <p class="task-section__empty">{{ 'tasksOverview.' + section.key + 'Empty' | translate }}</p>
-        }
-      </div>
-    </section>
+        <div class="task-rows">
+          @for (task of section.tasks; track task.id) {
+            <app-task-row
+              [task]="task"
+              [projectName]="projectName(task)"
+              [projectColor]="projectColor(task)"
+              [hasSubTasks]="parentTaskIds().has(task.id)"
+              (edit)="edit(task)"
+              (start)="start(task)"
+              (complete)="complete(task)"
+              (reopen)="reopen(task)"
+              (remove)="delete(task)"
+            />
+          }
+        </div>
+      </section>
+    }
   }
 </div>
 }

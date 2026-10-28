@@ -5,6 +5,7 @@ import { DEFAULT_TASK_BOARD_STATUSES, TaskBoardColumn, TaskBoardMove, TaskBoardS
 import { TaskItem } from '../../core/models/task.model';
 import { projectColor } from '../../core/utils/project-color';
 import { LocalizedDatePipe } from '../pipes/localized-date.pipe';
+import { TaskDescriptionPreviewComponent } from '../task-description-preview/task-description-preview.component';
 
 const COLUMNS: { status: TaskBoardStatus; icon: string }[] = [
   { status: 'ToDo', icon: 'pi pi-circle' },
@@ -23,7 +24,7 @@ const MAX_CARDS_PER_COLUMN = 60;
 @Component({
   selector: 'app-task-board',
   standalone: true,
-  imports: [CdkDropListGroup, CdkDropList, CdkDrag, CdkDragPlaceholder, LocalizedDatePipe, TranslateModule],
+  imports: [CdkDropListGroup, CdkDropList, CdkDrag, CdkDragPlaceholder, LocalizedDatePipe, TaskDescriptionPreviewComponent, TranslateModule],
   templateUrl: './task-board.component.html',
   styleUrl: './task-board.component.scss'
 })

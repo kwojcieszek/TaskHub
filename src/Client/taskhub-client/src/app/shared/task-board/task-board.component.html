@@ -28,6 +28,9 @@
             }
 
             <div class="board-card__meta">
+              @if (task.description?.trim()) {
+                <app-task-description-preview class="board-card__preview" [task]="task" />
+              }
               <span class="badge" [attr.data-priority]="task.priority">{{ 'tasks.priority.' + task.priority | translate }}</span>
               @if (task.dueDate) {
                 <span class="board-card__date" [class.board-card__date--overdue]="isOverdue(task)">

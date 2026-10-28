@@ -23,6 +23,9 @@
   </span>
 
   <span class="task-row__info">
+    @if (hasDescription) {
+      <app-task-description-preview class="task-row__preview" [task]="task" />
+    }
     @if (task.startedAt && task.status !== 'ToDo') {
       <span class="task-row__meta task-row__meta--started">
         <i class="pi pi-play"></i>{{ 'tasks.startedOn' | translate }} {{ task.startedAt | date: 'mediumDate' }}

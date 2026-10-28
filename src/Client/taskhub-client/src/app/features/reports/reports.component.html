@@ -3,8 +3,10 @@
     <h1>{{ 'reports.title' | translate }}</h1>
     <div class="report-summary">
       @for (item of summary(); track item.key) {
-        <span [class]="'chip tone-' + item.tone">
-          <i [class]="item.icon"></i>{{ 'reports.metric.' + item.key | translate }} · {{ item.value }}
+        <span [class]="'summary-stat tone-' + item.tone">
+          <span class="summary-stat__icon"><i [class]="item.icon"></i></span>
+          {{ 'reports.metric.' + item.key | translate }}
+          <span class="summary-stat__value">{{ item.value }}</span>
         </span>
       }
     </div>

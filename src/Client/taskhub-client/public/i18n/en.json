@@ -1,6 +1,7 @@
 {
   "app": {
-    "name": "TaskHub"
+    "name": "TaskHub",
+    "version": "Version {{version}}"
   },
   "nav": {
     "sectionMain": "Main",
@@ -207,6 +208,7 @@
     "title": "Tasks",
     "newTask": "New task",
     "newSubTask": "New subtask",
+    "previewDescription": "Preview description",
     "noTasks": "No tasks in this project yet.",
     "titleField": "Title",
     "description": "Description",
@@ -282,13 +284,9 @@
     "title": "Tasks",
     "subtitle": "Everything due across your projects, at a glance.",
     "overdue": "Overdue",
-    "overdueEmpty": "Nothing overdue. Nice work.",
     "today": "Due today",
-    "todayEmpty": "Nothing due today.",
     "upcoming": "Up next",
-    "upcomingEmpty": "No upcoming tasks.",
     "noDueDate": "No due date",
-    "noDueDateEmpty": "Nothing without a due date.",
     "loadError": "Couldn't load tasks. The API may need to be rebuilt/restarted to pick up the latest changes.",
     "retry": "Retry",
     "view": "Task view",
@@ -308,13 +306,9 @@
     "scope.All": "All",
     "scope.Mine": "Assigned to me",
     "overdue": "Overdue",
-    "overdueEmpty": "No overdue tasks.",
     "today": "Due today",
-    "todayEmpty": "Nothing due today.",
     "inProgress": "In progress",
-    "inProgressEmpty": "No task is in progress right now.",
     "upcoming": "Next 7 days",
-    "upcomingEmpty": "Nothing due in the next 7 days.",
     "completedRecently": "Completed in the last 7 days",
     "showAll": "Show all ({{count}})"
   },
@@ -541,6 +535,8 @@
     "logoutAll": "Sign out all devices"
   },
   "filters": {
+    "title": "Filters",
+    "active": "Filters applied",
     "search": "Search tasks",
     "project": "Project",
     "priority": "Priority",

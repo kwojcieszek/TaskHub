@@ -132,6 +132,11 @@
   white-space: nowrap;
 }
 
+.task-row__preview {
+  margin: -0.35rem 0;
+  font-size: 0.78rem;
+}
+
 .task-row__meta--overdue {
   color: var(--tone-red-fg);
   background: var(--tone-red-bg);

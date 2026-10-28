@@ -93,16 +93,6 @@
   gap: 0.45rem;
 }
 
-.dashboard-section__empty {
-  color: var(--p-text-muted-color);
-  font-size: 0.875rem;
-  font-style: italic;
-  margin: 0;
-  padding: 0.6rem 0.9rem;
-  border: 1px dashed var(--app-border);
-  border-radius: 10px;
-}
-
 .dashboard-section__more {
   display: inline-flex;
   align-items: center;
