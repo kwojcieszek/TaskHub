@@ -37,7 +37,11 @@ public class JwtTokenService : IJwtTokenService
         };
 
         claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
-        if (sessionId.HasValue) claims.Add(new Claim(AppClaimTypes.SessionId, sessionId.Value.ToString()));
+
+        if (sessionId.HasValue)
+        {
+            claims.Add(new Claim(AppClaimTypes.SessionId, sessionId.Value.ToString()));
+        }
 
         var token = CreateToken(claims, expiresAt);
 

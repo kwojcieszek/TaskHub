@@ -33,6 +33,7 @@ public class LoginSecurityTests : IClassFixture<TaskHubApiFactory>
         Assert.Equal(user.UserId, login.User!.Id);
 
         var me = await _factory.WithToken(login.AccessToken).GetAsync(ApiRoutes.Me);
+
         await me.ShouldBeAsync(HttpStatusCode.OK);
     }
 
@@ -80,6 +81,7 @@ public class LoginSecurityTests : IClassFixture<TaskHubApiFactory>
         // The users table survived whatever was sent.
         var admin = await _factory.AdminAsync();
         var users = await admin.GetAsync(ApiRoutes.AdminUsers);
+
         await users.ShouldBeAsync(HttpStatusCode.OK);
     }
 
@@ -136,6 +138,7 @@ public class LoginSecurityTests : IClassFixture<TaskHubApiFactory>
         {
             // Each account gets its own guesses so the lockout does not decide the outcome.
             var response = await anonymous.PostAsync(ApiRoutes.Login, new LoginRequest { UserName = user.UserName, Password = candidate });
+
             await response.ShouldBeAsync(HttpStatusCode.Unauthorized);
 
             await UnlockAsync(user);
@@ -176,18 +179,22 @@ public class LoginSecurityTests : IClassFixture<TaskHubApiFactory>
         for (var attempt = 0; attempt < TaskHubApiFactory.MaxFailedAccessAttempts; attempt++)
         {
             var failed = await anonymous.PostAsync(ApiRoutes.Login, new LoginRequest { UserName = user.UserName, Password = "Wrong-Passw0rd-1" });
+
             await failed.ShouldBeAsync(HttpStatusCode.Unauthorized);
         }
 
         var withRightPassword = await anonymous.PostAsync(ApiRoutes.Login, new LoginRequest { UserName = user.UserName, Password = user.Password });
+
         await withRightPassword.ShouldBeAsync(HttpStatusCode.Unauthorized);
 
         // A session opened before the lockout ends with it.
         var existingSession = await user.GetAsync(ApiRoutes.Me);
+
         await existingSession.ShouldBeAsync(HttpStatusCode.Unauthorized);
 
         var admin = await _factory.AdminAsync();
         var users = await admin.GetAsync<List<AdminUserDto>>(ApiRoutes.AdminUsers);
+
         Assert.True(users.Single(existing => existing.Id == user.UserId).LockedOut);
     }
 
@@ -205,6 +212,7 @@ public class LoginSecurityTests : IClassFixture<TaskHubApiFactory>
         await UnlockAsync(user);
 
         var login = await anonymous.PostAsync(ApiRoutes.Login, new LoginRequest { UserName = user.UserName, Password = user.Password });
+
         await login.ShouldBeAsync(HttpStatusCode.OK);
     }
 
@@ -220,6 +228,7 @@ public class LoginSecurityTests : IClassFixture<TaskHubApiFactory>
         }
 
         var login = await anonymous.PostAsync(ApiRoutes.Login, new LoginRequest { UserName = user.UserName, Password = user.Password });
+
         await login.ShouldBeAsync(HttpStatusCode.OK);
     }
 
@@ -237,6 +246,7 @@ public class LoginSecurityTests : IClassFixture<TaskHubApiFactory>
             }
 
             var login = await anonymous.PostAsync(ApiRoutes.Login, new LoginRequest { UserName = user.UserName, Password = user.Password });
+
             await login.ShouldBeAsync(HttpStatusCode.OK);
         }
     }
@@ -279,6 +289,7 @@ public class LoginSecurityTests : IClassFixture<TaskHubApiFactory>
         Assert.Contains(userLogs.Items, log => log.FailureReason is null && log.UserId == user.UserId);
 
         var ghostLog = Assert.Single(ghostLogs.Items);
+
         Assert.Equal(LoginFailureReason.UserNotFound, ghostLog.FailureReason);
         Assert.Null(ghostLog.UserId);
     }
@@ -288,6 +299,7 @@ public class LoginSecurityTests : IClassFixture<TaskHubApiFactory>
     {
         var user = await _factory.CreateUserAsync("history");
         var other = await _factory.CreateUserAsync("other");
+
         await _factory.LoginAsync(other);
 
         var logins = await user.GetAsync<PagedResultDto<UserActivityLogDto>>($"{ApiRoutes.MyLogins}?pageSize=200");
@@ -297,6 +309,7 @@ public class LoginSecurityTests : IClassFixture<TaskHubApiFactory>
 
         // Asking for somebody else by name does not widen the result.
         var searched = await user.GetAsync<PagedResultDto<UserActivityLogDto>>($"{ApiRoutes.MyLogins}?search={other.UserName}&userId={other.UserId}");
+
         Assert.All(searched.Items, log => Assert.Equal(user.UserId, log.UserId));
     }
 

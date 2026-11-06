@@ -22,6 +22,7 @@ public class TaskLifecycleTests : IClassFixture<TaskHubApiFactory>
     public async Task CreatedTask_StartsAsToDoWithTheGivenDetails()
     {
         var (user, project) = await CreateProjectAsync();
+
         var dueDate = new DateTime(2030, 5, 20, 0, 0, 0, DateTimeKind.Utc);
 
         var task = await user.PostAsync<TaskItemDto>(ApiRoutes.Tasks(project.Id), new CreateTaskItemRequest
@@ -44,6 +45,7 @@ public class TaskLifecycleTests : IClassFixture<TaskHubApiFactory>
         Assert.Null(task.CompletedAt);
 
         var reloadedProject = await user.GetAsync<ProjectDto>(ApiRoutes.Project(project.Id));
+
         Assert.Equal(1, reloadedProject.TaskCount);
     }
 
@@ -51,21 +53,26 @@ public class TaskLifecycleTests : IClassFixture<TaskHubApiFactory>
     public async Task Task_IsStartedThenCompleted()
     {
         var (user, project) = await CreateProjectAsync();
+
         var task = await user.CreateTaskAsync(project.Id);
 
         var started = await user.PostAsync<TaskItemDto>(ApiRoutes.StartTask(project.Id, task.Id));
+
         Assert.Equal(TaskItemStatus.InProgress, started.Status);
         Assert.NotNull(started.StartedAt);
 
         var startAgain = await user.PostAsync(ApiRoutes.StartTask(project.Id, task.Id));
+
         await startAgain.ReadErrorsAsync(HttpStatusCode.BadRequest);
 
         var completed = await user.PostAsync<TaskItemDto>(ApiRoutes.CompleteTask(project.Id, task.Id));
+
         Assert.Equal(TaskItemStatus.Done, completed.Status);
         Assert.NotNull(completed.CompletedAt);
 
         var completeAgain = await user.PostAsync(ApiRoutes.CompleteTask(project.Id, task.Id));
         var startCompleted = await user.PostAsync(ApiRoutes.StartTask(project.Id, task.Id));
+
         await completeAgain.ReadErrorsAsync(HttpStatusCode.BadRequest);
         await startCompleted.ReadErrorsAsync(HttpStatusCode.BadRequest);
     }
@@ -74,6 +81,7 @@ public class TaskLifecycleTests : IClassFixture<TaskHubApiFactory>
     public async Task UpdatedTask_KeepsTheNewValues()
     {
         var (user, project) = await CreateProjectAsync();
+
         var task = await user.CreateTaskAsync(project.Id, "Before");
 
         var updated = await user.PutAsync<TaskItemDto>(ApiRoutes.Task(project.Id, task.Id), new UpdateTaskItemRequest
@@ -92,6 +100,7 @@ public class TaskLifecycleTests : IClassFixture<TaskHubApiFactory>
         Assert.NotNull(updated.UpdatedAt);
 
         var reopened = await user.PutAsync<TaskItemDto>(ApiRoutes.Task(project.Id, task.Id), new UpdateTaskItemRequest { Title = "After", Status = TaskItemStatus.ToDo });
+
         Assert.Equal(TaskItemStatus.ToDo, reopened.Status);
         Assert.Null(reopened.StartedAt);
     }
@@ -100,6 +109,7 @@ public class TaskLifecycleTests : IClassFixture<TaskHubApiFactory>
     public async Task SubTasks_DecideTheStatusOfTheirParent()
     {
         var (user, project) = await CreateProjectAsync();
+
         var parent = await user.CreateTaskAsync(project.Id, "Parent");
         var first = await user.CreateSubTaskAsync(project.Id, parent.Id, "First");
         var second = await user.CreateSubTaskAsync(project.Id, parent.Id, "Second");
@@ -109,23 +119,30 @@ public class TaskLifecycleTests : IClassFixture<TaskHubApiFactory>
         // The parent has no status of its own any more.
         var startParent = await user.PostAsync(ApiRoutes.StartTask(project.Id, parent.Id));
         var completeParent = await user.PostAsync(ApiRoutes.CompleteTask(project.Id, parent.Id));
+
         await startParent.ReadErrorsAsync(HttpStatusCode.BadRequest);
         await completeParent.ReadErrorsAsync(HttpStatusCode.BadRequest);
 
         await user.PostAsync<TaskItemDto>(ApiRoutes.StartTask(project.Id, first.Id));
+
         var inProgress = await user.GetAsync<TaskItemDto>(ApiRoutes.Task(project.Id, parent.Id));
+
         Assert.Equal(TaskItemStatus.InProgress, inProgress.Status);
 
         await user.PostAsync<TaskItemDto>(ApiRoutes.CompleteTask(project.Id, first.Id));
         await user.PostAsync<TaskItemDto>(ApiRoutes.CompleteTask(project.Id, second.Id));
+
         var done = await user.GetAsync<TaskItemDto>(ApiRoutes.Task(project.Id, parent.Id));
+
         Assert.Equal(TaskItemStatus.Done, done.Status);
         Assert.Equal(2, done.SubTasks.Count);
 
         var subTasks = await user.GetAsync<List<TaskItemDto>>(ApiRoutes.SubTasks(project.Id, parent.Id));
+
         Assert.Equal(new[] { first.Id, second.Id }, subTasks.Select(subTask => subTask.Id));
 
         var reloadedProject = await user.GetAsync<ProjectDto>(ApiRoutes.Project(project.Id));
+
         Assert.Equal(1, reloadedProject.TaskCount);
         Assert.Equal(2, reloadedProject.SubTaskCount);
     }
@@ -134,6 +151,7 @@ public class TaskLifecycleTests : IClassFixture<TaskHubApiFactory>
     public async Task SubTasks_CannotBeNested()
     {
         var (user, project) = await CreateProjectAsync();
+
         var parent = await user.CreateTaskAsync(project.Id, "Parent");
         var subTask = await user.CreateSubTaskAsync(project.Id, parent.Id);
         var other = await user.CreateTaskAsync(project.Id, "Other");
@@ -153,11 +171,13 @@ public class TaskLifecycleTests : IClassFixture<TaskHubApiFactory>
     public async Task DeletedTask_TakesItsSubTasksAlong()
     {
         var (user, project) = await CreateProjectAsync();
+
         var parent = await user.CreateTaskAsync(project.Id, "Parent");
         var subTask = await user.CreateSubTaskAsync(project.Id, parent.Id);
         var other = await user.CreateTaskAsync(project.Id, "Other");
 
         var delete = await user.DeleteAsync(ApiRoutes.Task(project.Id, parent.Id));
+
         await delete.ShouldBeAsync(HttpStatusCode.NoContent);
 
         var deletedParent = await user.GetAsync(ApiRoutes.Task(project.Id, parent.Id));
@@ -179,11 +199,13 @@ public class TaskLifecycleTests : IClassFixture<TaskHubApiFactory>
         var own = await member.CreateProjectAsync("Own");
         var shared = await owner.CreateProjectAsync("Shared");
         var hidden = await owner.CreateProjectAsync("Hidden");
+
         await owner.AddMemberAsync(shared.Id, member.UserId, ProjectMemberRole.Viewer);
 
         var ownTask = await member.CreateTaskAsync(own.Id, "Own task", new DateTime(2030, 1, 10, 0, 0, 0, DateTimeKind.Utc));
         var sharedTask = await owner.CreateTaskAsync(shared.Id, "Shared task", new DateTime(2030, 1, 20, 0, 0, 0, DateTimeKind.Utc));
         var laterTask = await owner.CreateTaskAsync(shared.Id, "Later task", new DateTime(2030, 6, 1, 0, 0, 0, DateTimeKind.Utc));
+
         await owner.CreateTaskAsync(hidden.Id, "Hidden task", new DateTime(2030, 1, 15, 0, 0, 0, DateTimeKind.Utc));
 
         var overview = await member.GetAsync<List<TaskItemDto>>(ApiRoutes.AllTasks);

@@ -71,6 +71,21 @@ public class ProjectAccessGuard : IProjectAccessGuard
         return await FindRoleAsync(projectId, cancellationToken) == ProjectMemberRole.Owner;
     }
 
+    public async Task EnsureCanManageGroupAsync(Guid projectGroupId, CancellationToken cancellationToken = default)
+    {
+        var ownerId = await _dbContext.ProjectGroups
+            .AsNoTracking()
+            .Where(g => g.Id == projectGroupId)
+            .Select(g => (Guid?)g.OwnerId)
+            .FirstOrDefaultAsync(cancellationToken)
+            ?? throw new NotFoundException("Project group not found.");
+
+        if (!_currentUser.IsInRole(Roles.Admin) && ownerId != _currentUser.UserId)
+        {
+            throw new ForbiddenAccessException("Only the project group owner can perform this action.");
+        }
+    }
+
     // The strongest role the caller has in the project: their own membership or one of their teams'.
     private async Task<ProjectMemberRole?> FindRoleAsync(Guid projectId, CancellationToken cancellationToken)
     {
@@ -89,20 +104,5 @@ public class ProjectAccessGuard : IProjectAccessGuard
             .ToListAsync(cancellationToken);
 
         return ProjectAccess.Strongest(roles.Concat(teamRoles));
-    }
-
-    public async Task EnsureCanManageGroupAsync(Guid projectGroupId, CancellationToken cancellationToken = default)
-    {
-        var ownerId = await _dbContext.ProjectGroups
-            .AsNoTracking()
-            .Where(g => g.Id == projectGroupId)
-            .Select(g => (Guid?)g.OwnerId)
-            .FirstOrDefaultAsync(cancellationToken)
-            ?? throw new NotFoundException("Project group not found.");
-
-        if (!_currentUser.IsInRole(Roles.Admin) && ownerId != _currentUser.UserId)
-        {
-            throw new ForbiddenAccessException("Only the project group owner can perform this action.");
-        }
     }
 }

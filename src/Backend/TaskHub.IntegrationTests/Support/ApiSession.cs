@@ -9,11 +9,6 @@ namespace TaskHub.IntegrationTests.Support;
 /// </summary>
 public sealed class ApiSession
 {
-    public ApiSession(HttpClient client)
-    {
-        Client = client;
-    }
-
     public HttpClient Client { get; }
 
     public Guid UserId { get; set; }
@@ -25,6 +20,11 @@ public sealed class ApiSession
     public string Password { get; set; } = string.Empty;
 
     public string? Token { get; private set; }
+
+    public ApiSession(HttpClient client)
+    {
+        Client = client;
+    }
 
     /// <summary>Sends the given access token with every following request.</summary>
     public void Authenticate(string token)
@@ -74,9 +74,11 @@ public sealed class ApiSession
     public Task<HttpResponseMessage> UploadAsync(string url, string fileName, byte[] content, string contentType = "application/octet-stream")
     {
         var file = new ByteArrayContent(content);
+
         file.Headers.ContentType = MediaTypeHeaderValue.Parse(contentType);
 
         var form = new MultipartFormDataContent();
+
         form.Add(file, "file", fileName);
 
         return Client.PostAsync(url, form);

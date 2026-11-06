@@ -32,12 +32,14 @@ public class SessionJwtBearerEvents : JwtBearerEvents
         if (principal is null || principal.HasClaim(claim => claim.Type == AppClaimTypes.Purpose))
         {
             context.Fail("The token is not an access token.");
+
             return;
         }
 
         if (!Guid.TryParse(principal.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
         {
             context.Fail("The token has no user.");
+
             return;
         }
 
@@ -50,12 +52,14 @@ public class SessionJwtBearerEvents : JwtBearerEvents
         if (user is null)
         {
             context.Fail("The user no longer exists.");
+
             return;
         }
 
         if (user.LockoutEnd.HasValue && user.LockoutEnd.Value > DateTimeOffset.UtcNow)
         {
             context.Fail("The user is locked out.");
+
             return;
         }
 
@@ -64,6 +68,7 @@ public class SessionJwtBearerEvents : JwtBearerEvents
         if (tokenVersion != user.TokenVersion.ToString(CultureInfo.InvariantCulture))
         {
             context.Fail("The session has been revoked.");
+
             return;
         }
 
@@ -75,18 +80,27 @@ public class SessionJwtBearerEvents : JwtBearerEvents
         if (!Guid.TryParse(principal.FindFirstValue(AppClaimTypes.SessionId), out var sessionId))
         {
             context.Fail("The token has no active session.");
+
             return;
         }
+
         var now = DateTime.UtcNow;
-        var session = await _dbContext.UserSessions.AsNoTracking()
+
+        var session = await _dbContext.UserSessions
+            .AsNoTracking()
             .FirstOrDefaultAsync(s => s.Id == sessionId && s.UserId == userId && s.TokenVersion == user.TokenVersion && s.ExpiresAt > now, context.HttpContext.RequestAborted);
+
         if (session is null)
         {
             context.Fail("The session has ended.");
+
             return;
         }
+
         if (session.LastUsedAt < now.AddMinutes(-5))
+        {
             await _dbContext.UserSessions.Where(s => s.Id == sessionId)
                 .ExecuteUpdateAsync(update => update.SetProperty(s => s.LastUsedAt, now), context.HttpContext.RequestAborted);
+        }
     }
 }

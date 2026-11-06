@@ -38,7 +38,9 @@ public class TokenSecurityTests : IClassFixture<TaskHubApiFactory>
         // Proves the forged tokens below are refused for the reason under test, not because they are malformed.
         var user = await _factory.CreateUserAsync();
         var claims = TokenForge.AccessClaims(user.UserId, user.UserName, 1, Roles.User);
+
         claims.Add(new Claim(AppClaimTypes.SessionId, new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler().ReadJwtToken(user.Token!).Claims.Single(c => c.Type == AppClaimTypes.SessionId).Value));
+
         var token = Forge().Create(claims);
 
         var response = await _factory.WithToken(token).GetAsync(ApiRoutes.Me);
@@ -56,6 +58,7 @@ public class TokenSecurityTests : IClassFixture<TaskHubApiFactory>
     public async Task MalformedToken_IsRejected(string token)
     {
         var session = _factory.Anonymous();
+
         session.Client.DefaultRequestHeaders.TryAddWithoutValidation("Authorization", $"Bearer {token}");
 
         var response = await session.GetAsync(ApiRoutes.Me);
@@ -169,6 +172,7 @@ public class TokenSecurityTests : IClassFixture<TaskHubApiFactory>
         // Signed with the right key, but marked as the token that only proves the first login step.
         var user = await _factory.CreateUserAsync();
         var claims = TokenForge.AccessClaims(user.UserId, user.UserName, 1, Roles.User);
+
         claims.Add(new Claim(AppClaimTypes.Purpose, "2fa"));
 
         await AssertRejectedAsync(Forge().Create(claims));
@@ -253,6 +257,7 @@ public class TokenSecurityTests : IClassFixture<TaskHubApiFactory>
     {
         var user = await _factory.CreateUserAsync();
         var session = _factory.Anonymous();
+
         session.Client.DefaultRequestHeaders.Add("Cookie", $"access_token={user.Token}; Authorization=Bearer {user.Token}");
 
         var response = await session.GetAsync(ApiRoutes.Me);
@@ -266,6 +271,7 @@ public class TokenSecurityTests : IClassFixture<TaskHubApiFactory>
         var user = await _factory.CreateUserAsync();
         var session = _factory.Anonymous();
         var credentials = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{user.UserName}:{user.Password}"));
+
         session.Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", credentials);
 
         var response = await session.GetAsync(ApiRoutes.Me);
@@ -278,6 +284,7 @@ public class TokenSecurityTests : IClassFixture<TaskHubApiFactory>
     {
         var user = await _factory.CreateUserAsync();
         var session = _factory.Anonymous();
+
         session.Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Token", user.Token);
 
         var response = await session.GetAsync(ApiRoutes.Me);

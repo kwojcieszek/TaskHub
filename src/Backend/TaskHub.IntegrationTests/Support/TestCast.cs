@@ -6,16 +6,6 @@ namespace TaskHub.IntegrationTests.Support;
 /// </summary>
 public sealed class TestCast
 {
-    public TestCast(ApiSession anonymous, ApiSession admin, ApiSession owner, ApiSession editor, ApiSession viewer, ApiSession stranger)
-    {
-        Anonymous = anonymous;
-        Admin = admin;
-        Owner = owner;
-        Editor = editor;
-        Viewer = viewer;
-        Stranger = stranger;
-    }
-
     public ApiSession Anonymous { get; }
 
     public ApiSession Admin { get; }
@@ -28,6 +18,16 @@ public sealed class TestCast
 
     // Signed in, but not a member of any project the owner creates.
     public ApiSession Stranger { get; }
+
+    public TestCast(ApiSession anonymous, ApiSession admin, ApiSession owner, ApiSession editor, ApiSession viewer, ApiSession stranger)
+    {
+        Anonymous = anonymous;
+        Admin = admin;
+        Owner = owner;
+        Editor = editor;
+        Viewer = viewer;
+        Stranger = stranger;
+    }
 
     public ApiSession For(Actor actor)
     {

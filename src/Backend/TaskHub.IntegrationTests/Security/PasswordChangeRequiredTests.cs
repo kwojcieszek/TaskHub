@@ -14,11 +14,6 @@ public class PasswordChangeRequiredTests : IClassFixture<TaskHubApiFactory>
 
     private readonly TaskHubApiFactory _factory;
 
-    public PasswordChangeRequiredTests(TaskHubApiFactory factory)
-    {
-        _factory = factory;
-    }
-
     public static TheoryData<string, string> BlockedEndpoints => new()
     {
         { "GET", "/v1/projects" },
@@ -49,6 +44,11 @@ public class PasswordChangeRequiredTests : IClassFixture<TaskHubApiFactory>
         { "GET", "/v1/projects#/v1/auth/" }
     };
 
+    public PasswordChangeRequiredTests(TaskHubApiFactory factory)
+    {
+        _factory = factory;
+    }
+
     [Theory]
     [MemberData(nameof(BlockedEndpoints))]
     public async Task AssignedPassword_DoesNotOpenTheApplication(string method, string url)
@@ -59,6 +59,7 @@ public class PasswordChangeRequiredTests : IClassFixture<TaskHubApiFactory>
         var response = await user.SendAsync(new HttpMethod(method), url, hasBody ? new { name = "Blocked", value = "x" } : null);
 
         var errors = await response.ReadErrorsAsync(HttpStatusCode.Forbidden);
+
         Assert.Contains("change your password", errors[0]);
     }
 
@@ -80,11 +81,13 @@ public class PasswordChangeRequiredTests : IClassFixture<TaskHubApiFactory>
         var user = await SignInWithAssignedPasswordAsync();
 
         var create = await user.PostAsync(ApiRoutes.Projects, new { name = "Created too early" });
+
         await create.ShouldBeAsync(HttpStatusCode.Forbidden);
 
         await ChangePasswordAsync(user, TaskHubApiFactory.UserPassword);
 
         var projects = await user.GetAsync<List<object>>(ApiRoutes.Projects);
+
         Assert.Empty(projects);
     }
 
@@ -98,6 +101,7 @@ public class PasswordChangeRequiredTests : IClassFixture<TaskHubApiFactory>
         Assert.False(changed.User!.MustChangePassword);
 
         var projects = await user.GetAsync(ApiRoutes.Projects);
+
         await projects.ShouldBeAsync(HttpStatusCode.OK);
     }
 
@@ -129,6 +133,7 @@ public class PasswordChangeRequiredTests : IClassFixture<TaskHubApiFactory>
         await response.ReadErrorsAsync(HttpStatusCode.BadRequest);
 
         var projects = await user.GetAsync(ApiRoutes.Projects);
+
         await projects.ShouldBeAsync(HttpStatusCode.Forbidden);
     }
 
@@ -142,6 +147,7 @@ public class PasswordChangeRequiredTests : IClassFixture<TaskHubApiFactory>
         await response.ReadErrorsAsync(HttpStatusCode.BadRequest);
 
         var projects = await user.GetAsync(ApiRoutes.Projects);
+
         await projects.ShouldBeAsync(HttpStatusCode.Forbidden);
     }
 
@@ -193,24 +199,40 @@ public class PasswordChangeRequiredTests : IClassFixture<TaskHubApiFactory>
         var admin = await factory.LoginAsync(TaskHubApiFactory.AdminUserName, TaskHubApiFactory.InitialAdminPassword);
 
         var me = await admin.GetAsync<UserDto>(ApiRoutes.Me);
+
         Assert.True(me.MustChangePassword);
 
         var users = await admin.GetAsync(ApiRoutes.AdminUsers);
         var security = await admin.GetAsync(ApiRoutes.AdminSecurity);
+
         await users.ShouldBeAsync(HttpStatusCode.Forbidden);
         await security.ShouldBeAsync(HttpStatusCode.Forbidden);
 
         // The default password is exempt from the policy; its replacement is not.
         var weak = await admin.PostAsync(ApiRoutes.Password, new ChangePasswordRequest { CurrentPassword = TaskHubApiFactory.InitialAdminPassword, NewPassword = "admin2" });
+
         await weak.ReadErrorsAsync(HttpStatusCode.BadRequest);
 
         await ChangePasswordAsync(admin, TaskHubApiFactory.AdminPassword);
 
         var usersAfterwards = await admin.GetAsync(ApiRoutes.AdminUsers);
+
         await usersAfterwards.ShouldBeAsync(HttpStatusCode.OK);
 
         var withDefault = await factory.Anonymous().PostAsync(ApiRoutes.Login, new LoginRequest { UserName = TaskHubApiFactory.AdminUserName, Password = TaskHubApiFactory.InitialAdminPassword });
+
         await withDefault.ShouldBeAsync(HttpStatusCode.Unauthorized);
+    }
+
+    private static async Task<LoginResponse> ChangePasswordAsync(ApiSession session, string newPassword)
+    {
+        var changed = await session.PostAsync<LoginResponse>(ApiRoutes.Password, new ChangePasswordRequest { CurrentPassword = session.Password, NewPassword = newPassword });
+
+        session.Password = newPassword;
+
+        session.Authenticate(changed.AccessToken!);
+
+        return changed;
     }
 
     private async Task<ApiSession> SignInWithAssignedPasswordAsync()
@@ -221,15 +243,5 @@ public class PasswordChangeRequiredTests : IClassFixture<TaskHubApiFactory>
         Assert.True(login.User!.MustChangePassword);
 
         return user;
-    }
-
-    private static async Task<LoginResponse> ChangePasswordAsync(ApiSession session, string newPassword)
-    {
-        var changed = await session.PostAsync<LoginResponse>(ApiRoutes.Password, new ChangePasswordRequest { CurrentPassword = session.Password, NewPassword = newPassword });
-
-        session.Password = newPassword;
-        session.Authenticate(changed.AccessToken!);
-
-        return changed;
     }
 }

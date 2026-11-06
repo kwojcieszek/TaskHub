@@ -22,6 +22,7 @@ public class TaskAttachmentsController : ApiControllerBase
     public async Task<ActionResult<IReadOnlyCollection<AttachmentDto>>> GetAll(Guid projectId, Guid taskId, CancellationToken cancellationToken)
     {
         var attachments = await _attachmentService.GetByTaskAsync(projectId, taskId, cancellationToken);
+
         return Ok(attachments);
     }
 
@@ -30,6 +31,7 @@ public class TaskAttachmentsController : ApiControllerBase
     {
         await using var content = file.OpenReadStream();
         var attachment = await _attachmentService.UploadAsync(projectId, taskId, content, file.FileName, file.ContentType, file.Length, cancellationToken);
+
         return Ok(attachment);
     }
 
@@ -37,6 +39,7 @@ public class TaskAttachmentsController : ApiControllerBase
     public async Task<IActionResult> Download(Guid projectId, Guid taskId, Guid attachmentId, CancellationToken cancellationToken)
     {
         var content = await _attachmentService.DownloadAsync(projectId, taskId, attachmentId, cancellationToken);
+
         return File(content.Content, content.ContentType, content.FileName);
     }
 
@@ -44,6 +47,7 @@ public class TaskAttachmentsController : ApiControllerBase
     public async Task<IActionResult> Delete(Guid projectId, Guid taskId, Guid attachmentId, CancellationToken cancellationToken)
     {
         await _attachmentService.DeleteAsync(projectId, taskId, attachmentId, cancellationToken);
+
         return NoContent();
     }
 }

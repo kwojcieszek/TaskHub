@@ -92,6 +92,18 @@ public class CommentService : ICommentService
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
 
+    private static string Normalize(string? content)
+    {
+        var text = (content ?? string.Empty).Trim();
+
+        if (text.Length == 0)
+        {
+            throw new ValidationFailedException(new[] { "The comment cannot be empty." });
+        }
+
+        return text;
+    }
+
     private async Task<CommentDto> AddAsync(Guid projectId, Guid? taskId, SaveCommentRequest request, CancellationToken cancellationToken)
     {
         var comment = new Comment
@@ -153,18 +165,6 @@ public class CommentService : ICommentService
         {
             throw new NotFoundException("Task not found.");
         }
-    }
-
-    private static string Normalize(string? content)
-    {
-        var text = (content ?? string.Empty).Trim();
-
-        if (text.Length == 0)
-        {
-            throw new ValidationFailedException(new[] { "The comment cannot be empty." });
-        }
-
-        return text;
     }
 
     // Timestamps are stored in UTC; marking the kind makes the API emit them with a "Z" suffix.

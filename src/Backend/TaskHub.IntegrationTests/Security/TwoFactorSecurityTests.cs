@@ -37,15 +37,19 @@ public class TwoFactorSecurityTests : IClassFixture<TaskHubApiFactory>
         var setup = await user.PostAsync<TwoFactorSetupResponse>(ApiRoutes.TwoFactorSetup);
 
         var wrong = await user.PostAsync(ApiRoutes.TwoFactorEnable, new TwoFactorEnableRequest { Code = Authenticator.WrongCode(setup.SharedKey) });
+
         await wrong.ReadErrorsAsync(HttpStatusCode.BadRequest);
 
         var me = await user.GetAsync<UserDto>(ApiRoutes.Me);
+
         Assert.False(me.TwoFactorEnabled);
 
         var right = await user.PostAsync(ApiRoutes.TwoFactorEnable, new TwoFactorEnableRequest { Code = Authenticator.CurrentCode(setup.SharedKey) });
+
         await right.ShouldBeAsync(HttpStatusCode.NoContent);
 
         me = await user.GetAsync<UserDto>(ApiRoutes.Me);
+
         Assert.True(me.TwoFactorEnabled);
     }
 
@@ -64,6 +68,7 @@ public class TwoFactorSecurityTests : IClassFixture<TaskHubApiFactory>
         await response.ShouldBeAsync(HttpStatusCode.BadRequest);
 
         var me = await user.GetAsync<UserDto>(ApiRoutes.Me);
+
         Assert.False(me.TwoFactorEnabled);
     }
 
@@ -84,6 +89,7 @@ public class TwoFactorSecurityTests : IClassFixture<TaskHubApiFactory>
     public async Task TwoFactorToken_DoesNotOpenTheApi()
     {
         var (user, _) = await CreateUserWithTwoFactorAsync();
+
         var login = await _factory.Anonymous().PostAsync<LoginResponse>(ApiRoutes.Login, new LoginRequest { UserName = user.UserName, Password = user.Password });
         var halfSignedIn = _factory.WithToken(login.TwoFactorToken!);
 
@@ -102,6 +108,7 @@ public class TwoFactorSecurityTests : IClassFixture<TaskHubApiFactory>
     public async Task Verify_WithTheRightCode_SignsTheUserIn()
     {
         var (user, sharedKey) = await CreateUserWithTwoFactorAsync();
+
         var anonymous = _factory.Anonymous();
         var login = await anonymous.PostAsync<LoginResponse>(ApiRoutes.Login, new LoginRequest { UserName = user.UserName, Password = user.Password });
 
@@ -115,6 +122,7 @@ public class TwoFactorSecurityTests : IClassFixture<TaskHubApiFactory>
         Assert.Equal(user.UserId, verified.User!.Id);
 
         var me = await _factory.WithToken(verified.AccessToken!).GetAsync(ApiRoutes.Me);
+
         await me.ShouldBeAsync(HttpStatusCode.OK);
     }
 
@@ -122,6 +130,7 @@ public class TwoFactorSecurityTests : IClassFixture<TaskHubApiFactory>
     public async Task Verify_WithAWrongCode_IsRefused()
     {
         var (user, sharedKey) = await CreateUserWithTwoFactorAsync();
+
         var anonymous = _factory.Anonymous();
         var login = await anonymous.PostAsync<LoginResponse>(ApiRoutes.Login, new LoginRequest { UserName = user.UserName, Password = user.Password });
 
@@ -139,6 +148,7 @@ public class TwoFactorSecurityTests : IClassFixture<TaskHubApiFactory>
     {
         var (user, _) = await CreateUserWithTwoFactorAsync();
         var (_, otherSharedKey) = await CreateUserWithTwoFactorAsync();
+
         var anonymous = _factory.Anonymous();
         var login = await anonymous.PostAsync<LoginResponse>(ApiRoutes.Login, new LoginRequest { UserName = user.UserName, Password = user.Password });
 
@@ -156,6 +166,7 @@ public class TwoFactorSecurityTests : IClassFixture<TaskHubApiFactory>
     {
         // Otherwise any signed-in user could mint tokens for an account protected by 2FA knowing only its code.
         var (user, sharedKey) = await CreateUserWithTwoFactorAsync();
+
         var bystander = await _factory.CreateUserAsync();
 
         var withOwnAccessToken = await _factory.Anonymous().PostAsync(ApiRoutes.TwoFactorVerify, new TwoFactorVerifyRequest
@@ -189,6 +200,7 @@ public class TwoFactorSecurityTests : IClassFixture<TaskHubApiFactory>
     public async Task Verify_WithATwoFactorTokenSignedByAnotherKey_IsRefused()
     {
         var (user, sharedKey) = await CreateUserWithTwoFactorAsync();
+
         var forge = new TokenForge(_factory.Jwt);
         var claims = new List<Claim>
         {
@@ -206,12 +218,14 @@ public class TwoFactorSecurityTests : IClassFixture<TaskHubApiFactory>
     public async Task RepeatedWrongCodes_LockTheAccount()
     {
         var (user, sharedKey) = await CreateUserWithTwoFactorAsync();
+
         var anonymous = _factory.Anonymous();
         var login = await anonymous.PostAsync<LoginResponse>(ApiRoutes.Login, new LoginRequest { UserName = user.UserName, Password = user.Password });
 
         for (var attempt = 0; attempt < TaskHubApiFactory.MaxFailedAccessAttempts; attempt++)
         {
             var wrong = await anonymous.PostAsync(ApiRoutes.TwoFactorVerify, new TwoFactorVerifyRequest { TwoFactorToken = login.TwoFactorToken!, Code = Authenticator.WrongCode(sharedKey) });
+
             await wrong.ShouldBeAsync(HttpStatusCode.Unauthorized);
         }
 
@@ -254,6 +268,7 @@ public class TwoFactorSecurityTests : IClassFixture<TaskHubApiFactory>
         await missing.ShouldBeAsync(HttpStatusCode.BadRequest);
 
         var me = await user.GetAsync<UserDto>(ApiRoutes.Me);
+
         Assert.True(me.TwoFactorEnabled);
     }
 
@@ -263,6 +278,7 @@ public class TwoFactorSecurityTests : IClassFixture<TaskHubApiFactory>
         var (user, _) = await CreateUserWithTwoFactorAsync();
 
         var disable = await user.PostAsync(ApiRoutes.TwoFactorDisable, new TwoFactorDisableRequest { Password = user.Password });
+
         await disable.ShouldBeAsync(HttpStatusCode.NoContent);
 
         var login = await _factory.Anonymous().PostAsync<LoginResponse>(ApiRoutes.Login, new LoginRequest { UserName = user.UserName, Password = user.Password });
@@ -276,12 +292,15 @@ public class TwoFactorSecurityTests : IClassFixture<TaskHubApiFactory>
     {
         // The endpoints act on the caller only; a user id in the body must be ignored.
         var (victim, _) = await CreateUserWithTwoFactorAsync();
+
         var attacker = await _factory.CreateUserAsync("attacker");
 
         var response = await attacker.PostAsync(ApiRoutes.TwoFactorDisable, new { password = attacker.Password, userId = victim.UserId, userName = victim.UserName });
+
         await response.ShouldBeAsync(HttpStatusCode.NoContent);
 
         var me = await victim.GetAsync<UserDto>(ApiRoutes.Me);
+
         Assert.True(me.TwoFactorEnabled);
     }
 
@@ -291,6 +310,7 @@ public class TwoFactorSecurityTests : IClassFixture<TaskHubApiFactory>
         var setup = await user.PostAsync<TwoFactorSetupResponse>(ApiRoutes.TwoFactorSetup);
 
         var enable = await user.PostAsync(ApiRoutes.TwoFactorEnable, new TwoFactorEnableRequest { Code = Authenticator.CurrentCode(setup.SharedKey) });
+
         await enable.ShouldBeAsync(HttpStatusCode.NoContent);
 
         return (user, setup.SharedKey);

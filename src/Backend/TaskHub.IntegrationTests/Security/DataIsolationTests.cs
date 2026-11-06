@@ -48,6 +48,7 @@ public class DataIsolationTests : IClassFixture<TaskHubApiFactory>
     public async Task TaskLists_ContainOnlyTasksOfTheCallersProjects()
     {
         var (mine, theirs) = await CreateTwoScenariosAsync();
+
         var stranger = mine.Cast.Stranger;
 
         var all = await stranger.GetAsync<List<TaskItemDto>>(ApiRoutes.AllTasks);
@@ -76,6 +77,7 @@ public class DataIsolationTests : IClassFixture<TaskHubApiFactory>
     public async Task ForeignTask_CannotBeReachedThroughOwnProject()
     {
         var (mine, theirs) = await CreateTwoScenariosAsync();
+
         var attacker = mine.Cast.Stranger;
         var ownProject = theirs.Project.Id;
         var foreignTask = mine.LeafTask.Id;
@@ -95,6 +97,7 @@ public class DataIsolationTests : IClassFixture<TaskHubApiFactory>
         await delete.ShouldBeAsync(HttpStatusCode.NotFound);
 
         var untouched = await mine.Cast.Owner.GetAsync<TaskItemDto>(ApiRoutes.Task(mine.Project.Id, foreignTask));
+
         Assert.Equal(mine.LeafTask.Title, untouched.Title);
         Assert.Equal(TaskItemStatus.ToDo, untouched.Status);
     }
@@ -103,6 +106,7 @@ public class DataIsolationTests : IClassFixture<TaskHubApiFactory>
     public async Task ForeignTask_CannotBecomeTheParentOfOwnTask()
     {
         var (mine, theirs) = await CreateTwoScenariosAsync();
+
         var attacker = mine.Cast.Stranger;
         var ownProject = theirs.Project.Id;
         var foreignParent = mine.ParentTask.Id;
@@ -116,6 +120,7 @@ public class DataIsolationTests : IClassFixture<TaskHubApiFactory>
         await viaUpdate.ShouldBeAsync(HttpStatusCode.NotFound);
 
         var subTasks = await mine.Cast.Owner.GetAsync<List<TaskItemDto>>(ApiRoutes.SubTasks(mine.Project.Id, foreignParent));
+
         Assert.Equal(mine.SubTask.Id, Assert.Single(subTasks).Id);
     }
 
@@ -124,6 +129,7 @@ public class DataIsolationTests : IClassFixture<TaskHubApiFactory>
     {
         // The project comes from the address; a project id in the body must be ignored.
         var (mine, theirs) = await CreateTwoScenariosAsync();
+
         var attacker = mine.Cast.Stranger;
 
         var created = await attacker.PostAsync<TaskItemDto>(ApiRoutes.Tasks(theirs.Project.Id), new { title = "Misplaced", projectId = mine.Project.Id, id = Guid.NewGuid() });
@@ -131,6 +137,7 @@ public class DataIsolationTests : IClassFixture<TaskHubApiFactory>
         Assert.Equal(theirs.Project.Id, created.ProjectId);
 
         var foreignTasks = await mine.Cast.Owner.GetAsync<List<TaskItemDto>>(ApiRoutes.Tasks(mine.Project.Id));
+
         Assert.DoesNotContain(foreignTasks, task => task.Title == "Misplaced");
     }
 
@@ -138,6 +145,7 @@ public class DataIsolationTests : IClassFixture<TaskHubApiFactory>
     public async Task ForeignAttachment_CannotBeReachedThroughOwnProject()
     {
         var (mine, theirs) = await CreateTwoScenariosAsync();
+
         var attacker = mine.Cast.Stranger;
         var ownProject = theirs.Project.Id;
         var ownTask = theirs.LeafTask.Id;
@@ -157,6 +165,7 @@ public class DataIsolationTests : IClassFixture<TaskHubApiFactory>
         await deleteViaForeignTask.ShouldBeAsync(HttpStatusCode.NotFound);
 
         var attachments = await mine.Cast.Owner.GetAsync<List<AttachmentDto>>(ApiRoutes.Attachments(mine.Project.Id, mine.LeafTask.Id));
+
         Assert.Equal(mine.Attachment.Id, Assert.Single(attachments).Id);
     }
 
@@ -164,6 +173,7 @@ public class DataIsolationTests : IClassFixture<TaskHubApiFactory>
     public async Task KnowingTheHashOfAForeignFile_DoesNotGiveAccessToIt()
     {
         var (mine, theirs) = await CreateTwoScenariosAsync();
+
         var attacker = mine.Cast.Stranger;
         var foreignHash = mine.Attachment.Sha256;
 
@@ -185,18 +195,23 @@ public class DataIsolationTests : IClassFixture<TaskHubApiFactory>
     {
         // Content is stored once per hash, so two users can share a stored file without knowing it.
         var (mine, theirs) = await CreateTwoScenariosAsync();
+
         var other = mine.Cast.Stranger;
 
         var copy = await other.UploadAttachmentAsync(theirs.Project.Id, theirs.LeafTask.Id, "copy.txt", mine.AttachmentContent);
+
         Assert.Equal(mine.Attachment.Sha256, copy.Sha256);
 
         var found = await other.GetAsync<List<AttachmentDto>>(ApiRoutes.AttachmentsBySha256(copy.Sha256, theirs.LeafTask.Id));
+
         Assert.Equal(copy.Id, Assert.Single(found).Id);
 
         var delete = await other.DeleteAsync(ApiRoutes.Attachment(theirs.Project.Id, theirs.LeafTask.Id, copy.Id));
+
         await delete.ShouldBeAsync(HttpStatusCode.NoContent);
 
         var original = await mine.Cast.Owner.GetAsync(ApiRoutes.AttachmentContent(mine.Project.Id, mine.LeafTask.Id, mine.Attachment.Id));
+
         await original.ShouldBeAsync(HttpStatusCode.OK);
         Assert.Equal(mine.AttachmentContent, await original.Content.ReadAsByteArrayAsync());
     }
@@ -208,6 +223,7 @@ public class DataIsolationTests : IClassFixture<TaskHubApiFactory>
         var other = await _factory.CreateUserAsync("quota");
         var project = await owner.CreateProjectAsync();
         var task = await owner.CreateTaskAsync(project.Id);
+
         await owner.UploadAttachmentAsync(project.Id, task.Id, "file.bin", new byte[100]);
 
         var ownerLimits = await owner.GetAsync<AttachmentLimitsDto>(ApiRoutes.AttachmentLimits);
@@ -237,6 +253,7 @@ public class DataIsolationTests : IClassFixture<TaskHubApiFactory>
         await delete.ShouldBeAsync(HttpStatusCode.Forbidden);
 
         var untouched = await cast.Owner.GetAsync<ProjectGroupDto>(ApiRoutes.ProjectGroup(group.Id));
+
         Assert.Equal(group.Name, untouched.Name);
     }
 
@@ -255,6 +272,7 @@ public class DataIsolationTests : IClassFixture<TaskHubApiFactory>
         await moveIntoGroup.ShouldBeAsync(HttpStatusCode.Forbidden);
 
         var group = await cast.Owner.GetAsync<ProjectGroupDto>(ApiRoutes.ProjectGroup(foreignGroup.Id));
+
         Assert.Equal(0, group.ProjectCount);
     }
 
@@ -266,6 +284,7 @@ public class DataIsolationTests : IClassFixture<TaskHubApiFactory>
         var group = await owner.CreateProjectGroupAsync($"Shared {Guid.NewGuid():N}");
         var shared = await owner.CreateProjectAsync("Shared", group.Id);
         var secret = await owner.CreateProjectAsync("Secret", group.Id);
+
         await owner.AddMemberAsync(shared.Id, cast.Viewer.UserId, ProjectMemberRole.Viewer);
 
         var visibleGroup = await cast.Viewer.GetAsync<ProjectGroupDto>(ApiRoutes.ProjectGroup(group.Id));
@@ -292,9 +311,11 @@ public class DataIsolationTests : IClassFixture<TaskHubApiFactory>
         Assert.True(created.IsActive);
 
         var updated = await attacker.PutAsync<ProjectDto>(ApiRoutes.Project(created.Id), new { name = "Framed", ownerId = cast.Owner.UserId, isActive = true });
+
         Assert.Equal(attacker.UserId, updated.OwnerId);
 
         var victimProjects = await cast.Owner.GetAsync<List<ProjectDto>>(ApiRoutes.Projects);
+
         Assert.DoesNotContain(victimProjects, project => project.Id == created.Id);
     }
 
@@ -314,6 +335,7 @@ public class DataIsolationTests : IClassFixture<TaskHubApiFactory>
         await editorRemovesOwner.ShouldBeAsync(HttpStatusCode.Forbidden);
 
         var members = await scenario.Cast.Owner.GetAsync<List<ProjectMemberDto>>(ApiRoutes.ProjectMembers(scenario.Project.Id));
+
         Assert.Equal(ProjectMemberRole.Viewer.ToString(), members.Single(member => member.UserId == viewer.UserId).Role);
         Assert.Equal(ProjectMemberRole.Editor.ToString(), members.Single(member => member.UserId == editor.UserId).Role);
         Assert.Equal(ProjectMemberRole.Owner.ToString(), members.Single(member => member.UserId == scenario.Cast.Owner.UserId).Role);
@@ -336,6 +358,7 @@ public class DataIsolationTests : IClassFixture<TaskHubApiFactory>
     {
         var first = await _factory.CreateUserAsync("settings");
         var second = await _factory.CreateUserAsync("settings");
+
         await first.PutAsync<UserSettingDto>(ApiRoutes.Setting("theme"), new SetUserSettingRequest { Value = "dark" });
         await second.PutAsync<UserSettingDto>(ApiRoutes.Setting("theme"), new SetUserSettingRequest { Value = "light" });
         await first.PutAsync<UserSettingDto>(ApiRoutes.Setting("private-note"), new SetUserSettingRequest { Value = "secret" });
@@ -350,10 +373,12 @@ public class DataIsolationTests : IClassFixture<TaskHubApiFactory>
 
         // Deleting the setting both users named the same removes only the caller's.
         var secondDeletesTheme = await second.DeleteAsync(ApiRoutes.Setting("theme"));
+
         await secondDeletesTheme.ShouldBeAsync(HttpStatusCode.NoContent);
 
         var firstTheme = await first.GetAsync<UserSettingDto>(ApiRoutes.Setting("theme"));
         var firstNote = await first.GetAsync<UserSettingDto>(ApiRoutes.Setting("private-note"));
+
         Assert.Equal("dark", firstTheme.Value);
         Assert.Equal("secret", firstNote.Value);
     }
@@ -365,9 +390,11 @@ public class DataIsolationTests : IClassFixture<TaskHubApiFactory>
         var victim = await _factory.CreateUserAsync("settings");
 
         var response = await attacker.PutAsync($"{ApiRoutes.Setting("theme")}?userId={victim.UserId}", new { value = "planted", userId = victim.UserId });
+
         await response.ShouldBeAsync(HttpStatusCode.OK);
 
         var victimSettings = await victim.GetAsync<List<UserSettingDto>>(ApiRoutes.Settings);
+
         Assert.Empty(victimSettings);
     }
 

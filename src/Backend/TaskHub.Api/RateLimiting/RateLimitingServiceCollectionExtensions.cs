@@ -39,6 +39,7 @@ public static class RateLimitingServiceCollectionExtensions
                 response.ContentType = "application/json";
 
                 var payload = JsonSerializer.Serialize(new { errors = new[] { "Too many requests. Please try again later." } });
+
                 await response.WriteAsync(payload, cancellationToken);
             };
         });

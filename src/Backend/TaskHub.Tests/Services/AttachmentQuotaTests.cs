@@ -44,6 +44,7 @@ public class AttachmentQuotaTests : IDisposable
     public async Task Upload_IsRefusedWhenItWouldExceedTheQuota()
     {
         var (project, task, _) = await ArrangeTaskAsync();
+
         await UploadAsync(project.Id, task.Id, "a.bin", 60);
 
         var exception = await Assert.ThrowsAsync<ValidationFailedException>(() => UploadAsync(project.Id, task.Id, "b.bin", 41));
@@ -56,6 +57,7 @@ public class AttachmentQuotaTests : IDisposable
     public async Task Upload_StillCountsTheContentWhenTheDeclaredSizeUnderstatesIt()
     {
         var (project, task, _) = await ArrangeTaskAsync();
+
         using var stream = new MemoryStream(new byte[Quota + 1]);
 
         await Assert.ThrowsAsync<ValidationFailedException>(() => _attachments.UploadAsync(
@@ -68,6 +70,7 @@ public class AttachmentQuotaTests : IDisposable
     public async Task Delete_FreesTheSpaceForTheNextUpload()
     {
         var (project, task, _) = await ArrangeTaskAsync();
+
         var first = await UploadAsync(project.Id, task.Id, "a.bin", 80);
 
         await _attachments.DeleteAsync(project.Id, task.Id, first.Id);
@@ -80,7 +83,9 @@ public class AttachmentQuotaTests : IDisposable
     public async Task Quota_IsCountedSeparatelyForEachUser()
     {
         var (project, task, owner) = await ArrangeTaskAsync();
+
         var editor = await _host.CreateUserAsync("editor");
+
         await _host.AddMemberAsync(project, owner, editor, ProjectMemberRole.Editor);
 
         await UploadAsync(project.Id, task.Id, "owner.bin", 90);
@@ -103,10 +108,21 @@ public class AttachmentQuotaTests : IDisposable
         for (var index = 0; index < 3; index++)
         {
             using var stream = new MemoryStream(CreateContent(200, index));
+
             await attachments.UploadAsync(project.Id, task.Id, stream, $"file{index}.bin", "application/octet-stream", stream.Length);
         }
 
         Assert.Equal(600, (await attachments.GetLimitsAsync()).UsedBytes);
+    }
+
+    // Different seeds give different content, so each upload is stored under its own hash.
+    private static byte[] CreateContent(int size, int seed)
+    {
+        var content = new byte[size];
+
+        new Random(seed).NextBytes(content);
+
+        return content;
     }
 
     private async Task<(ProjectDto Project, TaskItemDto Task, User Owner)> ArrangeTaskAsync()
@@ -123,14 +139,5 @@ public class AttachmentQuotaTests : IDisposable
         using var stream = new MemoryStream(CreateContent(size, fileName.Length + size));
 
         return await _attachments.UploadAsync(projectId, taskId, stream, fileName, "application/octet-stream", stream.Length);
-    }
-
-    // Different seeds give different content, so each upload is stored under its own hash.
-    private static byte[] CreateContent(int size, int seed)
-    {
-        var content = new byte[size];
-        new Random(seed).NextBytes(content);
-
-        return content;
     }
 }

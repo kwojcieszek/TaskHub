@@ -14,11 +14,6 @@ public class AnonymousAccessTests : IClassFixture<TaskHubApiFactory>
 
     private readonly TaskHubApiFactory _factory;
 
-    public AnonymousAccessTests(TaskHubApiFactory factory)
-    {
-        _factory = factory;
-    }
-
     public static TheoryData<string, string> ProtectedEndpoints => new()
     {
         { "GET", "/v1/auth/me" },
@@ -109,6 +104,11 @@ public class AnonymousAccessTests : IClassFixture<TaskHubApiFactory>
         { "PUT", $"/v1/projects/{Id}/comments/{OtherId}" },
         { "DELETE", $"/v1/projects/{Id}/comments/{OtherId}" }
     };
+
+    public AnonymousAccessTests(TaskHubApiFactory factory)
+    {
+        _factory = factory;
+    }
 
     [Theory]
     [MemberData(nameof(ProtectedEndpoints))]

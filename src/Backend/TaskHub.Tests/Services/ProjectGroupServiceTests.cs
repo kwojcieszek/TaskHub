@@ -28,6 +28,7 @@ public class ProjectGroupServiceTests : IDisposable
     public async Task Create_MakesTheCallerTheOwner()
     {
         var owner = await _host.CreateUserAsync("owner");
+
         _host.SignIn(owner);
 
         var group = await _groups.CreateAsync(new CreateProjectGroupRequest { Name = "Clients", Description = "External work" });
@@ -44,19 +45,25 @@ public class ProjectGroupServiceTests : IDisposable
         var member = await _host.CreateUserAsync("member");
         var outsider = await _host.CreateUserAsync("outsider");
         var admin = await _host.CreateUserAsync("admin", Roles.Admin);
+
         _host.SignIn(owner);
+
         var group = await _groups.CreateAsync(new CreateProjectGroupRequest { Name = "Clients" });
         var project = await _projects.CreateAsync(new CreateProjectRequest { Name = "Shared", ProjectGroupId = group.Id });
+
         await _projects.AddMemberAsync(project.Id, new AddProjectMemberRequest { UserId = member.Id, Role = ProjectMemberRole.Viewer });
 
         _host.SignIn(member);
+
         var asMember = await _groups.GetAccessibleGroupsAsync();
         var memberProjects = await _projects.GetAccessibleProjectsAsync(group.Id);
 
         _host.SignIn(outsider);
+
         var asOutsider = await _groups.GetAccessibleGroupsAsync();
 
         _host.SignIn(admin, Roles.Admin);
+
         var asAdmin = await _groups.GetAccessibleGroupsAsync();
 
         Assert.Equal(group.Id, Assert.Single(asMember).Id);
@@ -74,9 +81,12 @@ public class ProjectGroupServiceTests : IDisposable
         var owner = await _host.CreateUserAsync("owner");
         var member = await _host.CreateUserAsync("member");
         var admin = await _host.CreateUserAsync("admin", Roles.Admin);
+
         _host.SignIn(owner);
+
         var group = await _groups.CreateAsync(new CreateProjectGroupRequest { Name = "Clients" });
         var project = await _projects.CreateAsync(new CreateProjectRequest { Name = "Shared", ProjectGroupId = group.Id });
+
         await _projects.AddMemberAsync(project.Id, new AddProjectMemberRequest { UserId = member.Id, Role = ProjectMemberRole.Editor });
 
         _host.SignIn(member);
@@ -84,6 +94,7 @@ public class ProjectGroupServiceTests : IDisposable
         await Assert.ThrowsAsync<ForbiddenAccessException>(() => _groups.DeleteAsync(group.Id));
 
         _host.SignIn(owner);
+
         var renamed = await _groups.UpdateAsync(group.Id, new UpdateProjectGroupRequest { Name = "Customers" });
 
         _host.SignIn(admin, Roles.Admin);
@@ -98,11 +109,14 @@ public class ProjectGroupServiceTests : IDisposable
     public async Task DeletingAGroup_KeepsItsProjects_WithoutAGroup()
     {
         var owner = await _host.CreateUserAsync("owner");
+
         _host.SignIn(owner);
+
         var group = await _groups.CreateAsync(new CreateProjectGroupRequest { Name = "Clients" });
         var project = await _projects.CreateAsync(new CreateProjectRequest { Name = "Kept", ProjectGroupId = group.Id });
 
         await _groups.DeleteAsync(group.Id);
+
         var kept = await _projects.GetByIdAsync(project.Id);
 
         Assert.Null(kept.ProjectGroupId);
@@ -114,10 +128,13 @@ public class ProjectGroupServiceTests : IDisposable
     {
         var owner = await _host.CreateUserAsync("owner");
         var other = await _host.CreateUserAsync("other");
+
         _host.SignIn(owner);
+
         var group = await _groups.CreateAsync(new CreateProjectGroupRequest { Name = "Clients" });
 
         _host.SignIn(other);
+
         var ownProject = await _projects.CreateAsync(new CreateProjectRequest { Name = "Own" });
 
         await Assert.ThrowsAsync<ForbiddenAccessException>(() => _projects.CreateAsync(new CreateProjectRequest { Name = "Planted", ProjectGroupId = group.Id }));

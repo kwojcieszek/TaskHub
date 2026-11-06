@@ -17,12 +17,12 @@ public sealed class TokenForge
 {
     private readonly JwtOptions _options;
 
+    public string SigningKey => _options.SigningKey;
+
     public TokenForge(JwtOptions options)
     {
         _options = options;
     }
-
-    public string SigningKey => _options.SigningKey;
 
     /// <summary>The claims a genuine access token of the given user carries.</summary>
     public static List<Claim> AccessClaims(Guid userId, string userName, int tokenVersion, params string[] roles)
@@ -37,6 +37,26 @@ public sealed class TokenForge
         claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
 
         return claims;
+    }
+
+    /// <summary>Rewrites the payload of a genuine token and keeps its original signature.</summary>
+    public static string TamperPayload(string token, Action<JsonObject> change)
+    {
+        var parts = token.Split('.');
+        var payload = JsonNode.Parse(Base64UrlEncoder.Decode(parts[1]))!.AsObject();
+
+        change(payload);
+
+        return $"{parts[0]}.{Base64UrlEncoder.Encode(payload.ToJsonString())}.{parts[2]}";
+    }
+
+    /// <summary>Declares the token unsigned ("alg": "none") and drops the signature.</summary>
+    public static string StripSignature(string token)
+    {
+        var parts = token.Split('.');
+        var header = Base64UrlEncoder.Encode(JsonSerializer.Serialize(new { alg = "none", typ = "JWT" }));
+
+        return $"{header}.{parts[1]}.";
     }
 
     public string Create(
@@ -59,25 +79,5 @@ public sealed class TokenForge
             signingCredentials: credentials);
 
         return new JwtSecurityTokenHandler().WriteToken(token);
-    }
-
-    /// <summary>Rewrites the payload of a genuine token and keeps its original signature.</summary>
-    public static string TamperPayload(string token, Action<JsonObject> change)
-    {
-        var parts = token.Split('.');
-        var payload = JsonNode.Parse(Base64UrlEncoder.Decode(parts[1]))!.AsObject();
-
-        change(payload);
-
-        return $"{parts[0]}.{Base64UrlEncoder.Encode(payload.ToJsonString())}.{parts[2]}";
-    }
-
-    /// <summary>Declares the token unsigned ("alg": "none") and drops the signature.</summary>
-    public static string StripSignature(string token)
-    {
-        var parts = token.Split('.');
-        var header = Base64UrlEncoder.Encode(JsonSerializer.Serialize(new { alg = "none", typ = "JWT" }));
-
-        return $"{header}.{parts[1]}.";
     }
 }

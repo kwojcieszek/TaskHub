@@ -7,11 +7,11 @@ namespace TaskHub.IntegrationTests.Security;
 /// </summary>
 public class AttachmentAccessMatrixTests : AccessMatrixTestsBase
 {
+    public static TheoryData<string, Actor> Cases => AccessOperations.Cases(AccessArea.Attachment);
+
     public AttachmentAccessMatrixTests(TaskHubApiFactory factory) : base(factory)
     {
     }
-
-    public static TheoryData<string, Actor> Cases => AccessOperations.Cases(AccessArea.Attachment);
 
     [Theory]
     [MemberData(nameof(Cases))]

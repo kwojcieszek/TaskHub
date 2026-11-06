@@ -6,16 +6,16 @@ namespace TaskHub.IntegrationTests.Support;
 /// </summary>
 public sealed class CrossUserContext
 {
+    public TaskOwner Attacker { get; }
+
+    public TaskOwner Victim { get; }
+
+    public TaskOwner Third { get; }
+
     public CrossUserContext(TaskOwner attacker, TaskOwner victim, TaskOwner third)
     {
         Attacker = attacker;
         Victim = victim;
         Third = third;
     }
-
-    public TaskOwner Attacker { get; }
-
-    public TaskOwner Victim { get; }
-
-    public TaskOwner Third { get; }
 }

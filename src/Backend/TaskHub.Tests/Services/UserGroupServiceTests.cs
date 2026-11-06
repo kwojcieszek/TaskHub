@@ -38,6 +38,7 @@ public class UserGroupServiceTests : IDisposable
     {
         var user = await _host.CreateUserAsync("anna");
         var group = await _groups.CreateAsync(new CreateUserGroupRequest { Name = "Developers", Description = "Old" });
+
         await _groups.AddMemberAsync(group.Id, new AddUserGroupMemberRequest { UserId = user.Id });
 
         var updated = await _groups.UpdateAsync(group.Id, new UpdateUserGroupRequest { Name = "  Engineers  ", Description = "  " });
@@ -70,6 +71,7 @@ public class UserGroupServiceTests : IDisposable
         var member = await _host.CreateUserAsync("member");
         var project = await _host.CreateProjectAsync(owner);
         var team = await _host.CreateTeamAsync("Developers", member);
+
         await _host.AddTeamAsync(project, owner, team, TaskHub.Domain.Enums.ProjectMemberRole.Editor);
 
         await _groups.UpdateAsync(team.Id, new UpdateUserGroupRequest { Name = "Engineers" });
@@ -102,6 +104,7 @@ public class UserGroupServiceTests : IDisposable
         var user = await _host.CreateUserAsync("anna");
         var other = await _host.CreateUserAsync("bartek");
         var group = await _groups.CreateAsync(new CreateUserGroupRequest { Name = "Developers" });
+
         await _groups.AddMemberAsync(group.Id, new AddUserGroupMemberRequest { UserId = user.Id });
 
         await _groups.RemoveMemberAsync(group.Id, user.Id);
@@ -116,6 +119,7 @@ public class UserGroupServiceTests : IDisposable
     {
         var user = await _host.CreateUserAsync("anna");
         var group = await _groups.CreateAsync(new CreateUserGroupRequest { Name = "Developers" });
+
         await _groups.AddMemberAsync(group.Id, new AddUserGroupMemberRequest { UserId = user.Id });
 
         await _groups.DeleteAsync(group.Id);
@@ -131,6 +135,7 @@ public class UserGroupServiceTests : IDisposable
     {
         var user = await _host.CreateUserAsync("anna");
         var group = await _groups.CreateAsync(new CreateUserGroupRequest { Name = "Developers" });
+
         await _groups.AddMemberAsync(group.Id, new AddUserGroupMemberRequest { UserId = user.Id });
 
         await _host.Users.DeleteAsync(user);

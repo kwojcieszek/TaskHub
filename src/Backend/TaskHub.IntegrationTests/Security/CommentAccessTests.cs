@@ -78,6 +78,7 @@ public class CommentAccessTests : IClassFixture<TaskHubApiFactory>
         }
 
         var comments = await scenario.Cast.Owner.GetAsync<List<CommentDto>>(ApiRoutes.ProjectComments(project));
+
         Assert.Equal("Private note", Assert.Single(comments).Content);
     }
 
@@ -136,6 +137,7 @@ public class CommentAccessTests : IClassFixture<TaskHubApiFactory>
         await deleteAgain.ShouldBeAsync(HttpStatusCode.NotFound);
 
         var left = await cast.Owner.GetAsync<List<CommentDto>>(ApiRoutes.ProjectComments(project));
+
         Assert.Equal(byOwner.Id, Assert.Single(left).Id);
     }
 
@@ -164,6 +166,7 @@ public class CommentAccessTests : IClassFixture<TaskHubApiFactory>
         Assert.Empty(ownProjectComments);
 
         var untouched = Assert.Single(await mine.Cast.Owner.GetAsync<List<CommentDto>>(ApiRoutes.TaskComments(mine.Project.Id, mine.LeafTask.Id)));
+
         Assert.Equal("Foreign note", untouched.Content);
     }
 
@@ -232,6 +235,7 @@ public class CommentAccessTests : IClassFixture<TaskHubApiFactory>
         var scenario = await ProjectScenario.CreateAsync(_factory);
         var owner = scenario.Cast.Owner;
         var project = scenario.Project.Id;
+
         await owner.CommentOnTaskAsync(project, scenario.ParentTask.Id, "On the parent");
         await owner.CommentOnTaskAsync(project, scenario.SubTask.Id, "On the subtask");
         await owner.CommentOnTaskAsync(project, scenario.LeafTask.Id, "On another task");
@@ -254,6 +258,7 @@ public class CommentAccessTests : IClassFixture<TaskHubApiFactory>
         var scenario = await ProjectScenario.CreateAsync(_factory);
         var owner = scenario.Cast.Owner;
         var project = scenario.Project.Id;
+
         await owner.CommentOnProjectAsync(project, "On the project");
         await owner.CommentOnTaskAsync(project, scenario.SubTask.Id, "On the subtask");
         await scenario.Cast.Viewer.CommentOnTaskAsync(project, scenario.LeafTask.Id, "On a task");
@@ -272,7 +277,9 @@ public class CommentAccessTests : IClassFixture<TaskHubApiFactory>
         var owner = await _factory.CreateUserAsync("commentowner");
         var author = await _factory.CreateUserAsync("commentauthor");
         var project = await owner.CreateProjectAsync("Outlives its author");
+
         await owner.AddMemberAsync(project.Id, author.UserId, Domain.Enums.ProjectMemberRole.Viewer);
+
         var comment = await author.CommentOnProjectAsync(project.Id, "Left behind");
 
         var delete = await admin.DeleteAsync(ApiRoutes.AdminUser(author.UserId));
@@ -291,7 +298,9 @@ public class CommentAccessTests : IClassFixture<TaskHubApiFactory>
         var owner = await _factory.CreateUserAsync("commentowner");
         var member = await _factory.CreateUserAsync("commentformer");
         var project = await owner.CreateProjectAsync("Left by a member");
+
         await owner.AddMemberAsync(project.Id, member.UserId, Domain.Enums.ProjectMemberRole.Editor);
+
         var comment = await member.CommentOnProjectAsync(project.Id, "Before leaving");
 
         var removal = await owner.DeleteAsync(ApiRoutes.ProjectMember(project.Id, member.UserId));
@@ -305,6 +314,7 @@ public class CommentAccessTests : IClassFixture<TaskHubApiFactory>
         await delete.ShouldBeAsync(HttpStatusCode.Forbidden);
 
         var kept = Assert.Single(await owner.GetAsync<List<CommentDto>>(ApiRoutes.ProjectComments(project.Id)));
+
         Assert.Equal("Before leaving", kept.Content);
     }
 

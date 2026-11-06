@@ -113,6 +113,7 @@ public class PasswordPolicyTests : IDisposable
     private async Task SavePolicyAsync(PasswordPolicyDto policy)
     {
         var settings = await _settings.GetAsync();
+
         settings.PasswordPolicy = policy;
 
         await _settings.UpdateAsync(settings);

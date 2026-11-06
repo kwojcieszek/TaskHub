@@ -26,7 +26,7 @@ $tones: (
   --app-bar-bg: var(--p-surface-0);
   --app-bar-shadow: 0 1px 0 var(--app-border), 0 4px 16px rgba(30, 41, 59, 0.05);
   --app-hero-bg: linear-gradient(135deg, #4c94f8 0%, #6eaefa 60%, #a3d0fd 100%);
-  --app-menu-active-bg: linear-gradient(135deg, #4c94f8 0%, #6eaefa 100%);
+  --app-menu-active-bg: linear-gradient(135deg, #9a9aa3 0%, #b4b4bb 100%);
   --app-accent: var(--p-primary-color);
   --app-radius: 16px;
   // Corners of everything that is clicked: the same as the buttons of the component library, and one step
@@ -57,7 +57,7 @@ $tones: (
   --app-bar-bg: var(--p-surface-900);
   --app-bar-shadow: 0 1px 0 var(--app-border), 0 4px 16px rgba(0, 0, 0, 0.3);
   --app-hero-bg: linear-gradient(135deg, #111a2e 0%, #1e2f7a 60%, #2550e0 100%);
-  --app-menu-active-bg: linear-gradient(135deg, #232ea0 0%, #2f5be0 100%);
+  --app-menu-active-bg: linear-gradient(135deg, #4b4b52 0%, #63636b 100%);
 
   @each $name, $tone in $tones {
     --tone-#{$name}-fg: #{map.get($tone, fg-dark)};

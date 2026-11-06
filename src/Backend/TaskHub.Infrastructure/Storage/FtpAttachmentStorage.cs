@@ -64,6 +64,7 @@ public class FtpAttachmentStorage : IAttachmentStorage
         catch
         {
             await buffer.DisposeAsync();
+
             throw;
         }
     }
@@ -83,6 +84,7 @@ public class FtpAttachmentStorage : IAttachmentStorage
     private async Task<AsyncFtpClient> ConnectAsync(CancellationToken cancellationToken)
     {
         var client = new AsyncFtpClient(_options.Host, _options.UserName, _options.Password, _options.Port);
+
         client.Config.EncryptionMode = _options.UseSsl ? FtpEncryptionMode.Explicit : FtpEncryptionMode.None;
 
         try
@@ -92,6 +94,7 @@ public class FtpAttachmentStorage : IAttachmentStorage
         catch
         {
             await client.DisposeAsync();
+
             throw;
         }
 

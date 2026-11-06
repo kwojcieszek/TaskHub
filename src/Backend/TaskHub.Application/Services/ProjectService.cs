@@ -209,53 +209,16 @@ public class ProjectService : IProjectService
         return result;
     }
 
-    // People who are in the project through a team are listed with the role the team gives them.
-    private async Task AddTeamMembersAsync(Guid projectId, List<ProjectMemberDto> result, CancellationToken cancellationToken)
-    {
-        var teams = await _dbContext.ProjectTeams
-            .AsNoTracking()
-            .Include(t => t.UserGroup!)
-            .ThenInclude(g => g.Members)
-            .ThenInclude(m => m.User)
-            .Where(t => t.ProjectId == projectId)
-            .OrderBy(t => t.UserGroup!.Name)
-            .ToListAsync(cancellationToken);
-
-        foreach (var team in teams)
-        {
-            foreach (var teamMember in team.UserGroup!.Members.Where(m => m.User is not null))
-            {
-                var entry = result.FirstOrDefault(member => member.UserId == teamMember.UserId);
-
-                if (entry is null)
-                {
-                    entry = new ProjectMemberDto
-                    {
-                        UserId = teamMember.UserId,
-                        UserName = teamMember.User!.UserName ?? string.Empty,
-                        DisplayName = teamMember.User.DisplayName,
-                        Role = team.Role.ToString()
-                    };
-
-                    result.Add(entry);
-                }
-                else if (Enum.TryParse<ProjectMemberRole>(entry.Role, out var current) && ProjectAccess.IsStronger(team.Role, current))
-                {
-                    entry.Role = team.Role.ToString();
-                }
-
-                entry.Teams.Add(team.UserGroup.Name);
-            }
-        }
-    }
-
     public async Task<ProjectMemberDto> AddMemberAsync(Guid projectId, AddProjectMemberRequest request, CancellationToken cancellationToken = default)
     {
         await _accessGuard.EnsureCanManageAsync(projectId, cancellationToken);
 
         // A number outside the enum would be stored as a role none of the access checks knows.
         if (!await _dbContext.Users.AnyAsync(u => u.Id == request.UserId, cancellationToken))
+        {
             throw new NotFoundException("User not found.");
+        }
+
         if (!Enum.IsDefined(request.Role))
         {
             throw new ValidationFailedException(new[] { "The role must be Owner, Editor or Viewer." });
@@ -352,6 +315,46 @@ public class ProjectService : IProjectService
         }
 
         return trimmed;
+    }
+
+    // People who are in the project through a team are listed with the role the team gives them.
+    private async Task AddTeamMembersAsync(Guid projectId, List<ProjectMemberDto> result, CancellationToken cancellationToken)
+    {
+        var teams = await _dbContext.ProjectTeams
+            .AsNoTracking()
+            .Include(t => t.UserGroup!)
+            .ThenInclude(g => g.Members)
+            .ThenInclude(m => m.User)
+            .Where(t => t.ProjectId == projectId)
+            .OrderBy(t => t.UserGroup!.Name)
+            .ToListAsync(cancellationToken);
+
+        foreach (var team in teams)
+        {
+            foreach (var teamMember in team.UserGroup!.Members.Where(m => m.User is not null))
+            {
+                var entry = result.FirstOrDefault(member => member.UserId == teamMember.UserId);
+
+                if (entry is null)
+                {
+                    entry = new ProjectMemberDto
+                    {
+                        UserId = teamMember.UserId,
+                        UserName = teamMember.User!.UserName ?? string.Empty,
+                        DisplayName = teamMember.User.DisplayName,
+                        Role = team.Role.ToString()
+                    };
+
+                    result.Add(entry);
+                }
+                else if (Enum.TryParse<ProjectMemberRole>(entry.Role, out var current) && ProjectAccess.IsStronger(team.Role, current))
+                {
+                    entry.Role = team.Role.ToString();
+                }
+
+                entry.Teams.Add(team.UserGroup.Name);
+            }
+        }
     }
 
     private async Task<Project> LoadProjectAsync(Guid projectId, CancellationToken cancellationToken)

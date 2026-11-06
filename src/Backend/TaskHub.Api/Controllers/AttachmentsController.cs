@@ -23,6 +23,7 @@ public class AttachmentsController : ApiControllerBase
     public async Task<ActionResult<AttachmentLimitsDto>> Limits(CancellationToken cancellationToken)
     {
         var limits = await _attachmentService.GetLimitsAsync(cancellationToken);
+
         return Ok(limits);
     }
 
@@ -30,6 +31,7 @@ public class AttachmentsController : ApiControllerBase
     public async Task<ActionResult<IReadOnlyCollection<AttachmentDto>>> FindBySha256([FromQuery, BindRequired] Guid taskId, string sha256, CancellationToken cancellationToken)
     {
         var attachments = await _attachmentService.FindBySha256Async(taskId, sha256, cancellationToken);
+
         return Ok(attachments);
     }
 
@@ -37,6 +39,7 @@ public class AttachmentsController : ApiControllerBase
     public async Task<IActionResult> DownloadBySha256([FromQuery, BindRequired] Guid taskId, string sha256, CancellationToken cancellationToken)
     {
         var content = await _attachmentService.DownloadBySha256Async(taskId, sha256, cancellationToken);
+
         return File(content.Content, content.ContentType, content.FileName);
     }
 }

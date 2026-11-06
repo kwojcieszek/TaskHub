@@ -31,9 +31,11 @@ public partial class CapturingEmailSender : IEmailSender
     public IDictionary<string, string> LastLinkQueryFor(string address)
     {
         var message = SentTo(address).LastOrDefault();
+
         Assert.NotNull(message);
 
         var link = LinkPattern().Match(message.TextBody);
+
         Assert.True(link.Success, $"The message has no link: {message.TextBody}");
 
         var query = new Uri(link.Value).Query;

@@ -98,7 +98,8 @@
     width: 1.8rem;
     height: 1.8rem;
     border-radius: 50%;
-    background: var(--app-hero-bg);
+    // Drawn like the active item of the top menu it sits in.
+    background: var(--app-menu-active-bg);
     color: #ffffff;
     display: flex;
     align-items: center;

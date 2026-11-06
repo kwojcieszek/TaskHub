@@ -17,6 +17,7 @@ public class FileSystemAttachmentStorageTests : IDisposable
         Directory.CreateDirectory(_contentRoot);
 
         var options = Options.Create(new AttachmentStorageOptions { FileSystem = new FileSystemStorageOptions { RootPath = "attachments" } });
+
         _storage = new FileSystemAttachmentStorage(options, new FakeHostEnvironment(_contentRoot));
     }
 
@@ -34,7 +35,9 @@ public class FileSystemAttachmentStorageTests : IDisposable
         var content = new byte[] { 1, 2, 3, 4, 5 };
 
         var before = await _storage.ExistsAsync(Key);
+
         await _storage.SaveAsync(Key, new MemoryStream(content));
+
         var after = await _storage.ExistsAsync(Key);
 
         byte[] read;
@@ -42,7 +45,9 @@ public class FileSystemAttachmentStorageTests : IDisposable
         await using (var stream = await _storage.OpenReadAsync(Key))
         {
             using var buffer = new MemoryStream();
+
             await stream.CopyToAsync(buffer);
+
             read = buffer.ToArray();
         }
 

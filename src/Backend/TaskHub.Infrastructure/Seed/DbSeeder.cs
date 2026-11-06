@@ -68,6 +68,7 @@ public class DbSeeder
         if (await _userManager.CheckPasswordAsync(admin, _defaultAdmin.Password))
         {
             admin.MustChangePassword = true;
+
             await _userManager.UpdateAsync(admin);
         }
     }

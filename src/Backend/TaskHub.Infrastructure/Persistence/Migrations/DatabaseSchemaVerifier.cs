@@ -87,6 +87,7 @@ public class DatabaseSchemaVerifier
     private async Task<bool> CanQueryAsync(string selectList, string tableName, CancellationToken cancellationToken)
     {
         await using var command = _dbContext.Database.GetDbConnection().CreateCommand();
+
         command.CommandText = $"SELECT {selectList} FROM {tableName} WHERE 1 = 0";
 
         try

@@ -1,5 +1,27 @@
 <form [formGroup]="form" (ngSubmit)="submit()" class="dialog-form task-dialog">
   <div class="task-dialog__main">
+    @if (selectsProject) {
+      <div class="field">
+        <label for="project">{{ 'tasks.project' | translate }}</label>
+        <p-select
+          appendTo="body"
+          inputId="project"
+          formControlName="projectId"
+          [options]="projectOptions"
+          optionLabel="label"
+          optionValue="value"
+          [filter]="projectOptions.length > 7"
+          filterBy="label"
+          [placeholder]="'tasks.selectProject' | translate"
+          (onChange)="onProjectChange($event.value)"
+          styleClass="w-full"
+        />
+        @if (!canCreateInProject()) {
+          <small class="p-error">{{ 'tasks.projectReadOnly' | translate }}</small>
+        }
+      </div>
+    }
+
     <div class="field">
       <label for="title">{{ 'tasks.titleField' | translate }}</label>
       <input pInputText appDictation id="title" formControlName="title" class="w-full" />
@@ -35,7 +57,7 @@
 
       <div class="field">
         <label for="assignee">{{ 'tasks.assignee' | translate }}</label>
-        <p-select appendTo="body" inputId="assignee" formControlName="assignedUserId" [options]="assigneeOptions" optionLabel="label" optionValue="value" styleClass="w-full" />
+        <p-select appendTo="body" inputId="assignee" formControlName="assignedUserId" [options]="assigneeOptions()" [loading]="loadingMembers()" optionLabel="label" optionValue="value" styleClass="w-full" />
       </div>
     </div>
 
@@ -81,6 +103,6 @@
 
   <div class="dialog-actions task-dialog__actions">
     <p-button [label]="'common.cancel' | translate" severity="secondary" [outlined]="true" type="button" (onClick)="cancel()" />
-    <p-button [label]="'common.save' | translate" icon="pi pi-check" type="submit" [disabled]="form.invalid || saving()" [loading]="saving()" />
+    <p-button [label]="'common.save' | translate" icon="pi pi-check" type="submit" [disabled]="form.invalid || saving() || !canCreateInProject()" [loading]="saving()" />
   </div>
 </form>

@@ -48,6 +48,19 @@
     </div>
   </div>
 
+  <div class="setting-row tone-amber">
+    <span class="setting-row__icon"><i class="pi pi-user-plus"></i></span>
+    <div class="setting-row__body">
+      <label class="setting-row__title" for="assignToMeByDefault">{{ 'settings.assignToMe' | translate }}</label>
+      <span class="setting-row__hint">{{ 'settings.assignToMeHint' | translate }}</span>
+    </div>
+    <p-toggleswitch
+      inputId="assignToMeByDefault"
+      [ngModel]="preferences.assignToMeByDefault()"
+      (ngModelChange)="preferences.setAssignToMeByDefault($event)"
+    />
+  </div>
+
   <div class="setting-row tone-green">
     <span class="setting-row__icon"><i class="pi pi-shield"></i></span>
     <div class="setting-row__body">

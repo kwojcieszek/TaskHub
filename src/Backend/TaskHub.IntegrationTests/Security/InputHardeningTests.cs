@@ -16,11 +16,6 @@ public class InputHardeningTests : IClassFixture<TaskHubApiFactory>
 {
     private readonly TaskHubApiFactory _factory;
 
-    public InputHardeningTests(TaskHubApiFactory factory)
-    {
-        _factory = factory;
-    }
-
     public static TheoryData<string> HostileTexts => new()
     {
         "<script>alert(document.cookie)</script>",
@@ -41,6 +36,11 @@ public class InputHardeningTests : IClassFixture<TaskHubApiFactory>
         "line one\r\nSet-Cookie: injected=1",
         "𝓤𝓷𝓲𝓬𝓸𝓭𝓮 ✓ 日本語 🚀"
     };
+
+    public InputHardeningTests(TaskHubApiFactory factory)
+    {
+        _factory = factory;
+    }
 
     [Theory]
     [MemberData(nameof(HostileTexts))]
@@ -87,6 +87,7 @@ public class InputHardeningTests : IClassFixture<TaskHubApiFactory>
         // Everything is still there afterwards.
         var users = await admin.GetAsync(ApiRoutes.AdminUsers);
         var projects = await user.GetAsync(ApiRoutes.Projects);
+
         await users.ShouldBeAsync(HttpStatusCode.OK);
         await projects.ShouldBeAsync(HttpStatusCode.OK);
     }
@@ -286,6 +287,7 @@ public class InputHardeningTests : IClassFixture<TaskHubApiFactory>
         await badAssignee.ReadErrorsAsync(HttpStatusCode.BadRequest);
 
         var tasks = await user.GetAsync<List<TaskItemDto>>(ApiRoutes.Tasks(project.Id));
+
         Assert.Empty(tasks);
     }
 
@@ -322,11 +324,13 @@ public class InputHardeningTests : IClassFixture<TaskHubApiFactory>
     {
         // The storage key is the content hash, so a hostile name cannot escape the attachment folder.
         var (user, project, task) = await CreateTaskAsync();
+
         var content = Guid.NewGuid().ToByteArray();
 
         var attachment = await user.UploadAttachmentAsync(project.Id, task.Id, "../../../../planted.txt", content);
 
         var stored = Directory.GetFiles(_factory.AttachmentsPath, "*", SearchOption.AllDirectories);
+
         Assert.Contains(stored, path => Path.GetFileName(path).StartsWith(attachment.Sha256, StringComparison.OrdinalIgnoreCase));
         Assert.DoesNotContain(stored, path => path.Contains("planted", StringComparison.OrdinalIgnoreCase));
         Assert.Empty(Directory.GetFiles(Path.GetDirectoryName(_factory.AttachmentsPath)!, "planted*", SearchOption.AllDirectories));
@@ -336,6 +340,7 @@ public class InputHardeningTests : IClassFixture<TaskHubApiFactory>
     public async Task AttachmentUpload_RejectsEmptyOversizedAndNamelessFiles()
     {
         var (user, project, task) = await CreateTaskAsync();
+
         var url = ApiRoutes.Attachments(project.Id, task.Id);
 
         var empty = await user.UploadAsync(url, "empty.txt", Array.Empty<byte>());
@@ -351,6 +356,7 @@ public class InputHardeningTests : IClassFixture<TaskHubApiFactory>
         await noFile.ShouldBeAsync(HttpStatusCode.BadRequest);
 
         var attachments = await user.GetAsync<List<AttachmentDto>>(url);
+
         Assert.Single(attachments);
     }
 
@@ -362,6 +368,7 @@ public class InputHardeningTests : IClassFixture<TaskHubApiFactory>
     {
         // Served inline, an uploaded page or script would run in the application's origin.
         var (user, project, task) = await CreateTaskAsync();
+
         var attachment = await user.UploadAttachmentAsync(project.Id, task.Id, "payload.html", Encoding.UTF8.GetBytes(content + Guid.NewGuid()), contentType);
 
         var byId = await user.GetAsync(ApiRoutes.AttachmentContent(project.Id, task.Id, attachment.Id));
@@ -396,6 +403,7 @@ public class InputHardeningTests : IClassFixture<TaskHubApiFactory>
     public async Task AttachmentHash_RequiresTheTask()
     {
         var (user, _, _) = await CreateTaskAsync();
+
         const string sha256 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 
         var withoutTask = await user.GetAsync($"{ApiRoutes.Root}/attachments/{sha256}");

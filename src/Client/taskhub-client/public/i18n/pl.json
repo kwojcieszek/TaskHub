@@ -71,6 +71,8 @@
     "languageHint": "Język interfejsu aplikacji.",
     "theme": "Motyw",
     "themeHint": "Jasny, ciemny albo zgodny z ustawieniami systemu.",
+    "assignToMe": "Przypisuj nowe zadania do mnie",
+    "assignToMeHint": "Tworzone przez Ciebie zadania są domyślnie przypisane do Ciebie.",
     "security": "Bezpieczeństwo",
     "openProfile": "Przejdź do profilu"
   },
@@ -207,6 +209,9 @@
     "deleteWithSubTasksConfirm": "Usunąć to zadanie razem z jego podzadaniami? Tej operacji nie można cofnąć.",
     "title": "Zadania",
     "newTask": "Nowe zadanie",
+    "project": "Projekt",
+    "selectProject": "Wybierz projekt",
+    "projectReadOnly": "W tym projekcie masz tylko podgląd, więc nie możesz dodawać do niego zadań.",
     "newSubTask": "Nowe podzadanie",
     "previewDescription": "Podgląd opisu",
     "noTasks": "Brak zadań w tym projekcie.",

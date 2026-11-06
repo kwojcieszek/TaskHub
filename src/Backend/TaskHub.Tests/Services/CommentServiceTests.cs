@@ -28,6 +28,7 @@ public class CommentServiceTests : IDisposable
     public async Task ProjectAndTaskComments_AreKeptApart()
     {
         var (project, _, _, _) = await ArrangeAsync();
+
         var task = await CreateTaskAsync(project);
         var otherTask = await CreateTaskAsync(project);
 
@@ -50,8 +51,11 @@ public class CommentServiceTests : IDisposable
     public async Task Comments_AreListedOldestFirst_WithTheAuthorsName()
     {
         var (project, owner, _, viewer) = await ArrangeAsync();
+
         var first = await _comments.AddToProjectAsync(project.Id, Content("First"));
+
         _host.SignIn(viewer);
+
         var second = await _comments.AddToProjectAsync(project.Id, Content("Second"));
 
         var listed = await _comments.GetForProjectAsync(project.Id);
@@ -67,6 +71,7 @@ public class CommentServiceTests : IDisposable
     public async Task EveryMember_MayComment_AndAnOutsiderMayNot()
     {
         var (project, _, editor, viewer) = await ArrangeAsync();
+
         var task = await CreateTaskAsync(project);
         var outsider = await _host.CreateUserAsync("outsider");
 
@@ -92,6 +97,7 @@ public class CommentServiceTests : IDisposable
     public async Task BlankComment_IsRejected(string content)
     {
         var (project, _, _, _) = await ArrangeAsync();
+
         var existing = await _comments.AddToProjectAsync(project.Id, Content("Existing"));
 
         await Assert.ThrowsAsync<ValidationFailedException>(() => _comments.AddToProjectAsync(project.Id, Content(content)));
@@ -103,6 +109,7 @@ public class CommentServiceTests : IDisposable
     public async Task TaskComment_NeedsATaskOfTheSameProject()
     {
         var (project, owner, _, _) = await ArrangeAsync();
+
         var otherProject = await _host.CreateProjectAsync(owner, "Other");
         var taskOfOther = await CreateTaskAsync(otherProject);
 
@@ -115,8 +122,11 @@ public class CommentServiceTests : IDisposable
     public async Task Update_IsForTheAuthorOnly()
     {
         var (project, owner, editor, viewer) = await ArrangeAsync();
+
         var admin = await _host.CreateUserAsync("admin", Roles.Admin);
+
         _host.SignIn(viewer);
+
         var comment = await _comments.AddToProjectAsync(project.Id, Content("Original"));
 
         _host.SignIn(owner);
@@ -127,6 +137,7 @@ public class CommentServiceTests : IDisposable
         await Assert.ThrowsAsync<ForbiddenAccessException>(() => _comments.UpdateAsync(project.Id, comment.Id, Content("By the administrator")));
 
         _host.SignIn(viewer);
+
         var updated = await _comments.UpdateAsync(project.Id, comment.Id, Content("  Corrected "));
 
         Assert.Equal("Corrected", updated.Content);
@@ -138,8 +149,11 @@ public class CommentServiceTests : IDisposable
     public async Task Delete_IsForTheAuthorTheOwnerAndAnAdministrator()
     {
         var (project, owner, editor, viewer) = await ArrangeAsync();
+
         var admin = await _host.CreateUserAsync("admin", Roles.Admin);
+
         _host.SignIn(viewer);
+
         var forAuthor = await _comments.AddToProjectAsync(project.Id, Content("For the author"));
         var forOwner = await _comments.AddToProjectAsync(project.Id, Content("For the owner"));
         var forAdmin = await _comments.AddToProjectAsync(project.Id, Content("For the administrator"));
@@ -162,13 +176,18 @@ public class CommentServiceTests : IDisposable
     public async Task Flags_TellTheCallerWhatTheyMayDo()
     {
         var (project, owner, editor, viewer) = await ArrangeAsync();
+
         _host.SignIn(viewer);
         await _comments.AddToProjectAsync(project.Id, Content("By the viewer"));
 
         var asAuthor = Assert.Single(await _comments.GetForProjectAsync(project.Id));
+
         _host.SignIn(editor);
+
         var asEditor = Assert.Single(await _comments.GetForProjectAsync(project.Id));
+
         _host.SignIn(owner);
+
         var asOwner = Assert.Single(await _comments.GetForProjectAsync(project.Id));
 
         Assert.True(asAuthor.CanEdit);
@@ -183,6 +202,7 @@ public class CommentServiceTests : IDisposable
     public async Task Comment_IsNotReachableThroughAnotherProject()
     {
         var (project, owner, _, _) = await ArrangeAsync();
+
         var otherProject = await _host.CreateProjectAsync(owner, "Other");
         var comment = await _comments.AddToProjectAsync(project.Id, Content("Here"));
 
@@ -195,10 +215,12 @@ public class CommentServiceTests : IDisposable
     public async Task DeletingATask_RemovesTheCommentsOfItAndItsSubTasks()
     {
         var (project, _, _, _) = await ArrangeAsync();
+
         var tasks = _host.Get<ITaskItemService>();
         var parent = await CreateTaskAsync(project);
         var subTask = await tasks.CreateAsync(project.Id, new CreateTaskItemRequest { Title = "Subtask", ParentTaskId = parent.Id });
         var other = await CreateTaskAsync(project);
+
         await _comments.AddToTaskAsync(project.Id, parent.Id, Content("On the parent"));
         await _comments.AddToTaskAsync(project.Id, subTask.Id, Content("On the subtask"));
         await _comments.AddToTaskAsync(project.Id, other.Id, Content("On another task"));
@@ -215,9 +237,11 @@ public class CommentServiceTests : IDisposable
     public async Task DeletingAProject_RemovesAllItsComments()
     {
         var (project, _, _, _) = await ArrangeAsync();
+
         var tasks = _host.Get<ITaskItemService>();
         var parent = await CreateTaskAsync(project);
         var subTask = await tasks.CreateAsync(project.Id, new CreateTaskItemRequest { Title = "Subtask", ParentTaskId = parent.Id });
+
         await _comments.AddToProjectAsync(project.Id, Content("On the project"));
         await _comments.AddToTaskAsync(project.Id, subTask.Id, Content("On the subtask"));
 
@@ -226,12 +250,18 @@ public class CommentServiceTests : IDisposable
         Assert.Equal(0, _host.Db.Comments.Count());
     }
 
+    private static SaveCommentRequest Content(string content)
+    {
+        return new SaveCommentRequest { Content = content };
+    }
+
     private async Task<(ProjectDto Project, User Owner, User Editor, User Viewer)> ArrangeAsync()
     {
         var owner = await _host.CreateUserAsync("owner");
         var editor = await _host.CreateUserAsync("editor");
         var viewer = await _host.CreateUserAsync("viewer");
         var project = await _host.CreateProjectAsync(owner);
+
         await _host.AddMemberAsync(project, owner, editor, ProjectMemberRole.Editor);
         await _host.AddMemberAsync(project, owner, viewer, ProjectMemberRole.Viewer);
 
@@ -241,10 +271,5 @@ public class CommentServiceTests : IDisposable
     private Task<TaskItemDto> CreateTaskAsync(ProjectDto project)
     {
         return _host.Get<ITaskItemService>().CreateAsync(project.Id, new CreateTaskItemRequest { Title = "Task" });
-    }
-
-    private static SaveCommentRequest Content(string content)
-    {
-        return new SaveCommentRequest { Content = content };
     }
 }

@@ -68,6 +68,7 @@ public class AuthServiceTests : IDisposable
 
         await Assert.ThrowsAsync<AuthenticationFailedException>(() => LoginAsync("anna", "wrong"));
         await Assert.ThrowsAsync<AuthenticationFailedException>(() => LoginAsync("nobody", "wrong"));
+
         var reasons = await _host.Db.UserActivityLogs.AsNoTracking().Where(log => log.Type == UserActivityType.Login).Select(log => log.FailureReason).ToListAsync();
 
         Assert.Contains(LoginFailureReason.InvalidPassword, reasons);
@@ -104,7 +105,9 @@ public class AuthServiceTests : IDisposable
     public async Task ChangePassword_ReplacesThePasswordAndEndsOtherSessions()
     {
         var user = await _host.CreateUserAsync("anna");
+
         user.MustChangePassword = true;
+
         await _host.Users.UpdateAsync(user);
 
         var response = await _auth.ChangePasswordAsync(user.Id, new ChangePasswordRequest
@@ -161,8 +164,11 @@ public class AuthServiceTests : IDisposable
     public async Task TwoFactor_VerifyRejectsAWrongCodeAndAnAccessTokenUsedAsTheFirstStep()
     {
         var user = await _host.CreateUserAsync("anna");
+
         await EnableTwoFactorAsync(user);
+
         var firstStep = await LoginAsync("anna", TestHost.DefaultPassword);
+
         var (accessToken, _) = _host.Get<IJwtTokenService>().CreateAccessToken(user, Array.Empty<string>());
 
         await Assert.ThrowsAsync<AuthenticationFailedException>(() => _auth.VerifyTwoFactorAsync(new TwoFactorVerifyRequest
@@ -181,6 +187,7 @@ public class AuthServiceTests : IDisposable
     public async Task TwoFactor_SetupCannotBeRestartedWhileItIsEnabled()
     {
         var user = await _host.CreateUserAsync("anna");
+
         await EnableTwoFactorAsync(user);
 
         await Assert.ThrowsAsync<ConflictException>(() => _auth.BeginTwoFactorSetupAsync(user.Id));
@@ -190,11 +197,14 @@ public class AuthServiceTests : IDisposable
     public async Task TwoFactor_DisableNeedsThePassword()
     {
         var user = await _host.CreateUserAsync("anna");
+
         await EnableTwoFactorAsync(user);
 
         await Assert.ThrowsAsync<ValidationFailedException>(
             () => _auth.DisableTwoFactorAsync(user.Id, new TwoFactorDisableRequest { Password = "wrong" }));
+
         var stillEnabled = user.TwoFactorEnabled;
+
         await _auth.DisableTwoFactorAsync(user.Id, new TwoFactorDisableRequest { Password = TestHost.DefaultPassword });
 
         Assert.True(stillEnabled);
@@ -206,7 +216,9 @@ public class AuthServiceTests : IDisposable
     {
         var user = await _host.CreateUserAsync("anna");
         var google = new GoogleUserInfo { Subject = "google-1", Email = "anna@example.test", EmailVerified = true };
+
         _host.Get<FakeGoogleTokenValidator>().Register("valid-token", google);
+
         var request = new GoogleTokenRequest { IdToken = "valid-token", Password = TestHost.DefaultPassword };
 
         // The matching e-mail address alone does not sign anyone in.
@@ -227,6 +239,7 @@ public class AuthServiceTests : IDisposable
         var first = await _host.CreateUserAsync("anna");
         var second = await _host.CreateUserAsync("jan");
         var validator = _host.Get<FakeGoogleTokenValidator>();
+
         validator.Register("verified", new GoogleUserInfo { Subject = "google-1", Email = "a@example.test", EmailVerified = true });
         validator.Register("unverified", new GoogleUserInfo { Subject = "google-2", Email = "b@example.test", EmailVerified = false });
         await _auth.LinkGoogleAsync(first.Id, new GoogleTokenRequest { IdToken = "verified", Password = TestHost.DefaultPassword });
@@ -242,6 +255,7 @@ public class AuthServiceTests : IDisposable
         var key = await EnableTwoFactorAsync(user);
         var login = await LoginAsync(user.UserName!, TestHost.DefaultPassword);
         var request = new TwoFactorVerifyRequest { TwoFactorToken = login.TwoFactorToken!, Code = CodeFor(key) };
+
         await _auth.VerifyTwoFactorAsync(request);
         await Assert.ThrowsAsync<AuthenticationFailedException>(() => _auth.VerifyTwoFactorAsync(request));
         Assert.Single(await _host.Db.UserSessions.ToListAsync());
@@ -253,6 +267,7 @@ public class AuthServiceTests : IDisposable
         var user = await _host.CreateUserAsync("revokedchallenge");
         var key = await EnableTwoFactorAsync(user);
         var login = await LoginAsync(user.UserName!, TestHost.DefaultPassword);
+
         await _auth.ChangePasswordAsync(user.Id, new ChangePasswordRequest { CurrentPassword = TestHost.DefaultPassword, NewPassword = "NewPassword2" });
         await Assert.ThrowsAsync<AuthenticationFailedException>(() => _auth.VerifyTwoFactorAsync(new TwoFactorVerifyRequest { TwoFactorToken = login.TwoFactorToken!, Code = CodeFor(key) }));
     }
@@ -261,6 +276,7 @@ public class AuthServiceTests : IDisposable
     public async Task GoogleLink_RequiresFreshPassword()
     {
         var user = await _host.CreateUserAsync("freshpassword");
+
         await Assert.ThrowsAsync<ValidationFailedException>(() => _auth.LinkGoogleAsync(user.Id, new GoogleTokenRequest { IdToken = "anything", Password = "wrong" }));
         Assert.Empty(await _host.Users.GetLoginsAsync(user));
     }
@@ -269,11 +285,15 @@ public class AuthServiceTests : IDisposable
     public async Task PasswordReset_MailsALinkThatSetsANewPasswordAndEndsSessions()
     {
         var user = await _host.CreateUserAsync("anna");
+
         user.MustChangePassword = true;
+
         await _host.Users.UpdateAsync(user);
 
         await _auth.RequestPasswordResetAsync(new ForgotPasswordRequest { Email = user.Email! });
+
         var message = Assert.Single(_host.Email.Sent);
+
         await _auth.ResetPasswordAsync(new ResetPasswordRequest { Email = user.Email!, Token = ResetTokenFrom(message.TextBody), NewPassword = "NewPassword2" });
 
         Assert.Equal(user.Email, message.To);
@@ -295,7 +315,9 @@ public class AuthServiceTests : IDisposable
     public async Task PasswordReset_LinkWorksOnlyOnce()
     {
         var user = await _host.CreateUserAsync("anna");
+
         await _auth.RequestPasswordResetAsync(new ForgotPasswordRequest { Email = user.Email! });
+
         var token = ResetTokenFrom(_host.Email.Sent.Single().TextBody);
 
         await _auth.ResetPasswordAsync(new ResetPasswordRequest { Email = user.Email!, Token = token, NewPassword = "NewPassword2" });
@@ -309,7 +331,9 @@ public class AuthServiceTests : IDisposable
     {
         var anna = await _host.CreateUserAsync("anna");
         var bob = await _host.CreateUserAsync("bob");
+
         await _auth.RequestPasswordResetAsync(new ForgotPasswordRequest { Email = anna.Email! });
+
         var annasToken = ResetTokenFrom(_host.Email.Sent.Single().TextBody);
 
         await Assert.ThrowsAsync<ValidationFailedException>(() => _auth.ResetPasswordAsync(new ResetPasswordRequest { Email = bob.Email!, Token = annasToken, NewPassword = "NewPassword2" }));
@@ -323,6 +347,7 @@ public class AuthServiceTests : IDisposable
     public async Task PasswordReset_IsUnavailableWithoutAMailServer()
     {
         var user = await _host.CreateUserAsync("anna");
+
         _host.Email.IsConfigured = false;
 
         var providers = await _auth.GetProvidersAsync();
@@ -351,28 +376,6 @@ public class AuthServiceTests : IDisposable
         };
     }
 
-    private async Task OpenRegistrationAsync()
-    {
-        var settings = _host.Get<ISecuritySettingsService>();
-        var current = await settings.GetAsync();
-        current.RegistrationEnabled = true;
-
-        await settings.UpdateAsync(current);
-    }
-
-    private Task<LoginResponse> LoginAsync(string userName, string password)
-    {
-        return _auth.LoginAsync(new LoginRequest { UserName = userName, Password = password });
-    }
-
-    private async Task<string> EnableTwoFactorAsync(User user)
-    {
-        var setup = await _auth.BeginTwoFactorSetupAsync(user.Id);
-        await _auth.EnableTwoFactorAsync(user.Id, CodeFor(setup.SharedKey));
-
-        return setup.SharedKey;
-    }
-
     private static string CodeFor(string sharedKey)
     {
         return new Totp(Base32Encoding.ToBytes(sharedKey)).ComputeTotp();
@@ -388,5 +391,29 @@ public class AuthServiceTests : IDisposable
         var query = QueryHelpers.ParseQuery(new Uri(ResetLinkFrom(body)).Query);
 
         return query["token"].ToString();
+    }
+
+    private async Task OpenRegistrationAsync()
+    {
+        var settings = _host.Get<ISecuritySettingsService>();
+        var current = await settings.GetAsync();
+
+        current.RegistrationEnabled = true;
+
+        await settings.UpdateAsync(current);
+    }
+
+    private Task<LoginResponse> LoginAsync(string userName, string password)
+    {
+        return _auth.LoginAsync(new LoginRequest { UserName = userName, Password = password });
+    }
+
+    private async Task<string> EnableTwoFactorAsync(User user)
+    {
+        var setup = await _auth.BeginTwoFactorSetupAsync(user.Id);
+
+        await _auth.EnableTwoFactorAsync(user.Id, CodeFor(setup.SharedKey));
+
+        return setup.SharedKey;
     }
 }

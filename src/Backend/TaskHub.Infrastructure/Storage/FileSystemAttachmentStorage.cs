@@ -25,6 +25,7 @@ public class FileSystemAttachmentStorage : IAttachmentStorage
     public async Task SaveAsync(string sha256, Stream content, CancellationToken cancellationToken = default)
     {
         var path = GetPath(sha256);
+
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
 
         // Written under a temporary name first so a failed upload never leaves a truncated file under the hash.

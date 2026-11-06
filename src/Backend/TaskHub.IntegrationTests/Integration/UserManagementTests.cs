@@ -35,6 +35,7 @@ public class UserManagementTests : IClassFixture<TaskHubApiFactory>
         Assert.False(created.TwoFactorEnabled);
 
         var users = await admin.GetAsync<List<AdminUserDto>>(ApiRoutes.AdminUsers);
+
         Assert.Contains(users, user => user.Id == created.Id);
     }
 
@@ -43,6 +44,7 @@ public class UserManagementTests : IClassFixture<TaskHubApiFactory>
     {
         var admin = await _factory.AdminAsync();
         var request = NewUser();
+
         request.DisplayName = "";
 
         var created = await admin.PostAsync<AdminUserDto>(ApiRoutes.AdminUsers, request, HttpStatusCode.Created);
@@ -56,12 +58,15 @@ public class UserManagementTests : IClassFixture<TaskHubApiFactory>
         var user = await _factory.CreatePendingUserAsync();
 
         var login = await _factory.LoginAsync(user);
+
         Assert.True(login.User!.MustChangePassword);
 
         var changed = await user.PostAsync<LoginResponse>(ApiRoutes.Password, new ChangePasswordRequest { CurrentPassword = user.Password, NewPassword = TaskHubApiFactory.UserPassword });
+
         Assert.False(changed.User!.MustChangePassword);
 
         user.Password = TaskHubApiFactory.UserPassword;
+
         var secondLogin = await _factory.LoginAsync(user);
 
         Assert.False(secondLogin.User!.MustChangePassword);
@@ -85,17 +90,21 @@ public class UserManagementTests : IClassFixture<TaskHubApiFactory>
         var existing = await _factory.CreatePendingUserAsync();
 
         var sameName = NewUser();
+
         sameName.UserName = existing.UserName;
 
         var sameNameOtherCase = NewUser();
+
         sameNameOtherCase.UserName = existing.UserName.ToUpperInvariant();
 
         var sameEmail = NewUser();
+
         sameEmail.Email = existing.Email;
 
         foreach (var request in new[] { sameName, sameNameOtherCase, sameEmail })
         {
             var response = await admin.PostAsync(ApiRoutes.AdminUsers, request);
+
             await response.ReadErrorsAsync(HttpStatusCode.BadRequest);
         }
     }
@@ -132,10 +141,12 @@ public class UserManagementTests : IClassFixture<TaskHubApiFactory>
         });
 
         var created = await response.ReadAsync<AdminUserDto>(HttpStatusCode.Created);
+
         Assert.Equal(new[] { Roles.User }, created.Roles);
 
         var user = await _factory.LoginAsync(request.UserName, request.Password);
         var me = await user.GetAsync<UserDto>(ApiRoutes.Me);
+
         Assert.True(me.MustChangePassword);
     }
 
@@ -146,11 +157,13 @@ public class UserManagementTests : IClassFixture<TaskHubApiFactory>
         var user = await _factory.CreateUserAsync();
 
         var updated = await admin.PutAsync<AdminUserDto>(ApiRoutes.AdminUserRoles(user.UserId), new UpdateUserRolesRequest { Roles = new[] { Roles.Admin, Roles.User } });
+
         Assert.Contains(Roles.Admin, updated.Roles);
 
         await _factory.LoginAsync(user);
 
         var response = await user.GetAsync(ApiRoutes.AdminUsers);
+
         await response.ShouldBeAsync(HttpStatusCode.OK);
     }
 
@@ -163,9 +176,11 @@ public class UserManagementTests : IClassFixture<TaskHubApiFactory>
         var user = await _factory.CreateUserAsync();
 
         var reset = await admin.PutAsync(ApiRoutes.AdminUserPassword(user.UserId), new ResetUserPasswordRequest { NewPassword = resetPassword });
+
         await reset.ShouldBeAsync(HttpStatusCode.OK);
 
         user.Password = resetPassword;
+
         var login = await _factory.LoginAsync(user);
 
         Assert.NotNull(login.AccessToken);
@@ -184,6 +199,7 @@ public class UserManagementTests : IClassFixture<TaskHubApiFactory>
 
         // The user's password and session are unchanged.
         var me = await user.GetAsync(ApiRoutes.Me);
+
         await me.ShouldBeAsync(HttpStatusCode.OK);
     }
 
@@ -194,6 +210,7 @@ public class UserManagementTests : IClassFixture<TaskHubApiFactory>
         var user = await _factory.CreateUserAsync("removed");
 
         var delete = await admin.DeleteAsync(ApiRoutes.AdminUser(user.UserId));
+
         await delete.ShouldBeAsync(HttpStatusCode.NoContent);
 
         var users = await admin.GetAsync<List<AdminUserDto>>(ApiRoutes.AdminUsers);
@@ -210,6 +227,7 @@ public class UserManagementTests : IClassFixture<TaskHubApiFactory>
     {
         var admin = await _factory.AdminAsync();
         var user = await _factory.CreateUserAsync("reused");
+
         await admin.DeleteAsync(ApiRoutes.AdminUser(user.UserId));
 
         var recreated = await admin.PostAsync<AdminUserDto>(ApiRoutes.AdminUsers, new CreateUserRequest
@@ -252,10 +270,12 @@ public class UserManagementTests : IClassFixture<TaskHubApiFactory>
         var second = await _factory.CreateUserAsync("grouped");
 
         var group = await admin.PostAsync<UserGroupDto>(ApiRoutes.UserGroups, new CreateUserGroupRequest { Name = $"Team {Guid.NewGuid():N}", Description = "A team" });
+
         await admin.PostAsync<UserGroupMemberDto>(ApiRoutes.UserGroupMembers(group.Id), new AddUserGroupMemberRequest { UserId = first.UserId });
         await admin.PostAsync<UserGroupMemberDto>(ApiRoutes.UserGroupMembers(group.Id), new AddUserGroupMemberRequest { UserId = second.UserId });
 
         var duplicate = await admin.PostAsync(ApiRoutes.UserGroupMembers(group.Id), new AddUserGroupMemberRequest { UserId = first.UserId });
+
         await duplicate.ReadErrorsAsync(HttpStatusCode.Conflict);
 
         var members = await admin.GetAsync<List<UserGroupMemberDto>>(ApiRoutes.UserGroupMembers(group.Id));
@@ -266,16 +286,19 @@ public class UserManagementTests : IClassFixture<TaskHubApiFactory>
 
         var remove = await admin.DeleteAsync(ApiRoutes.UserGroupMember(group.Id, first.UserId));
         var removeAgain = await admin.DeleteAsync(ApiRoutes.UserGroupMember(group.Id, first.UserId));
+
         await remove.ShouldBeAsync(HttpStatusCode.NoContent);
         await removeAgain.ShouldBeAsync(HttpStatusCode.NotFound);
 
         var delete = await admin.DeleteAsync(ApiRoutes.UserGroup(group.Id));
         var deleteAgain = await admin.DeleteAsync(ApiRoutes.UserGroup(group.Id));
+
         await delete.ShouldBeAsync(HttpStatusCode.NoContent);
         await deleteAgain.ShouldBeAsync(HttpStatusCode.NotFound);
 
         // Deleting the group removed the memberships, not the users.
         var stillThere = await second.GetAsync(ApiRoutes.Me);
+
         await stillThere.ShouldBeAsync(HttpStatusCode.OK);
     }
 
@@ -285,12 +308,15 @@ public class UserManagementTests : IClassFixture<TaskHubApiFactory>
         var admin = await _factory.AdminAsync();
         var user = await _factory.CreateUserAsync("grouped");
         var group = await admin.PostAsync<UserGroupDto>(ApiRoutes.UserGroups, new CreateUserGroupRequest { Name = $"Team {Guid.NewGuid():N}" });
+
         await admin.PostAsync<UserGroupMemberDto>(ApiRoutes.UserGroupMembers(group.Id), new AddUserGroupMemberRequest { UserId = user.UserId });
 
         var delete = await admin.DeleteAsync(ApiRoutes.AdminUser(user.UserId));
+
         await delete.ShouldBeAsync(HttpStatusCode.NoContent);
 
         var members = await admin.GetAsync<List<UserGroupMemberDto>>(ApiRoutes.UserGroupMembers(group.Id));
+
         Assert.Empty(members);
     }
 

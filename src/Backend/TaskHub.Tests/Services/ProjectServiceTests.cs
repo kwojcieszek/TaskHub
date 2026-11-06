@@ -32,7 +32,9 @@ public class ProjectServiceTests : IDisposable
 
         Assert.True(project.IsActive);
         Assert.Equal(owner.Id, project.OwnerId);
+
         var member = Assert.Single(members);
+
         Assert.Equal(owner.Id, member.UserId);
         Assert.Equal(ProjectMemberRole.Owner.ToString(), member.Role);
     }
@@ -42,10 +44,12 @@ public class ProjectServiceTests : IDisposable
     {
         var owner = await _host.CreateUserAsync("owner");
         var stranger = await _host.CreateUserAsync("stranger");
+
         await _host.CreateProjectAsync(owner, "mine");
         await _host.CreateProjectAsync(stranger, "theirs");
 
         _host.SignIn(owner);
+
         var projects = await _projects.GetAccessibleProjectsAsync();
 
         Assert.Equal("mine", Assert.Single(projects).Name);
@@ -56,10 +60,12 @@ public class ProjectServiceTests : IDisposable
     {
         var owner = await _host.CreateUserAsync("owner");
         var admin = await _host.CreateUserAsync("admin", Roles.Admin);
+
         await _host.CreateProjectAsync(owner, "first");
         await _host.CreateProjectAsync(owner, "second");
 
         _host.SignIn(admin, Roles.Admin);
+
         var projects = await _projects.GetAccessibleProjectsAsync();
 
         Assert.Equal(2, projects.Count);
@@ -83,10 +89,13 @@ public class ProjectServiceTests : IDisposable
         var owner = await _host.CreateUserAsync("owner");
         var viewer = await _host.CreateUserAsync("viewer");
         var project = await _host.CreateProjectAsync(owner);
+
         await _host.AddMemberAsync(project, owner, viewer, ProjectMemberRole.Viewer);
+
         var tasks = _host.Get<ITaskItemService>();
 
         _host.SignIn(viewer);
+
         var visible = await tasks.GetByProjectAsync(project.Id);
 
         Assert.Empty(visible);
@@ -101,9 +110,11 @@ public class ProjectServiceTests : IDisposable
         var editor = await _host.CreateUserAsync("editor");
         var other = await _host.CreateUserAsync("other");
         var project = await _host.CreateProjectAsync(owner);
+
         await _host.AddMemberAsync(project, owner, editor, ProjectMemberRole.Editor);
 
         _host.SignIn(editor);
+
         var renamed = await _projects.UpdateAsync(project.Id, new UpdateProjectRequest { Name = "renamed" });
 
         Assert.Equal("renamed", renamed.Name);
@@ -133,6 +144,7 @@ public class ProjectServiceTests : IDisposable
         var owner = await _host.CreateUserAsync("owner");
         var member = await _host.CreateUserAsync("member");
         var project = await _host.CreateProjectAsync(owner);
+
         await _host.AddMemberAsync(project, owner, member, ProjectMemberRole.Viewer);
 
         await Assert.ThrowsAsync<ConflictException>(
@@ -155,6 +167,7 @@ public class ProjectServiceTests : IDisposable
     public async Task Create_RejectsGitUrlThatIsNotHttp(string gitUrl)
     {
         var owner = await _host.CreateUserAsync("owner");
+
         _host.SignIn(owner);
 
         await Assert.ThrowsAsync<ValidationFailedException>(
@@ -169,6 +182,7 @@ public class ProjectServiceTests : IDisposable
     public async Task Create_RejectsIconThatIsNeitherAKnownNameNorARasterImage(string icon)
     {
         var owner = await _host.CreateUserAsync("owner");
+
         _host.SignIn(owner);
 
         await Assert.ThrowsAsync<ValidationFailedException>(
@@ -179,6 +193,7 @@ public class ProjectServiceTests : IDisposable
     public async Task Create_AcceptsIconNameRasterImageAndHttpsGitUrl()
     {
         var owner = await _host.CreateUserAsync("owner");
+
         _host.SignIn(owner);
 
         var named = await _projects.CreateAsync(new CreateProjectRequest { Name = "named", Icon = "pi-briefcase", GitUrl = "https://example.test/repo.git" });

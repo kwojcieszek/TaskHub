@@ -10,6 +10,9 @@ namespace TaskHub.Application.Services;
 
 public class TaskItemService : ITaskItemService
 {
+    private const int HistoryPageSize = 50;
+    private const int MaxHistoryPage = 10000;
+
     private readonly IApplicationDbContext _dbContext;
     private readonly ICurrentUserService _currentUser;
     private readonly IProjectAccessGuard _accessGuard;
@@ -49,16 +52,38 @@ public class TaskItemService : ITaskItemService
         return _mapper.Map<List<TaskItemDto>>(tasks);
     }
 
-    public async Task<IReadOnlyCollection<TaskChangeDto>> GetHistoryAsync(Guid projectId, Guid taskId, int page = 1, CancellationToken ct = default)
+    public async Task<IReadOnlyCollection<TaskChangeDto>> GetHistoryAsync(Guid projectId, Guid taskId, int page = 1, CancellationToken cancellationToken = default)
     {
-        await _accessGuard.EnsureCanViewAsync(projectId, ct);
-        if (!await _dbContext.Tasks.AnyAsync(t => t.Id == taskId && t.ProjectId == projectId, ct))
+        await _accessGuard.EnsureCanViewAsync(projectId, cancellationToken);
+
+        if (!await _dbContext.Tasks.AnyAsync(t => t.Id == taskId && t.ProjectId == projectId, cancellationToken))
+        {
             throw new NotFoundException("Task not found.");
-        if (page < 1 || page > 10000) throw new ValidationFailedException(new[] { "Invalid history page." });
-        var changes = await _dbContext.TaskChanges.AsNoTracking().Where(c => c.TaskItemId == taskId && c.ProjectId == projectId)
-            .OrderByDescending(c => c.ChangedAt).ThenByDescending(c => c.Id).Skip((page - 1) * 50).Take(50).ToListAsync(ct);
-        return changes.Select(c => new TaskChangeDto { Id = c.Id, ActorName = c.ActorName, Field = c.Field,
-            OldValue = c.OldValue, NewValue = c.NewValue, ChangedAt = DateTime.SpecifyKind(c.ChangedAt, DateTimeKind.Utc) }).ToList();
+        }
+
+        if (page < 1 || page > MaxHistoryPage)
+        {
+            throw new ValidationFailedException(new[] { "Invalid history page." });
+        }
+
+        var changes = await _dbContext.TaskChanges
+            .AsNoTracking()
+            .Where(c => c.TaskItemId == taskId && c.ProjectId == projectId)
+            .OrderByDescending(c => c.ChangedAt)
+            .ThenByDescending(c => c.Id)
+            .Skip((page - 1) * HistoryPageSize)
+            .Take(HistoryPageSize)
+            .ToListAsync(cancellationToken);
+
+        return changes.Select(c => new TaskChangeDto
+        {
+            Id = c.Id,
+            ActorName = c.ActorName,
+            Field = c.Field,
+            OldValue = c.OldValue,
+            NewValue = c.NewValue,
+            ChangedAt = DateTime.SpecifyKind(c.ChangedAt, DateTimeKind.Utc)
+        }).ToList();
     }
 
     public async Task<IReadOnlyCollection<TaskItemDto>> GetSubTasksAsync(Guid projectId, Guid taskId, CancellationToken cancellationToken = default)
@@ -161,6 +186,7 @@ public class TaskItemService : ITaskItemService
         task.Priority = request.Priority;
         task.AssignedUserId = request.AssignedUserId;
         task.UpdatedAt = DateTime.UtcNow;
+
         SetRecurrence(task, request.Recurrence);
 
         // A task with subtasks takes its status from them, so the requested status is ignored.
@@ -225,6 +251,7 @@ public class TaskItemService : ITaskItemService
         if (!_currentUser.IsInRole(Roles.Admin))
         {
             var visibleProjects = VisibleProjectIds();
+
             query = query.Where(t => visibleProjects.Contains(t.ProjectId));
         }
 
@@ -245,6 +272,7 @@ public class TaskItemService : ITaskItemService
         if (!_currentUser.IsInRole(Roles.Admin))
         {
             var visibleProjects = VisibleProjectIds();
+
             query = query.Where(t => visibleProjects.Contains(t.ProjectId));
         }
 
@@ -316,20 +344,6 @@ public class TaskItemService : ITaskItemService
         return _mapper.Map<TaskItemDto>(updated);
     }
 
-    private async Task<TaskItem> LoadTaskAsync(Guid projectId, Guid taskId, CancellationToken cancellationToken)
-    {
-        return await _dbContext.Tasks
-            .AsNoTracking()
-            .Include(t => t.AssignedUser)
-            .Include(t => t.Attachments)
-            .Include(t => t.SubTasks)
-                .ThenInclude(s => s.AssignedUser)
-            .Include(t => t.SubTasks)
-                .ThenInclude(s => s.Attachments)
-            .FirstOrDefaultAsync(t => t.Id == taskId && t.ProjectId == projectId, cancellationToken)
-            ?? throw new NotFoundException("Task not found.");
-    }
-
     private static void ApplyStatus(TaskItem task, TaskItemStatus status)
     {
         if (status == TaskItemStatus.Done && task.Status != TaskItemStatus.Done)
@@ -352,6 +366,75 @@ public class TaskItemService : ITaskItemService
         }
 
         task.Status = status;
+    }
+
+    private static void EnsureCanRepeat(Guid? parentTaskId, TaskRecurrenceDto? recurrence)
+    {
+        if (recurrence is null)
+        {
+            return;
+        }
+
+        if (parentTaskId.HasValue)
+        {
+            throw new ValidationFailedException(new[] { "Only a top-level task can repeat; its subtasks are repeated with it." });
+        }
+
+        if (recurrence.Interval is < TaskRecurrence.MinInterval or > TaskRecurrence.MaxInterval ||
+            !Enum.IsDefined(recurrence.Unit) || !Enum.IsDefined(recurrence.Basis))
+        {
+            throw new ValidationFailedException(new[] { $"A task repeats every {TaskRecurrence.MinInterval} to {TaskRecurrence.MaxInterval} days, weeks, months or years." });
+        }
+    }
+
+    private static void SetRecurrence(TaskItem task, TaskRecurrenceDto? recurrence)
+    {
+        task.RecurrenceInterval = recurrence?.Interval;
+        task.RecurrenceUnit = recurrence?.Unit;
+        task.RecurrenceBasis = recurrence?.Basis;
+    }
+
+    private static TaskRecurrenceDto? GetRecurrence(TaskItem task)
+    {
+        if (!task.RecurrenceInterval.HasValue || !task.RecurrenceUnit.HasValue)
+        {
+            return null;
+        }
+
+        return new TaskRecurrenceDto
+        {
+            Interval = task.RecurrenceInterval.Value,
+            Unit = task.RecurrenceUnit.Value,
+            Basis = task.RecurrenceBasis ?? RecurrenceBasis.CompletionDate
+        };
+    }
+
+    private static TaskItem CopyAsToDo(TaskItem source, DateTime? dueDate, Guid? parentTaskId)
+    {
+        return new TaskItem
+        {
+            Id = Guid.NewGuid(),
+            ProjectId = source.ProjectId,
+            ParentTaskId = parentTaskId,
+            Title = source.Title,
+            Description = source.Description,
+            DueDate = dueDate,
+            Priority = source.Priority
+        };
+    }
+
+    private async Task<TaskItem> LoadTaskAsync(Guid projectId, Guid taskId, CancellationToken cancellationToken)
+    {
+        return await _dbContext.Tasks
+            .AsNoTracking()
+            .Include(t => t.AssignedUser)
+            .Include(t => t.Attachments)
+            .Include(t => t.SubTasks)
+                .ThenInclude(s => s.AssignedUser)
+            .Include(t => t.SubTasks)
+                .ThenInclude(s => s.Attachments)
+            .FirstOrDefaultAsync(t => t.Id == taskId && t.ProjectId == projectId, cancellationToken)
+            ?? throw new NotFoundException("Task not found.");
     }
 
     private async Task<bool> HasSubTasksAsync(Guid taskId, CancellationToken cancellationToken)
@@ -436,47 +519,6 @@ public class TaskItemService : ITaskItemService
         await RepeatIfCompletedAsync(parent, previousStatus, cancellationToken);
     }
 
-    private static void EnsureCanRepeat(Guid? parentTaskId, TaskRecurrenceDto? recurrence)
-    {
-        if (recurrence is null)
-        {
-            return;
-        }
-
-        if (parentTaskId.HasValue)
-        {
-            throw new ValidationFailedException(new[] { "Only a top-level task can repeat; its subtasks are repeated with it." });
-        }
-
-        if (recurrence.Interval is < TaskRecurrence.MinInterval or > TaskRecurrence.MaxInterval ||
-            !Enum.IsDefined(recurrence.Unit) || !Enum.IsDefined(recurrence.Basis))
-        {
-            throw new ValidationFailedException(new[] { $"A task repeats every {TaskRecurrence.MinInterval} to {TaskRecurrence.MaxInterval} days, weeks, months or years." });
-        }
-    }
-
-    private static void SetRecurrence(TaskItem task, TaskRecurrenceDto? recurrence)
-    {
-        task.RecurrenceInterval = recurrence?.Interval;
-        task.RecurrenceUnit = recurrence?.Unit;
-        task.RecurrenceBasis = recurrence?.Basis;
-    }
-
-    private static TaskRecurrenceDto? GetRecurrence(TaskItem task)
-    {
-        if (!task.RecurrenceInterval.HasValue || !task.RecurrenceUnit.HasValue)
-        {
-            return null;
-        }
-
-        return new TaskRecurrenceDto
-        {
-            Interval = task.RecurrenceInterval.Value,
-            Unit = task.RecurrenceUnit.Value,
-            Basis = task.RecurrenceBasis ?? RecurrenceBasis.CompletionDate
-        };
-    }
-
     // Completing a repeating task creates its next occurrence, with fresh copies of the subtasks.
     // The schedule moves to the new task, so reopening and completing the old one does not repeat it twice.
     private async Task RepeatIfCompletedAsync(TaskItem task, TaskItemStatus previousStatus, CancellationToken cancellationToken)
@@ -492,7 +534,9 @@ public class TaskItemService : ITaskItemService
         var shift = task.DueDate.HasValue ? nextDueDate - task.DueDate.Value : (TimeSpan?)null;
 
         var next = CopyAsToDo(task, nextDueDate, null);
+
         next.AssignedUserId = await KeepAssigneeAsync(task, cancellationToken);
+
         SetRecurrence(next, recurrence);
         _dbContext.Tasks.Add(next);
 
@@ -505,27 +549,15 @@ public class TaskItemService : ITaskItemService
         foreach (var subTask in subTasks)
         {
             var copy = CopyAsToDo(subTask, subTask.DueDate + shift, next.Id);
+
             copy.AssignedUserId = await KeepAssigneeAsync(subTask, cancellationToken);
+
             _dbContext.Tasks.Add(copy);
         }
 
         SetRecurrence(task, null);
 
         await _dbContext.SaveChangesAsync(cancellationToken);
-    }
-
-    private static TaskItem CopyAsToDo(TaskItem source, DateTime? dueDate, Guid? parentTaskId)
-    {
-        return new TaskItem
-        {
-            Id = Guid.NewGuid(),
-            ProjectId = source.ProjectId,
-            ParentTaskId = parentTaskId,
-            Title = source.Title,
-            Description = source.Description,
-            DueDate = dueDate,
-            Priority = source.Priority
-        };
     }
 
     // An assignee who has left the project in the meantime is not carried over to the next occurrence.

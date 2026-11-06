@@ -29,6 +29,7 @@ public class AuthController : ApiControllerBase
     public async Task<ActionResult<UserDto>> Register(RegisterRequest request, CancellationToken cancellationToken)
     {
         var user = await _authService.RegisterAsync(request, cancellationToken);
+
         return StatusCode(StatusCodes.Status201Created, user);
     }
 
@@ -37,6 +38,7 @@ public class AuthController : ApiControllerBase
     public async Task<ActionResult<LoginResponse>> Login(LoginRequest request, CancellationToken cancellationToken)
     {
         var response = await _authService.LoginAsync(request, cancellationToken);
+
         return Ok(response);
     }
 
@@ -45,6 +47,7 @@ public class AuthController : ApiControllerBase
     public async Task<ActionResult<LoginResponse>> VerifyTwoFactor(TwoFactorVerifyRequest request, CancellationToken cancellationToken)
     {
         var response = await _authService.VerifyTwoFactorAsync(request, cancellationToken);
+
         return Ok(response);
     }
 
@@ -53,6 +56,7 @@ public class AuthController : ApiControllerBase
     public async Task<ActionResult<TwoFactorSetupResponse>> BeginTwoFactorSetup(CancellationToken cancellationToken)
     {
         var response = await _authService.BeginTwoFactorSetupAsync(CurrentUserId, cancellationToken);
+
         return Ok(response);
     }
 
@@ -61,6 +65,7 @@ public class AuthController : ApiControllerBase
     public async Task<IActionResult> EnableTwoFactor(TwoFactorEnableRequest request, CancellationToken cancellationToken)
     {
         await _authService.EnableTwoFactorAsync(CurrentUserId, request.Code, cancellationToken);
+
         return NoContent();
     }
 
@@ -69,6 +74,7 @@ public class AuthController : ApiControllerBase
     public async Task<IActionResult> DisableTwoFactor(TwoFactorDisableRequest request, CancellationToken cancellationToken)
     {
         await _authService.DisableTwoFactorAsync(CurrentUserId, request, cancellationToken);
+
         return NoContent();
     }
 
@@ -78,6 +84,7 @@ public class AuthController : ApiControllerBase
     public async Task<ActionResult<LoginResponse>> ChangePassword(ChangePasswordRequest request, CancellationToken cancellationToken)
     {
         var response = await _authService.ChangePasswordAsync(CurrentUserId, request, cancellationToken);
+
         return Ok(response);
     }
 
@@ -86,6 +93,7 @@ public class AuthController : ApiControllerBase
     public async Task<IActionResult> ForgotPassword(ForgotPasswordRequest request, CancellationToken cancellationToken)
     {
         await _authService.RequestPasswordResetAsync(request, cancellationToken);
+
         return NoContent();
     }
 
@@ -94,6 +102,7 @@ public class AuthController : ApiControllerBase
     public async Task<IActionResult> ResetPassword(ResetPasswordRequest request, CancellationToken cancellationToken)
     {
         await _authService.ResetPasswordAsync(request, cancellationToken);
+
         return NoContent();
     }
 
@@ -102,6 +111,7 @@ public class AuthController : ApiControllerBase
     public async Task<ActionResult<UserDto>> Me(CancellationToken cancellationToken)
     {
         var user = await _authService.GetCurrentUserAsync(CurrentUserId, cancellationToken);
+
         return Ok(user);
     }
 
@@ -109,6 +119,7 @@ public class AuthController : ApiControllerBase
     public async Task<ActionResult<AuthProvidersDto>> Providers(CancellationToken cancellationToken)
     {
         var providers = await _authService.GetProvidersAsync(cancellationToken);
+
         return Ok(providers);
     }
 
@@ -117,6 +128,7 @@ public class AuthController : ApiControllerBase
     public async Task<ActionResult<LoginResponse>> LoginWithGoogle(GoogleTokenRequest request, CancellationToken cancellationToken)
     {
         var response = await _authService.LoginWithGoogleAsync(request, cancellationToken);
+
         return Ok(response);
     }
 
@@ -125,6 +137,7 @@ public class AuthController : ApiControllerBase
     public async Task<ActionResult<UserDto>> LinkGoogle(GoogleTokenRequest request, CancellationToken cancellationToken)
     {
         var user = await _authService.LinkGoogleAsync(CurrentUserId, request, cancellationToken);
+
         return Ok(user);
     }
 
@@ -133,6 +146,7 @@ public class AuthController : ApiControllerBase
     public async Task<ActionResult<UserDto>> UnlinkGoogle(CancellationToken cancellationToken)
     {
         var user = await _authService.UnlinkGoogleAsync(CurrentUserId, cancellationToken);
+
         return Ok(user);
     }
 
@@ -141,6 +155,7 @@ public class AuthController : ApiControllerBase
     public async Task<ActionResult<PagedResultDto<UserActivityLogDto>>> MyLogins([FromQuery] AuditLogQuery query, CancellationToken cancellationToken)
     {
         var logs = await _auditLogService.GetLoginLogsForUserAsync(CurrentUserId, query, cancellationToken);
+
         return Ok(logs);
     }
 }

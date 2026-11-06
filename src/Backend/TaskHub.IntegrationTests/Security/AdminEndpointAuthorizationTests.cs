@@ -17,11 +17,6 @@ public class AdminEndpointAuthorizationTests : IClassFixture<TaskHubApiFactory>
 
     private readonly TaskHubApiFactory _factory;
 
-    public AdminEndpointAuthorizationTests(TaskHubApiFactory factory)
-    {
-        _factory = factory;
-    }
-
     public static TheoryData<string, string> AdminEndpoints => new()
     {
         { "GET", "/v1/admin/users" },
@@ -35,6 +30,11 @@ public class AdminEndpointAuthorizationTests : IClassFixture<TaskHubApiFactory>
         { "GET", "/v1/admin/security" },
         { "PUT", "/v1/admin/security" }
     };
+
+    public AdminEndpointAuthorizationTests(TaskHubApiFactory factory)
+    {
+        _factory = factory;
+    }
 
     [Theory]
     [MemberData(nameof(AdminEndpoints))]
@@ -90,6 +90,7 @@ public class AdminEndpointAuthorizationTests : IClassFixture<TaskHubApiFactory>
     public async Task AdminEndpoint_IsNotOpenedByARequestHeader(string header, string value)
     {
         var user = await _factory.CreateUserAsync();
+
         user.Client.DefaultRequestHeaders.Add(header, value);
 
         var response = await user.GetAsync(ApiRoutes.AdminUsers);
@@ -107,10 +108,12 @@ public class AdminEndpointAuthorizationTests : IClassFixture<TaskHubApiFactory>
         await response.ShouldBeAsync(HttpStatusCode.Forbidden);
 
         var me = await user.GetAsync<UserDto>(ApiRoutes.Me);
+
         Assert.Equal(new[] { Roles.User }, me.Roles);
 
         // A new sign-in does not carry the role either.
         var login = await _factory.LoginAsync(user);
+
         Assert.Equal(new[] { Roles.User }, login.User!.Roles);
     }
 
@@ -131,6 +134,7 @@ public class AdminEndpointAuthorizationTests : IClassFixture<TaskHubApiFactory>
 
         var admin = await _factory.AdminAsync();
         var users = await admin.GetAsync<List<AdminUserDto>>(ApiRoutes.AdminUsers);
+
         Assert.DoesNotContain(users, existing => existing.UserName == userName);
     }
 
@@ -152,9 +156,11 @@ public class AdminEndpointAuthorizationTests : IClassFixture<TaskHubApiFactory>
 
         // The victim's session and password are exactly as they were.
         var me = await victim.GetAsync<UserDto>(ApiRoutes.Me);
+
         Assert.Equal(new[] { Roles.User }, me.Roles);
 
         var login = await _factory.LoginAsync(victim);
+
         Assert.NotNull(login.AccessToken);
     }
 
@@ -173,6 +179,7 @@ public class AdminEndpointAuthorizationTests : IClassFixture<TaskHubApiFactory>
         await reset.ShouldBeAsync(HttpStatusCode.Forbidden);
 
         var stillWorks = await admin.GetAsync(ApiRoutes.AdminUsers);
+
         await stillWorks.ShouldBeAsync(HttpStatusCode.OK);
     }
 
@@ -195,6 +202,7 @@ public class AdminEndpointAuthorizationTests : IClassFixture<TaskHubApiFactory>
         await response.ShouldBeAsync(HttpStatusCode.Forbidden);
 
         var after = await admin.GetAsync<SecuritySettingsDto>(ApiRoutes.AdminSecurity);
+
         Assert.Equal(before.LockoutEnabled, after.LockoutEnabled);
         Assert.Equal(before.MaxFailedAccessAttempts, after.MaxFailedAccessAttempts);
         Assert.Equal(before.RegistrationEnabled, after.RegistrationEnabled);
@@ -215,6 +223,7 @@ public class AdminEndpointAuthorizationTests : IClassFixture<TaskHubApiFactory>
         await delete.ShouldBeAsync(HttpStatusCode.Forbidden);
 
         var groups = await admin.GetAsync<List<UserGroupDto>>(ApiRoutes.UserGroups);
+
         Assert.Equal(0, groups.Single(existing => existing.Id == group.Id).MemberCount);
     }
 

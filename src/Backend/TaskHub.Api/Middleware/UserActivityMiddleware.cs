@@ -24,6 +24,14 @@ public class UserActivityMiddleware
         await RecordAsync(context);
     }
 
+    private static bool IsTrackedMethod(string method)
+    {
+        return HttpMethods.IsPost(method)
+            || HttpMethods.IsPut(method)
+            || HttpMethods.IsPatch(method)
+            || HttpMethods.IsDelete(method);
+    }
+
     private async Task RecordAsync(HttpContext context)
     {
         if (!IsTrackedMethod(context.Request.Method) || context.User.Identity?.IsAuthenticated != true)
@@ -58,13 +66,5 @@ public class UserActivityMiddleware
         {
             _logger.LogWarning(exception, "Could not record user activity for {Path}", path);
         }
-    }
-
-    private static bool IsTrackedMethod(string method)
-    {
-        return HttpMethods.IsPost(method)
-            || HttpMethods.IsPut(method)
-            || HttpMethods.IsPatch(method)
-            || HttpMethods.IsDelete(method);
     }
 }

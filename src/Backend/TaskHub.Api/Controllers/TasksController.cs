@@ -43,6 +43,7 @@ public class TasksController : ApiControllerBase
     public async Task<ActionResult<IReadOnlyCollection<TaskItemDto>>> GetAll(Guid projectId, CancellationToken cancellationToken)
     {
         var tasks = await _taskItemService.GetByProjectAsync(projectId, cancellationToken);
+
         return Ok(tasks);
     }
 
@@ -50,6 +51,7 @@ public class TasksController : ApiControllerBase
     public async Task<ActionResult<IReadOnlyCollection<TaskItemDto>>> GetSubTasks(Guid projectId, Guid taskId, CancellationToken cancellationToken)
     {
         var subTasks = await _taskItemService.GetSubTasksAsync(projectId, taskId, cancellationToken);
+
         return Ok(subTasks);
     }
 
@@ -57,7 +59,9 @@ public class TasksController : ApiControllerBase
     public async Task<ActionResult<TaskItemDto>> CreateSubTask(Guid projectId, Guid taskId, CreateTaskItemRequest request, CancellationToken cancellationToken)
     {
         request.ParentTaskId = taskId;
+
         var subTask = await _taskItemService.CreateAsync(projectId, request, cancellationToken);
+
         return Ok(subTask);
     }
 
@@ -65,6 +69,7 @@ public class TasksController : ApiControllerBase
     public async Task<ActionResult<TaskItemDto>> GetById(Guid projectId, Guid taskId, CancellationToken cancellationToken)
     {
         var task = await _taskItemService.GetByIdAsync(projectId, taskId, cancellationToken);
+
         return Ok(task);
     }
 
@@ -72,6 +77,7 @@ public class TasksController : ApiControllerBase
     public async Task<ActionResult<TaskItemDto>> Create(Guid projectId, CreateTaskItemRequest request, CancellationToken cancellationToken)
     {
         var task = await _taskItemService.CreateAsync(projectId, request, cancellationToken);
+
         return Ok(task);
     }
 
@@ -79,6 +85,7 @@ public class TasksController : ApiControllerBase
     public async Task<ActionResult<TaskItemDto>> Update(Guid projectId, Guid taskId, UpdateTaskItemRequest request, CancellationToken cancellationToken)
     {
         var task = await _taskItemService.UpdateAsync(projectId, taskId, request, cancellationToken);
+
         return Ok(task);
     }
 
@@ -86,6 +93,7 @@ public class TasksController : ApiControllerBase
     public async Task<IActionResult> Delete(Guid projectId, Guid taskId, CancellationToken cancellationToken)
     {
         await _taskItemService.DeleteAsync(projectId, taskId, cancellationToken);
+
         return NoContent();
     }
 
@@ -93,17 +101,21 @@ public class TasksController : ApiControllerBase
     public async Task<ActionResult<TaskItemDto>> Start(Guid projectId, Guid taskId, CancellationToken cancellationToken)
     {
         var task = await _taskItemService.StartAsync(projectId, taskId, cancellationToken);
+
         return Ok(task);
     }
 
     [HttpGet("{taskId:guid}/history")]
-    public async Task<ActionResult<IReadOnlyCollection<TaskChangeDto>>> History(Guid projectId, Guid taskId, [FromQuery] int page = 1, CancellationToken ct = default)
-        => Ok(await _taskItemService.GetHistoryAsync(projectId, taskId, page, ct));
+    public async Task<ActionResult<IReadOnlyCollection<TaskChangeDto>>> History(Guid projectId, Guid taskId, [FromQuery] int page = 1, CancellationToken cancellationToken = default)
+    {
+        return Ok(await _taskItemService.GetHistoryAsync(projectId, taskId, page, cancellationToken));
+    }
 
     [HttpPost("{taskId:guid}/complete")]
     public async Task<ActionResult<TaskItemDto>> Complete(Guid projectId, Guid taskId, CancellationToken cancellationToken)
     {
         var task = await _taskItemService.CompleteAsync(projectId, taskId, cancellationToken);
+
         return Ok(task);
     }
 }

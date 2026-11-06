@@ -35,9 +35,13 @@ public class UserGroupService : IUserGroupService
         var ownerIds = groups.Where(g => g.OwnerId.HasValue).Select(g => g.OwnerId!.Value).Distinct().ToList();
         var owners = await _userManager.Users.AsNoTracking().Where(u => ownerIds.Contains(u.Id))
             .ToDictionaryAsync(u => u.Id, u => u.DisplayName, cancellationToken);
-        return groups.Select(g => {
+
+        return groups.Select(g =>
+        {
             var dto = MapGroup(g);
+
             dto.OwnerDisplayName = g.OwnerId.HasValue ? owners.GetValueOrDefault(g.OwnerId.Value) : null;
+
             return dto;
         }).ToList();
     }
@@ -61,6 +65,7 @@ public class UserGroupService : IUserGroupService
     public async Task<UserGroupDto> UpdateAsync(Guid groupId, UpdateUserGroupRequest request, CancellationToken cancellationToken = default)
     {
         await EnsureAccessAsync(groupId, true, cancellationToken);
+
         var name = (request.Name ?? string.Empty).Trim();
 
         if (name.Length == 0)
@@ -84,10 +89,12 @@ public class UserGroupService : IUserGroupService
     public async Task DeleteAsync(Guid groupId, CancellationToken cancellationToken = default)
     {
         await EnsureAccessAsync(groupId, true, cancellationToken);
+
         var group = await _dbContext.UserGroups.FirstOrDefaultAsync(g => g.Id == groupId, cancellationToken)
             ?? throw new NotFoundException("User group not found.");
 
         var projectIds = await _dbContext.ProjectTeams.Where(t => t.UserGroupId == groupId).Select(t => t.ProjectId).ToListAsync(cancellationToken);
+
         _dbContext.UserGroups.Remove(group);
         await _dbContext.SaveChangesAsync(cancellationToken);
         await AssignmentCleanup.ClearInaccessibleAsync(_dbContext, projectIds, cancellationToken);
@@ -96,6 +103,7 @@ public class UserGroupService : IUserGroupService
     public async Task<IReadOnlyCollection<UserGroupMemberDto>> GetMembersAsync(Guid groupId, CancellationToken cancellationToken = default)
     {
         await EnsureAccessAsync(groupId, false, cancellationToken);
+
         var members = await _dbContext.UserGroupMembers
             .AsNoTracking()
             .Include(m => m.User)
@@ -108,10 +116,12 @@ public class UserGroupService : IUserGroupService
     public async Task<UserGroupMemberDto> AddMemberAsync(Guid groupId, AddUserGroupMemberRequest request, CancellationToken cancellationToken = default)
     {
         await EnsureAccessAsync(groupId, true, cancellationToken);
+
         if (!await _userManager.Users.AnyAsync(u => u.Id == request.UserId, cancellationToken))
         {
             throw new NotFoundException("User not found.");
         }
+
         var exists = await _dbContext.UserGroupMembers
             .AsNoTracking()
             .AnyAsync(m => m.UserGroupId == groupId && m.UserId == request.UserId, cancellationToken);
@@ -142,6 +152,7 @@ public class UserGroupService : IUserGroupService
     public async Task RemoveMemberAsync(Guid groupId, Guid userId, CancellationToken cancellationToken = default)
     {
         await EnsureAccessAsync(groupId, true, cancellationToken);
+
         var member = await _dbContext.UserGroupMembers
             .FirstOrDefaultAsync(m => m.UserGroupId == groupId && m.UserId == userId, cancellationToken)
             ?? throw new NotFoundException("Membership not found.");
@@ -151,43 +162,62 @@ public class UserGroupService : IUserGroupService
         await ClearInaccessibleAssignmentsAsync(groupId, userId, cancellationToken);
     }
 
-    private UserGroupDto MapGroup(UserGroup group)
+    public async Task<UserGroupDto> TransferOwnershipAsync(Guid groupId, Guid userId, CancellationToken cancellationToken = default)
     {
-        var dto = _mapper.Map<UserGroupDto>(group);
-        dto.CanManage = _currentUser.IsInRole(Roles.Admin) || group.OwnerId == _currentUser.UserId;
-        return dto;
-    }
+        await EnsureAccessAsync(groupId, true, cancellationToken);
 
-    public async Task<UserGroupDto> TransferOwnershipAsync(Guid groupId, Guid userId, CancellationToken ct = default)
-    {
-        await EnsureAccessAsync(groupId, true, ct);
-        if (!await _userManager.Users.AnyAsync(u => u.Id == userId, ct))
+        if (!await _userManager.Users.AnyAsync(u => u.Id == userId, cancellationToken))
+        {
             throw new NotFoundException("User not found.");
-        if (!await _dbContext.UserGroupMembers.AnyAsync(m => m.UserGroupId == groupId && m.UserId == userId, ct))
+        }
+
+        if (!await _dbContext.UserGroupMembers.AnyAsync(m => m.UserGroupId == groupId && m.UserId == userId, cancellationToken))
+        {
             throw new ValidationFailedException(new[] { "The new owner must be a member of the team." });
-        var group = await _dbContext.UserGroups.Include(g => g.Members).FirstAsync(g => g.Id == groupId, ct);
+        }
+
+        var group = await _dbContext.UserGroups.Include(g => g.Members).FirstAsync(g => g.Id == groupId, cancellationToken);
+
         group.OwnerId = userId;
-        await _dbContext.SaveChangesAsync(ct);
+
+        await _dbContext.SaveChangesAsync(cancellationToken);
+
         return MapGroup(group);
     }
 
-    public async Task LeaveAsync(Guid groupId, CancellationToken ct = default)
+    public async Task LeaveAsync(Guid groupId, CancellationToken cancellationToken = default)
     {
-        await EnsureAccessAsync(groupId, false, ct);
-        var group = await _dbContext.UserGroups.AsNoTracking().FirstAsync(g => g.Id == groupId, ct);
+        await EnsureAccessAsync(groupId, false, cancellationToken);
+
+        var group = await _dbContext.UserGroups.AsNoTracking().FirstAsync(g => g.Id == groupId, cancellationToken);
+
         if (group.OwnerId == _currentUser.UserId)
+        {
             throw new ConflictException("Transfer team ownership before leaving.");
-        var member = await _dbContext.UserGroupMembers.FirstOrDefaultAsync(m => m.UserGroupId == groupId && m.UserId == _currentUser.UserId, ct)
+        }
+
+        var member = await _dbContext.UserGroupMembers.FirstOrDefaultAsync(m => m.UserGroupId == groupId && m.UserId == _currentUser.UserId, cancellationToken)
             ?? throw new NotFoundException("Membership not found.");
+
         _dbContext.UserGroupMembers.Remove(member);
-        await _dbContext.SaveChangesAsync(ct);
-        await ClearInaccessibleAssignmentsAsync(groupId, _currentUser.UserId, ct);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+        await ClearInaccessibleAssignmentsAsync(groupId, _currentUser.UserId, cancellationToken);
     }
 
-    private async Task ClearInaccessibleAssignmentsAsync(Guid groupId, Guid userId, CancellationToken ct)
+    private UserGroupDto MapGroup(UserGroup group)
     {
-        var projects = await _dbContext.ProjectTeams.Where(t => t.UserGroupId == groupId).Select(t => t.ProjectId).ToListAsync(ct);
-        await AssignmentCleanup.ClearInaccessibleAsync(_dbContext, projects, ct);
+        var dto = _mapper.Map<UserGroupDto>(group);
+
+        dto.CanManage = _currentUser.IsInRole(Roles.Admin) || group.OwnerId == _currentUser.UserId;
+
+        return dto;
+    }
+
+    private async Task ClearInaccessibleAssignmentsAsync(Guid groupId, Guid userId, CancellationToken cancellationToken)
+    {
+        var projects = await _dbContext.ProjectTeams.Where(t => t.UserGroupId == groupId).Select(t => t.ProjectId).ToListAsync(cancellationToken);
+
+        await AssignmentCleanup.ClearInaccessibleAsync(_dbContext, projects, cancellationToken);
     }
 
     private async Task EnsureAccessAsync(Guid groupId, bool manage, CancellationToken cancellationToken)

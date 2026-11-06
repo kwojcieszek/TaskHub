@@ -22,14 +22,14 @@ public class QueuedEmailSender : IEmailSender
 
     private readonly EmailOptions _options;
 
+    public bool IsConfigured => _options.IsConfigured;
+
+    public ChannelReader<EmailMessage> Reader => _queue.Reader;
+
     public QueuedEmailSender(IOptions<EmailOptions> options)
     {
         _options = options.Value;
     }
-
-    public bool IsConfigured => _options.IsConfigured;
-
-    public ChannelReader<EmailMessage> Reader => _queue.Reader;
 
     public Task SendAsync(EmailMessage message, CancellationToken cancellationToken = default)
     {

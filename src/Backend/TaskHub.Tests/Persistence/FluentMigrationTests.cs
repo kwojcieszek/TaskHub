@@ -27,13 +27,17 @@ public sealed class FluentMigrationTests : IDisposable
     private readonly string _directory = Path.Combine(Path.GetTempPath(), "taskhub-migrations", Guid.NewGuid().ToString("N"));
     private readonly ServiceProvider _provider;
     private readonly IServiceScope _scope;
+
     private ApplicationDbContext Db => _scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
     private IMigrationRunner Runner => _scope.ServiceProvider.GetRequiredService<IMigrationRunner>();
 
     public FluentMigrationTests()
     {
         Directory.CreateDirectory(_directory);
+
         var options = new DatabaseOptions { Provider = DatabaseProvider.Sqlite, ConnectionString = $"Data Source={Path.Combine(_directory, "test.db")};Pooling=False" };
+
         _provider = new ServiceCollection().AddLogging().AddDatabaseMigrations(options)
             .AddDbContext<ApplicationDbContext>(builder => builder.UseSqlite(options.ConnectionString))
             .BuildServiceProvider();
@@ -53,11 +57,13 @@ public sealed class FluentMigrationTests : IDisposable
     public async Task EveryMigration_RollsBackOneByOneAndAppliesAgain()
     {
         Runner.MigrateUp();
+
         var versions = Migrations.Select(migration => migration.Version).OrderDescending().ToList();
 
         for (var index = 0; index < versions.Count; index++)
         {
             var target = index + 1 < versions.Count ? versions[index + 1] : 0;
+
             Runner.MigrateDown(target);
             Assert.Equal((long)(versions.Count - index - 1), await ScalarAsync("SELECT COUNT(*) FROM VersionInfo"));
         }
@@ -70,17 +76,24 @@ public sealed class FluentMigrationTests : IDisposable
     public async Task Migrator_BacksUpAnExistingDatabaseBeforeApplyingPendingMigrations()
     {
         var oldest = Migrations.Min(migration => migration.Version);
+
         Runner.MigrateUp(oldest);
+
         var migrator = _scope.ServiceProvider.GetRequiredService<DatabaseMigrator>();
 
         migrator.Migrate();
 
         Assert.Equal(LatestVersion, await ScalarAsync("SELECT MAX(Version) FROM VersionInfo"));
         Assert.NotNull(migrator.BackupPath);
+
         await using var backup = new SqliteConnection($"Data Source={migrator.BackupPath};Pooling=False");
+
         await backup.OpenAsync();
+
         await using var command = backup.CreateCommand();
+
         command.CommandText = "SELECT MAX(Version) FROM VersionInfo";
+
         Assert.Equal(oldest, await command.ExecuteScalarAsync());
     }
 
@@ -119,6 +132,7 @@ public sealed class FluentMigrationTests : IDisposable
     {
         var latest = Migrations.OrderByDescending(migration => migration.Version).First();
         var previous = Migrations.Where(migration => migration.Version < latest.Version).Max(migration => migration.Version);
+
         Runner.MigrateUp(previous);
 
         var error = await Assert.ThrowsAsync<InvalidOperationException>(() => _scope.ServiceProvider.GetRequiredService<DatabaseSchemaVerifier>().VerifyAsync());
@@ -127,57 +141,15 @@ public sealed class FluentMigrationTests : IDisposable
         Assert.Contains("Add a migration", error.Message);
     }
 
-    private async Task AssertSchemaMatchesModelAsync()
-    {
-        var model = Db.GetService<IDesignTimeModel>().Model.GetRelationalModel();
-        foreach (var table in model.Tables)
-        {
-            await using var connection = new SqliteConnection(Db.Database.GetConnectionString());
-            await connection.OpenAsync();
-            await using var command = connection.CreateCommand();
-            command.CommandText = $"PRAGMA table_info(\"{table.Name}\")";
-            var columns = new HashSet<string>();
-            var keys = new List<string>();
-            await using (var reader = await command.ExecuteReaderAsync())
-                while (await reader.ReadAsync())
-                {
-                    columns.Add(reader.GetString(1));
-                    if (reader.GetInt32(5) > 0) keys.Add(reader.GetString(1));
-                }
-            Assert.Equal(table.Columns.Select(c => c.Name).Order(), columns.Order());
-            Assert.Equal(table.PrimaryKey!.Columns.Select(c => c.Name).Order(), keys.Order());
-            command.CommandText = $"PRAGMA index_list(\"{table.Name}\")";
-            var indexes = new Dictionary<string, bool>();
-            await using (var reader = await command.ExecuteReaderAsync())
-                while (await reader.ReadAsync()) indexes[reader.GetString(1)] = reader.GetInt32(2) != 0;
-            foreach (var index in table.Indexes)
-            {
-                Assert.True(indexes.ContainsKey(index.Name), $"Missing index {index.Name}");
-                Assert.Equal(index.IsUnique, indexes[index.Name]);
-            }
-            command.CommandText = $"PRAGMA foreign_key_list(\"{table.Name}\")";
-            var relationships = new HashSet<string>();
-            await using (var reader = await command.ExecuteReaderAsync())
-                while (await reader.ReadAsync()) relationships.Add($"{reader.GetString(3)}:{reader.GetString(2)}:{reader.GetString(4)}:{reader.GetString(6)}");
-            foreach (var fk in table.ForeignKeyConstraints)
-            {
-                var action = fk.OnDeleteAction switch
-                {
-                    Microsoft.EntityFrameworkCore.Migrations.ReferentialAction.Cascade => "CASCADE",
-                    Microsoft.EntityFrameworkCore.Migrations.ReferentialAction.SetNull => "SET NULL",
-                    _ => "NO ACTION"
-                };
-                Assert.Contains($"{fk.Columns.Single().Name}:{fk.PrincipalTable.Name}:{fk.PrincipalColumns.Single().Name}:{action}", relationships);
-            }
-        }
-    }
-
     [Fact]
     public async Task RepeatedStartup_DoesNotReapplyInitialMigrationOrChangeData()
     {
         Runner.MigrateUp();
+
         var user = new User { Id = Guid.NewGuid(), UserName = "owner", NormalizedUserName = "OWNER", DisplayName = "Owner" };
+
         user.PasswordHash = new PasswordHasher<User>().HashPassword(user, "Preserved123!");
+
         Db.Users.Add(user);
         Db.Projects.Add(new Project { Id = Guid.NewGuid(), Name = "Preserved project", OwnerId = user.Id });
         await Db.SaveChangesAsync();
@@ -185,8 +157,11 @@ public sealed class FluentMigrationTests : IDisposable
 
         // Resolve a new runner scope to model the next API startup.
         using var nextStartup = _provider.CreateScope();
+
         nextStartup.ServiceProvider.GetRequiredService<IMigrationRunner>().MigrateUp();
+
         var restored = await Db.Users.SingleAsync();
+
         Assert.Equal(user.Id, restored.Id);
         Assert.Equal(PasswordVerificationResult.Success, new PasswordHasher<User>().VerifyHashedPassword(restored, restored.PasswordHash!, "Preserved123!"));
         Assert.Equal(user.Id, (await Db.Projects.SingleAsync()).OwnerId);
@@ -204,28 +179,11 @@ public sealed class FluentMigrationTests : IDisposable
         Assert.Equal(0L, await ScalarAsync("SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name NOT IN ('VersionInfo', 'sqlite_sequence')"));
 
         using var nextStartup = _provider.CreateScope();
+
         nextStartup.ServiceProvider.GetRequiredService<IMigrationRunner>().MigrateUp();
         Assert.Empty(await Db.Users.ToListAsync());
         Assert.Empty(await Db.Projects.ToListAsync());
         Assert.Equal(MigrationCount, await ScalarAsync("SELECT COUNT(*) FROM VersionInfo"));
-    }
-
-    private async Task<object?> ScalarAsync(string sql)
-    {
-        await using var connection = new SqliteConnection(Db.Database.GetConnectionString());
-        await connection.OpenAsync();
-        await using var command = connection.CreateCommand();
-        command.CommandText = sql;
-        return await command.ExecuteScalarAsync();
-    }
-
-    private async Task ExecuteAsync(string sql)
-    {
-        await using var connection = new SqliteConnection(Db.Database.GetConnectionString());
-        await connection.OpenAsync();
-        await using var command = connection.CreateCommand();
-        command.CommandText = sql;
-        await command.ExecuteNonQueryAsync();
     }
 
     public void Dispose()
@@ -233,5 +191,108 @@ public sealed class FluentMigrationTests : IDisposable
         _scope.Dispose();
         _provider.Dispose();
         Directory.Delete(_directory, true);
+    }
+
+    private async Task AssertSchemaMatchesModelAsync()
+    {
+        var model = Db.GetService<IDesignTimeModel>().Model.GetRelationalModel();
+
+        foreach (var table in model.Tables)
+        {
+            await using var connection = new SqliteConnection(Db.Database.GetConnectionString());
+
+            await connection.OpenAsync();
+
+            await using var command = connection.CreateCommand();
+
+            command.CommandText = $"PRAGMA table_info(\"{table.Name}\")";
+
+            var columns = new HashSet<string>();
+            var keys = new List<string>();
+
+            await using (var reader = await command.ExecuteReaderAsync())
+            {
+                while (await reader.ReadAsync())
+                {
+                    columns.Add(reader.GetString(1));
+
+                    if (reader.GetInt32(5) > 0)
+                    {
+                        keys.Add(reader.GetString(1));
+                    }
+                }
+            }
+
+            Assert.Equal(table.Columns.Select(c => c.Name).Order(), columns.Order());
+            Assert.Equal(table.PrimaryKey!.Columns.Select(c => c.Name).Order(), keys.Order());
+
+            command.CommandText = $"PRAGMA index_list(\"{table.Name}\")";
+
+            var indexes = new Dictionary<string, bool>();
+
+            await using (var reader = await command.ExecuteReaderAsync())
+            {
+                while (await reader.ReadAsync())
+                {
+                    indexes[reader.GetString(1)] = reader.GetInt32(2) != 0;
+                }
+            }
+
+            foreach (var index in table.Indexes)
+            {
+                Assert.True(indexes.ContainsKey(index.Name), $"Missing index {index.Name}");
+                Assert.Equal(index.IsUnique, indexes[index.Name]);
+            }
+
+            command.CommandText = $"PRAGMA foreign_key_list(\"{table.Name}\")";
+
+            var relationships = new HashSet<string>();
+
+            await using (var reader = await command.ExecuteReaderAsync())
+            {
+                while (await reader.ReadAsync())
+                {
+                    relationships.Add($"{reader.GetString(3)}:{reader.GetString(2)}:{reader.GetString(4)}:{reader.GetString(6)}");
+                }
+            }
+
+            foreach (var fk in table.ForeignKeyConstraints)
+            {
+                var action = fk.OnDeleteAction switch
+                {
+                    Microsoft.EntityFrameworkCore.Migrations.ReferentialAction.Cascade => "CASCADE",
+                    Microsoft.EntityFrameworkCore.Migrations.ReferentialAction.SetNull => "SET NULL",
+                    _ => "NO ACTION"
+                };
+
+                Assert.Contains($"{fk.Columns.Single().Name}:{fk.PrincipalTable.Name}:{fk.PrincipalColumns.Single().Name}:{action}", relationships);
+            }
+        }
+    }
+
+    private async Task<object?> ScalarAsync(string sql)
+    {
+        await using var connection = new SqliteConnection(Db.Database.GetConnectionString());
+
+        await connection.OpenAsync();
+
+        await using var command = connection.CreateCommand();
+
+        command.CommandText = sql;
+
+        return await command.ExecuteScalarAsync();
+    }
+
+    private async Task ExecuteAsync(string sql)
+    {
+        await using var connection = new SqliteConnection(Db.Database.GetConnectionString());
+
+        await connection.OpenAsync();
+
+        await using var command = connection.CreateCommand();
+
+        command.CommandText = sql;
+
+        await command.ExecuteNonQueryAsync();
     }
 }

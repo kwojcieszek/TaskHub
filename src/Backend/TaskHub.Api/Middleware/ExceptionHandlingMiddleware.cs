@@ -6,6 +6,8 @@ namespace TaskHub.Api.Middleware;
 
 public class ExceptionHandlingMiddleware
 {
+    private const string RequestTooLargeMessage = "The request is too large.";
+
     private readonly RequestDelegate _next;
     private readonly ILogger<ExceptionHandlingMiddleware> _logger;
 
@@ -26,8 +28,6 @@ public class ExceptionHandlingMiddleware
             await HandleAsync(context, exception);
         }
     }
-
-    private const string RequestTooLargeMessage = "The request is too large.";
 
     private static string DescribeBadRequest(BadHttpRequestException exception)
     {
@@ -58,6 +58,7 @@ public class ExceptionHandlingMiddleware
         context.Response.StatusCode = (int)statusCode;
 
         var payload = JsonSerializer.Serialize(new { errors });
+
         await context.Response.WriteAsync(payload);
     }
 }

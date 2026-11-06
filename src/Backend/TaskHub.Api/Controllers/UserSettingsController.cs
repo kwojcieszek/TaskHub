@@ -22,6 +22,7 @@ public class UserSettingsController : ApiControllerBase
     public async Task<ActionResult<IReadOnlyCollection<UserSettingDto>>> GetAll(CancellationToken cancellationToken)
     {
         var settings = await _userSettingService.GetAllAsync(cancellationToken);
+
         return Ok(settings);
     }
 
@@ -29,6 +30,7 @@ public class UserSettingsController : ApiControllerBase
     public async Task<ActionResult<UserSettingDto>> Get(string key, CancellationToken cancellationToken)
     {
         var setting = await _userSettingService.GetAsync(key, cancellationToken);
+
         return Ok(setting);
     }
 
@@ -36,6 +38,7 @@ public class UserSettingsController : ApiControllerBase
     public async Task<ActionResult<UserSettingDto>> Set(string key, SetUserSettingRequest request, CancellationToken cancellationToken)
     {
         var setting = await _userSettingService.SetAsync(key, request, cancellationToken);
+
         return Ok(setting);
     }
 
@@ -43,6 +46,7 @@ public class UserSettingsController : ApiControllerBase
     public async Task<IActionResult> Delete(string key, CancellationToken cancellationToken)
     {
         await _userSettingService.DeleteAsync(key, cancellationToken);
+
         return NoContent();
     }
 }

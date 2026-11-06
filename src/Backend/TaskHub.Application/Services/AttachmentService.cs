@@ -81,6 +81,7 @@ public class AttachmentService : IAttachmentService
 
         // Same idea for the user's total: a declared size that cannot fit is refused before the content is read.
         var usedBytes = await GetUsedBytesAsync(cancellationToken);
+
         EnsureWithinQuota(usedBytes, declaredSize ?? 0);
 
         var safeFileName = Path.GetFileName(fileName ?? string.Empty).Trim();
@@ -106,6 +107,7 @@ public class AttachmentService : IAttachmentService
         if (!await _storage.ExistsAsync(sha256, cancellationToken))
         {
             buffer.Position = 0;
+
             await _storage.SaveAsync(sha256, buffer, cancellationToken);
         }
 
@@ -197,6 +199,11 @@ public class AttachmentService : IAttachmentService
         }
     }
 
+    private static string FormatMegabytes(long bytes)
+    {
+        return FormattableString.Invariant($"{bytes / (1024d * 1024d):0.##}");
+    }
+
     private async Task<string> BufferAndHashAsync(Stream content, Stream buffer, CancellationToken cancellationToken)
     {
         using var hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
@@ -247,11 +254,6 @@ public class AttachmentService : IAttachmentService
         var used = FormatMegabytes(usedBytes);
 
         throw new ValidationFailedException(new[] { $"Your attachment quota of {limit} MB would be exceeded ({used} MB used). Delete some of your attachments first." });
-    }
-
-    private static string FormatMegabytes(long bytes)
-    {
-        return FormattableString.Invariant($"{bytes / (1024d * 1024d):0.##}");
     }
 
     private string TooLargeMessage()

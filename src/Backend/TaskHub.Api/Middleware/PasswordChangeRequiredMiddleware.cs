@@ -28,6 +28,7 @@ public class PasswordChangeRequiredMiddleware
         if (!mustChangePassword || AccountPathPattern.IsMatch(path))
         {
             await _next(context);
+
             return;
         }
 
@@ -35,6 +36,7 @@ public class PasswordChangeRequiredMiddleware
         context.Response.ContentType = "application/json";
 
         var payload = JsonSerializer.Serialize(new { errors = new[] { "You must change your password before continuing." } });
+
         await context.Response.WriteAsync(payload);
     }
 }

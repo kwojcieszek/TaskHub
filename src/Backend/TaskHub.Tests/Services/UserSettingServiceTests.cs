@@ -27,6 +27,7 @@ public class UserSettingServiceTests : IDisposable
 
         await _settings.SetAsync("theme", new SetUserSettingRequest { Value = "light" });
         await _settings.SetAsync("theme", new SetUserSettingRequest { Value = "dark" });
+
         var all = await _settings.GetAllAsync();
 
         Assert.Equal("dark", Assert.Single(all).Value);
@@ -37,6 +38,7 @@ public class UserSettingServiceTests : IDisposable
     {
         var anna = await _host.CreateUserAsync("anna");
         var jan = await _host.CreateUserAsync("jan");
+
         _host.SignIn(anna);
         await _settings.SetAsync("theme", new SetUserSettingRequest { Value = "dark" });
 

@@ -5,20 +5,23 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
+using TaskHub.Api;
 using TaskHub.Api.Authentication;
 using TaskHub.Api.Middleware;
 using TaskHub.Api.RateLimiting;
 using TaskHub.Application;
 using TaskHub.Application.Common;
 using TaskHub.Application.Options;
+using TaskHub.Domain.Entities;
 using TaskHub.Infrastructure;
 using TaskHub.Infrastructure.Persistence.Migrations;
 using TaskHub.Infrastructure.Seed;
 
 var builder = WebApplication.CreateBuilder(args);
-TaskHub.Api.StartupSecurity.Validate(builder.Configuration, builder.Environment);
+StartupSecurity.Validate(builder.Configuration, builder.Environment);
 
 builder.Services.AddControllers()
     .ConfigureApiBehaviorOptions(options =>
@@ -158,10 +161,17 @@ using (var scope = app.Services.CreateScope())
     // and stop if the model has changed without a migration for it.
     scope.ServiceProvider.GetRequiredService<DatabaseMigrator>().Migrate();
     await scope.ServiceProvider.GetRequiredService<DatabaseSchemaVerifier>().VerifyAsync();
+
     var seeder = scope.ServiceProvider.GetRequiredService<DbSeeder>();
+
     await seeder.SeedAsync();
+
     if (app.Environment.IsProduction())
-        await TaskHub.Api.StartupSecurity.ValidateAccountsAsync(scope.ServiceProvider.GetRequiredService<Microsoft.AspNetCore.Identity.UserManager<TaskHub.Domain.Entities.User>>());
+    {
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
+
+        await StartupSecurity.ValidateAccountsAsync(userManager);
+    }
 }
 
 // Registered first so it sees the final status code, including the ones set by the exception handler.

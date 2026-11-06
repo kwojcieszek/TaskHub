@@ -41,22 +41,27 @@ public abstract class AccessMatrixTestsBase : IClassFixture<TaskHubApiFactory>
         var owner = scenario.Cast.Owner;
 
         var project = await owner.GetAsync<ProjectDto>(ApiRoutes.Project(scenario.Project.Id));
+
         Assert.Equal(scenario.Project.Name, project.Name);
         Assert.True(project.IsActive);
         Assert.Equal(2, project.TaskCount);
         Assert.Equal(1, project.SubTaskCount);
 
         var members = await owner.GetAsync<List<ProjectMemberDto>>(ApiRoutes.ProjectMembers(scenario.Project.Id));
+
         Assert.Equal(3, members.Count);
 
         var leafTask = await owner.GetAsync<TaskItemDto>(ApiRoutes.Task(scenario.Project.Id, scenario.LeafTask.Id));
+
         Assert.Equal(scenario.LeafTask.Title, leafTask.Title);
         Assert.Equal(scenario.LeafTask.Status, leafTask.Status);
 
         var attachments = await owner.GetAsync<List<AttachmentDto>>(ApiRoutes.Attachments(scenario.Project.Id, scenario.LeafTask.Id));
+
         Assert.Equal(scenario.Attachment.Id, Assert.Single(attachments).Id);
 
         var content = await owner.GetAsync(ApiRoutes.AttachmentContent(scenario.Project.Id, scenario.LeafTask.Id, scenario.Attachment.Id));
+
         await content.ShouldBeAsync(HttpStatusCode.OK);
 
         Assert.Empty(await owner.GetAsync<List<ProjectTeamDto>>(ApiRoutes.ProjectTeams(scenario.Project.Id)));

@@ -7,14 +7,6 @@ namespace TaskHub.IntegrationTests.Support;
 /// </summary>
 public sealed class CrossUserAttack
 {
-    public CrossUserAttack(string name, HttpStatusCode expected, Func<CrossUserContext, Task<HttpResponseMessage>> execute, string? expectedBody = null)
-    {
-        Name = name;
-        Expected = expected;
-        Execute = execute;
-        ExpectedBody = expectedBody;
-    }
-
     public string Name { get; }
 
     public HttpStatusCode Expected { get; }
@@ -26,4 +18,12 @@ public sealed class CrossUserAttack
 
     // Set for the few attempts that are answered normally, but must come back empty.
     public string? ExpectedBody { get; }
+
+    public CrossUserAttack(string name, HttpStatusCode expected, Func<CrossUserContext, Task<HttpResponseMessage>> execute, string? expectedBody = null)
+    {
+        Name = name;
+        Expected = expected;
+        Execute = execute;
+        ExpectedBody = expectedBody;
+    }
 }

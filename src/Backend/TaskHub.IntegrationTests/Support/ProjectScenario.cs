@@ -11,17 +11,6 @@ namespace TaskHub.IntegrationTests.Support;
 /// </summary>
 public sealed class ProjectScenario
 {
-    private ProjectScenario(TestCast cast, ProjectDto project, TaskItemDto parentTask, TaskItemDto subTask, TaskItemDto leafTask, AttachmentDto attachment, byte[] attachmentContent)
-    {
-        Cast = cast;
-        Project = project;
-        ParentTask = parentTask;
-        SubTask = subTask;
-        LeafTask = leafTask;
-        Attachment = attachment;
-        AttachmentContent = attachmentContent;
-    }
-
     public TestCast Cast { get; }
 
     public ProjectDto Project { get; }
@@ -38,6 +27,17 @@ public sealed class ProjectScenario
 
     public byte[] AttachmentContent { get; }
 
+    private ProjectScenario(TestCast cast, ProjectDto project, TaskItemDto parentTask, TaskItemDto subTask, TaskItemDto leafTask, AttachmentDto attachment, byte[] attachmentContent)
+    {
+        Cast = cast;
+        Project = project;
+        ParentTask = parentTask;
+        SubTask = subTask;
+        LeafTask = leafTask;
+        Attachment = attachment;
+        AttachmentContent = attachmentContent;
+    }
+
     /// <summary>Wraps a project a test built by hand, so it can be used like a created scenario.</summary>
     public static ProjectScenario FromExisting(TestCast cast, ProjectDto project, TaskItemDto parentTask, TaskItemDto subTask, TaskItemDto leafTask, AttachmentDto attachment, byte[] attachmentContent)
     {
@@ -50,6 +50,7 @@ public sealed class ProjectScenario
         var owner = cast.Owner;
 
         var project = await owner.CreateProjectAsync($"Scenario {Guid.NewGuid():N}");
+
         await owner.AddMemberAsync(project.Id, cast.Editor.UserId, ProjectMemberRole.Editor);
         await owner.AddMemberAsync(project.Id, cast.Viewer.UserId, ProjectMemberRole.Viewer);
 

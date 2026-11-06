@@ -11,30 +11,6 @@ namespace TaskHub.IntegrationTests.Support;
 /// </summary>
 public sealed class TaskOwner
 {
-    public TaskOwner(
-        ApiSession session,
-        string secret,
-        ProjectDto project,
-        TaskItemDto parentTask,
-        TaskItemDto subTask,
-        TaskItemDto ownTask,
-        AttachmentDto attachment,
-        byte[] attachmentContent,
-        CommentDto projectComment,
-        CommentDto taskComment)
-    {
-        Session = session;
-        Secret = secret;
-        Project = project;
-        ParentTask = parentTask;
-        SubTask = subTask;
-        OwnTask = ownTask;
-        Attachment = attachment;
-        AttachmentContent = attachmentContent;
-        ProjectComment = projectComment;
-        TaskComment = taskComment;
-    }
-
     public ApiSession Session { get; }
 
     // Part of every title and description of this user, so a leak into someone else's response can be recognised.
@@ -59,4 +35,28 @@ public sealed class TaskOwner
     public CommentDto TaskComment { get; }
 
     public IReadOnlyList<Guid> TaskIds => new[] { ParentTask.Id, SubTask.Id, OwnTask.Id };
+
+    public TaskOwner(
+        ApiSession session,
+        string secret,
+        ProjectDto project,
+        TaskItemDto parentTask,
+        TaskItemDto subTask,
+        TaskItemDto ownTask,
+        AttachmentDto attachment,
+        byte[] attachmentContent,
+        CommentDto projectComment,
+        CommentDto taskComment)
+    {
+        Session = session;
+        Secret = secret;
+        Project = project;
+        ParentTask = parentTask;
+        SubTask = subTask;
+        OwnTask = ownTask;
+        Attachment = attachment;
+        AttachmentContent = attachmentContent;
+        ProjectComment = projectComment;
+        TaskComment = taskComment;
+    }
 }

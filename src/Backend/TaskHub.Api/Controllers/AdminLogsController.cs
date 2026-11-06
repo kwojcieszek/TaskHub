@@ -24,6 +24,7 @@ public class AdminLogsController : ApiControllerBase
     public async Task<ActionResult<PagedResultDto<UserActivityLogDto>>> GetLogins([FromQuery] AuditLogQuery query, CancellationToken cancellationToken)
     {
         var logs = await _auditLogService.GetLoginLogsAsync(query, cancellationToken);
+
         return Ok(logs);
     }
 
@@ -31,6 +32,7 @@ public class AdminLogsController : ApiControllerBase
     public async Task<ActionResult<PagedResultDto<UserActivityLogDto>>> GetActivity([FromQuery] AuditLogQuery query, CancellationToken cancellationToken)
     {
         var logs = await _auditLogService.GetActivityLogsAsync(query, cancellationToken);
+
         return Ok(logs);
     }
 }

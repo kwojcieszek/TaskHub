@@ -95,34 +95,6 @@ public class AuditLogService : IAuditLogService
         return GetLoginLogsAsync(LoginLogs().Where(l => l.UserId == userId), query, cancellationToken);
     }
 
-    private async Task<PagedResultDto<UserActivityLogDto>> GetLoginLogsAsync(IQueryable<UserActivityLog> logs, AuditLogQuery query, CancellationToken cancellationToken)
-    {
-        if (!string.IsNullOrWhiteSpace(query.Search))
-        {
-            var search = query.Search.Trim();
-            logs = logs.Where(l => l.UserName.Contains(search) || (l.IpAddress != null && l.IpAddress.Contains(search)));
-        }
-
-        var page = NormalizePage(query.Page);
-        var pageSize = NormalizePageSize(query.PageSize);
-
-        var totalCount = await logs.CountAsync(cancellationToken);
-
-        var items = await logs
-            .OrderByDescending(l => l.CreatedAt)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .ToListAsync(cancellationToken);
-
-        return new PagedResultDto<UserActivityLogDto>
-        {
-            Items = _mapper.Map<List<UserActivityLogDto>>(items),
-            TotalCount = totalCount,
-            Page = page,
-            PageSize = pageSize
-        };
-    }
-
     public async Task<PagedResultDto<UserActivityLogDto>> GetActivityLogsAsync(AuditLogQuery query, CancellationToken cancellationToken = default)
     {
         var logs = _dbContext.UserActivityLogs.AsNoTracking().Where(l => l.Type == UserActivityType.Request);
@@ -130,6 +102,7 @@ public class AuditLogService : IAuditLogService
         if (!string.IsNullOrWhiteSpace(query.Search))
         {
             var search = query.Search.Trim();
+
             logs = logs.Where(l => l.UserName.Contains(search)
                 || l.Action.Contains(search)
                 || l.Path.Contains(search)
@@ -156,11 +129,6 @@ public class AuditLogService : IAuditLogService
         };
     }
 
-    private IQueryable<UserActivityLog> LoginLogs()
-    {
-        return _dbContext.UserActivityLogs.AsNoTracking().Where(l => l.Type == UserActivityType.Login);
-    }
-
     private static int NormalizePage(int page)
     {
         return Math.Max(page, 1);
@@ -174,5 +142,39 @@ public class AuditLogService : IAuditLogService
     private static string Truncate(string value, int maxLength)
     {
         return value.Length <= maxLength ? value : value[..maxLength];
+    }
+
+    private async Task<PagedResultDto<UserActivityLogDto>> GetLoginLogsAsync(IQueryable<UserActivityLog> logs, AuditLogQuery query, CancellationToken cancellationToken)
+    {
+        if (!string.IsNullOrWhiteSpace(query.Search))
+        {
+            var search = query.Search.Trim();
+
+            logs = logs.Where(l => l.UserName.Contains(search) || (l.IpAddress != null && l.IpAddress.Contains(search)));
+        }
+
+        var page = NormalizePage(query.Page);
+        var pageSize = NormalizePageSize(query.PageSize);
+
+        var totalCount = await logs.CountAsync(cancellationToken);
+
+        var items = await logs
+            .OrderByDescending(l => l.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        return new PagedResultDto<UserActivityLogDto>
+        {
+            Items = _mapper.Map<List<UserActivityLogDto>>(items),
+            TotalCount = totalCount,
+            Page = page,
+            PageSize = pageSize
+        };
+    }
+
+    private IQueryable<UserActivityLog> LoginLogs()
+    {
+        return _dbContext.UserActivityLogs.AsNoTracking().Where(l => l.Type == UserActivityType.Login);
     }
 }

@@ -25,6 +25,7 @@ public class FakeCurrentUserService : ICurrentUserService
     public void SignIn(Guid userId, params string[] roles)
     {
         UserId = userId;
+
         _roles.Clear();
 
         foreach (var role in roles)

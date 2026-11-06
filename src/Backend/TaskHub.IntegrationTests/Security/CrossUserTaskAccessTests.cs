@@ -16,12 +16,12 @@ public class CrossUserTaskAccessTests : IClassFixture<TaskOwnersFixture>
 {
     private readonly TaskOwnersFixture _fixture;
 
+    public static TheoryData<string> Cases => CrossUserAttacks.Cases();
+
     public CrossUserTaskAccessTests(TaskOwnersFixture fixture)
     {
         _fixture = fixture;
     }
-
-    public static TheoryData<string> Cases => CrossUserAttacks.Cases();
 
     [Theory]
     [MemberData(nameof(Cases))]
@@ -61,6 +61,7 @@ public class CrossUserTaskAccessTests : IClassFixture<TaskOwnersFixture>
             await AssertUntouchedAsync(owner);
 
             var members = await owner.Session.GetAsync<List<ProjectMemberDto>>(ApiRoutes.ProjectMembers(owner.Project.Id));
+
             Assert.Equal(owner.Session.UserId, Assert.Single(members).UserId);
         }
     }
@@ -117,6 +118,7 @@ public class CrossUserTaskAccessTests : IClassFixture<TaskOwnersFixture>
         var owner = await _fixture.CreateOwnerAsync("shareowner");
         var viewer = await _fixture.CreateOwnerAsync("shareviewer");
         var outsider = await _fixture.CreateOwnerAsync("shareoutsider");
+
         await owner.Session.AddMemberAsync(owner.Project.Id, viewer.Session.UserId, ProjectMemberRole.Viewer);
 
         var read = await viewer.Session.GetAsync<TaskItemDto>(ApiRoutes.Task(owner.Project.Id, owner.OwnTask.Id));
@@ -154,6 +156,7 @@ public class CrossUserTaskAccessTests : IClassFixture<TaskOwnersFixture>
         var outsider = await _fixture.CreateOwnerAsync("shareoutsider");
         var privateProject = await owner.Session.CreateProjectAsync($"Private {owner.Secret}");
         var privateTask = await owner.Session.CreateTaskAsync(privateProject.Id, $"Private {owner.Secret}");
+
         await owner.Session.AddMemberAsync(owner.Project.Id, guest.Session.UserId, ProjectMemberRole.Editor);
 
         var guestReadsPrivate = await guest.Session.GetAsync(ApiRoutes.Task(privateProject.Id, privateTask.Id));
@@ -183,13 +186,16 @@ public class CrossUserTaskAccessTests : IClassFixture<TaskOwnersFixture>
     {
         var owner = await _fixture.CreateOwnerAsync("revokeowner");
         var editor = await _fixture.CreateOwnerAsync("revokeeditor");
+
         await owner.Session.AddMemberAsync(owner.Project.Id, editor.Session.UserId, ProjectMemberRole.Editor);
 
         var assigned = await owner.Session.PostAsync<TaskItemDto>(ApiRoutes.Tasks(owner.Project.Id), new CreateTaskItemRequest { Title = $"Assigned {owner.Secret}", AssignedUserId = editor.Session.UserId });
         var whileMember = await editor.Session.PutAsync(ApiRoutes.Task(owner.Project.Id, assigned.Id), new UpdateTaskItemRequest { Title = assigned.Title, AssignedUserId = editor.Session.UserId, Status = TaskItemStatus.InProgress });
+
         await whileMember.ShouldBeAsync(HttpStatusCode.OK);
 
         var removal = await owner.Session.DeleteAsync(ApiRoutes.ProjectMember(owner.Project.Id, editor.Session.UserId));
+
         await removal.ShouldBeAsync(HttpStatusCode.NoContent);
 
         var read = await editor.Session.GetAsync(ApiRoutes.Task(owner.Project.Id, assigned.Id));
@@ -209,6 +215,7 @@ public class CrossUserTaskAccessTests : IClassFixture<TaskOwnersFixture>
         Assert.DoesNotContain(owner.Secret, await calendar.Content.ReadAsStringAsync());
 
         var kept = await owner.Session.GetAsync<TaskItemDto>(ApiRoutes.Task(owner.Project.Id, assigned.Id));
+
         Assert.Equal(assigned.Title, kept.Title);
         Assert.Equal(TaskItemStatus.InProgress, kept.Status);
     }
@@ -218,13 +225,17 @@ public class CrossUserTaskAccessTests : IClassFixture<TaskOwnersFixture>
     {
         var owner = await _fixture.CreateOwnerAsync("unassignowner");
         var editor = await _fixture.CreateOwnerAsync("unassigneditor");
+
         await owner.Session.AddMemberAsync(owner.Project.Id, editor.Session.UserId, ProjectMemberRole.Editor);
+
         var assigned = await owner.Session.PostAsync<TaskItemDto>(ApiRoutes.Tasks(owner.Project.Id), new CreateTaskItemRequest { Title = "Assigned", AssignedUserId = editor.Session.UserId });
 
         var removal = await owner.Session.DeleteAsync(ApiRoutes.ProjectMember(owner.Project.Id, editor.Session.UserId));
+
         await removal.ShouldBeAsync(HttpStatusCode.NoContent);
 
         var kept = await owner.Session.GetAsync<TaskItemDto>(ApiRoutes.Task(owner.Project.Id, assigned.Id));
+
         Assert.Null(kept.AssignedUserId);
     }
 
@@ -244,27 +255,12 @@ public class CrossUserTaskAccessTests : IClassFixture<TaskOwnersFixture>
         }
     }
 
-    private IEnumerable<CrossUserContext> Arrangements(bool everyThird)
-    {
-        foreach (var attacker in _fixture.Owners)
-        {
-            foreach (var victim in _fixture.Owners.Where(owner => owner != attacker))
-            {
-                var thirds = _fixture.Owners.Where(owner => owner != attacker && owner != victim);
-
-                foreach (var third in everyThird ? thirds : thirds.Take(1))
-                {
-                    yield return new CrossUserContext(attacker, victim, third);
-                }
-            }
-        }
-    }
-
     private static async Task AssertUntouchedAsync(TaskOwner owner)
     {
         var session = owner.Session;
 
         var project = await session.GetAsync<ProjectDto>(ApiRoutes.Project(owner.Project.Id));
+
         Assert.Equal(owner.Project.Name, project.Name);
         Assert.Equal(owner.Session.UserId, project.OwnerId);
         Assert.True(project.IsActive);
@@ -272,10 +268,12 @@ public class CrossUserTaskAccessTests : IClassFixture<TaskOwnersFixture>
         var tasks = await session.GetAsync<List<TaskItemDto>>(ApiRoutes.Tasks(owner.Project.Id));
         var subTasks = await session.GetAsync<List<TaskItemDto>>(ApiRoutes.SubTasks(owner.Project.Id, owner.ParentTask.Id));
         var taskIds = Flatten(tasks).Concat(subTasks).Select(task => task.Id).Distinct().Order();
+
         Assert.Equal(owner.TaskIds.Order(), taskIds);
         Assert.Equal(owner.SubTask.Id, Assert.Single(subTasks).Id);
 
         var ownTask = await session.GetAsync<TaskItemDto>(ApiRoutes.Task(owner.Project.Id, owner.OwnTask.Id));
+
         Assert.Equal(owner.OwnTask.Title, ownTask.Title);
         Assert.Equal(owner.OwnTask.Description, ownTask.Description);
         Assert.Equal(TaskItemStatus.ToDo, ownTask.Status);
@@ -286,18 +284,22 @@ public class CrossUserTaskAccessTests : IClassFixture<TaskOwnersFixture>
         Assert.Null(ownTask.CompletedAt);
 
         var attachments = await session.GetAsync<List<AttachmentDto>>(ApiRoutes.Attachments(owner.Project.Id, owner.OwnTask.Id));
+
         Assert.Equal(owner.Attachment.Id, Assert.Single(attachments).Id);
 
         var content = await session.GetAsync(ApiRoutes.AttachmentContent(owner.Project.Id, owner.OwnTask.Id, owner.Attachment.Id));
+
         await content.ShouldBeAsync(HttpStatusCode.OK);
         Assert.Equal(owner.AttachmentContent, await content.Content.ReadAsByteArrayAsync());
 
         var projectComment = Assert.Single(await session.GetAsync<List<CommentDto>>(ApiRoutes.ProjectComments(owner.Project.Id)));
+
         Assert.Equal(owner.ProjectComment.Id, projectComment.Id);
         Assert.Equal(owner.ProjectComment.Content, projectComment.Content);
         Assert.Equal(owner.Session.UserId, projectComment.AuthorId);
 
         var taskComment = Assert.Single(await session.GetAsync<List<CommentDto>>(ApiRoutes.TaskComments(owner.Project.Id, owner.OwnTask.Id)));
+
         Assert.Equal(owner.TaskComment.Id, taskComment.Id);
         Assert.Equal(owner.TaskComment.Content, taskComment.Content);
 
@@ -315,6 +317,22 @@ public class CrossUserTaskAccessTests : IClassFixture<TaskOwnersFixture>
             foreach (var subTask in Flatten(task.SubTasks))
             {
                 yield return subTask;
+            }
+        }
+    }
+
+    private IEnumerable<CrossUserContext> Arrangements(bool everyThird)
+    {
+        foreach (var attacker in _fixture.Owners)
+        {
+            foreach (var victim in _fixture.Owners.Where(owner => owner != attacker))
+            {
+                var thirds = _fixture.Owners.Where(owner => owner != attacker && owner != victim);
+
+                foreach (var third in everyThird ? thirds : thirds.Take(1))
+                {
+                    yield return new CrossUserContext(attacker, victim, third);
+                }
             }
         }
     }

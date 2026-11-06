@@ -30,6 +30,7 @@ public class RecurringTaskTests : IClassFixture<TaskHubApiFactory>
             DueDate = dueDate,
             Recurrence = new TaskRecurrenceDto { Interval = 1, Unit = RecurrenceUnit.Month, Basis = RecurrenceBasis.DueDate }
         });
+
         await (await user.PostAsync(ApiRoutes.CompleteTask(project.Id, task.Id))).ShouldBeAsync(HttpStatusCode.OK);
 
         var tasks = await user.GetAsync<List<TaskItemDto>>(ApiRoutes.Tasks(project.Id));

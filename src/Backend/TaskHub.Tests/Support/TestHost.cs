@@ -30,10 +30,21 @@ public sealed class TestHost : IDisposable
     private readonly ServiceProvider _provider;
     private readonly IServiceScope _scope;
 
+    public ApplicationDbContext Db => Get<ApplicationDbContext>();
+
+    public FakeCurrentUserService CurrentUser => Get<FakeCurrentUserService>();
+
+    public FakeEmailSender Email => Get<FakeEmailSender>();
+
+    public InMemoryAttachmentStorage Storage => Get<InMemoryAttachmentStorage>();
+
+    public UserManager<User> Users => Get<UserManager<User>>();
+
     public TestHost(Action<SecurityOptions>? configureSecurity = null, Action<AttachmentStorageOptions>? configureAttachments = null)
     {
         // The database lives as long as this connection stays open.
         _connection = new SqliteConnection("Data Source=:memory:");
+
         _connection.Open();
 
         var services = new ServiceCollection();
@@ -73,6 +84,7 @@ public sealed class TestHost : IDisposable
         services.Configure<AttachmentStorageOptions>(options =>
         {
             options.MaxFileSizeBytes = MaxFileSizeBytes;
+
             configureAttachments?.Invoke(options);
         });
 
@@ -92,19 +104,10 @@ public sealed class TestHost : IDisposable
         Db.Database.EnsureCreated();
 
         var roleManager = Get<RoleManager<Role>>();
+
         roleManager.CreateAsync(new Role(Roles.Admin)).GetAwaiter().GetResult();
         roleManager.CreateAsync(new Role(Roles.User)).GetAwaiter().GetResult();
     }
-
-    public ApplicationDbContext Db => Get<ApplicationDbContext>();
-
-    public FakeCurrentUserService CurrentUser => Get<FakeCurrentUserService>();
-
-    public FakeEmailSender Email => Get<FakeEmailSender>();
-
-    public InMemoryAttachmentStorage Storage => Get<InMemoryAttachmentStorage>();
-
-    public UserManager<User> Users => Get<UserManager<User>>();
 
     public T Get<T>() where T : notnull
     {
@@ -122,6 +125,7 @@ public sealed class TestHost : IDisposable
         };
 
         var result = await Users.CreateAsync(user, DefaultPassword);
+
         Assert.True(result.Succeeded, string.Join("; ", result.Errors.Select(error => error.Description)));
 
         foreach (var role in roles)

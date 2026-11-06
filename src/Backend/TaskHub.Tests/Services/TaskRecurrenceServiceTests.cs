@@ -49,6 +49,7 @@ public class TaskRecurrenceServiceTests : IDisposable
         var task = await CreateRepeatingTaskAsync(project.Id, new TaskRecurrenceDto { Interval = 3, Unit = RecurrenceUnit.Day, Basis = RecurrenceBasis.CompletionDate });
 
         await _tasks.CompleteAsync(project.Id, task.Id);
+
         var next = Assert.Single(await _tasks.GetByProjectAsync(project.Id), t => t.Id != task.Id);
 
         Assert.Equal(DateTime.UtcNow.Date.AddDays(3), next.DueDate!.Value.Date);
@@ -88,6 +89,7 @@ public class TaskRecurrenceServiceTests : IDisposable
 
         await _tasks.CompleteAsync(project.Id, first.Id);
         await _tasks.CompleteAsync(project.Id, second.Id);
+
         var next = Assert.Single(await _tasks.GetByProjectAsync(project.Id), t => t.Id != task.Id);
 
         Assert.Equal(new[] { "first", "second" }, next.SubTasks.Select(s => s.Title));

@@ -75,6 +75,7 @@ public class ApiTokenService : IApiTokenService
         await _dbContext.SaveChangesAsync(cancellationToken);
 
         var created = Map(token, new CreatedApiTokenDto());
+
         created.Token = secret;
 
         return created;

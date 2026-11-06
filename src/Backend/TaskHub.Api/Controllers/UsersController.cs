@@ -22,6 +22,7 @@ public class UsersController : ApiControllerBase
     public async Task<ActionResult<IReadOnlyCollection<UserSummaryDto>>> Search([FromQuery] string? q, CancellationToken cancellationToken)
     {
         var users = await _userDirectoryService.SearchAsync(q, cancellationToken);
+
         return Ok(users);
     }
 }

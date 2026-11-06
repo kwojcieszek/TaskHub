@@ -39,6 +39,7 @@ public class AttachmentServiceTests : IDisposable
     public async Task Upload_AcceptsAFileOfExactlyTheMaximumSize()
     {
         var (project, task, _) = await ArrangeTaskAsync();
+
         var atLimit = new string('x', (int)TestHost.MaxFileSizeBytes);
 
         var attachment = await UploadAsync(project.Id, task.Id, "limit.txt", atLimit);
@@ -50,6 +51,7 @@ public class AttachmentServiceTests : IDisposable
     public async Task Upload_RefusesAnOversizedFileByItsDeclaredSizeWithoutReadingIt()
     {
         var (project, task, _) = await ArrangeTaskAsync();
+
         using var stream = new MemoryStream(Encoding.UTF8.GetBytes(Content));
 
         var exception = await Assert.ThrowsAsync<ValidationFailedException>(() => _attachments.UploadAsync(
@@ -64,6 +66,7 @@ public class AttachmentServiceTests : IDisposable
     public async Task Upload_StillCountsTheContentWhenTheDeclaredSizeUnderstatesIt()
     {
         var (project, task, _) = await ArrangeTaskAsync();
+
         using var stream = new MemoryStream(new byte[TestHost.MaxFileSizeBytes + 1]);
 
         await Assert.ThrowsAsync<ValidationFailedException>(() => _attachments.UploadAsync(
@@ -98,6 +101,7 @@ public class AttachmentServiceTests : IDisposable
     public async Task Upload_RejectsEmptyAndOversizedFiles()
     {
         var (project, task, _) = await ArrangeTaskAsync();
+
         var tooLarge = new string('x', (int)TestHost.MaxFileSizeBytes + 1);
 
         await Assert.ThrowsAsync<ValidationFailedException>(() => UploadAsync(project.Id, task.Id, "empty.txt", string.Empty));
@@ -109,7 +113,9 @@ public class AttachmentServiceTests : IDisposable
     public async Task Upload_IsForbiddenForAViewer()
     {
         var (project, task, owner) = await ArrangeTaskAsync();
+
         var viewer = await _host.CreateUserAsync("viewer");
+
         await _host.AddMemberAsync(project, owner, viewer, ProjectMemberRole.Viewer);
 
         _host.SignIn(viewer);
@@ -121,6 +127,7 @@ public class AttachmentServiceTests : IDisposable
     public async Task IdenticalContent_IsStoredOnceAndRemovedWithItsLastAttachment()
     {
         var (project, task, _) = await ArrangeTaskAsync();
+
         var otherTask = await _host.Get<ITaskItemService>().CreateAsync(project.Id, new CreateTaskItemRequest { Title = "other" });
 
         var first = await UploadAsync(project.Id, task.Id, "a.txt");
@@ -128,7 +135,9 @@ public class AttachmentServiceTests : IDisposable
         var savedOnce = _host.Storage.SaveCalls;
 
         await _attachments.DeleteAsync(project.Id, task.Id, first.Id);
+
         var afterFirstDelete = _host.Storage.Count;
+
         await _attachments.DeleteAsync(project.Id, otherTask.Id, second.Id);
 
         Assert.Equal(1, savedOnce);
@@ -140,6 +149,7 @@ public class AttachmentServiceTests : IDisposable
     public async Task DownloadBySha256_ReturnsContentForTheTaskItIsAttachedTo()
     {
         var (project, task, _) = await ArrangeTaskAsync();
+
         var attachment = await UploadAsync(project.Id, task.Id, "notes.txt");
 
         var download = await _attachments.DownloadBySha256Async(task.Id, attachment.Sha256.ToUpperInvariant());
@@ -154,6 +164,7 @@ public class AttachmentServiceTests : IDisposable
     {
         // The hash of a file in a foreign project is useless without access to a task it is attached to.
         var (project, task, _) = await ArrangeTaskAsync();
+
         var attachment = await UploadAsync(project.Id, task.Id, "notes.txt");
         var stranger = await _host.CreateUserAsync("stranger");
         var strangersProject = await _host.CreateProjectAsync(stranger, "theirs");
@@ -178,11 +189,17 @@ public class AttachmentServiceTests : IDisposable
     public async Task DeletingATask_RemovesItsAttachmentContent()
     {
         var (project, task, _) = await ArrangeTaskAsync();
+
         await UploadAsync(project.Id, task.Id, "notes.txt");
 
         await _host.Get<ITaskItemService>().DeleteAsync(project.Id, task.Id);
 
         Assert.Equal(0, _host.Storage.Count);
+    }
+
+    private static string Sha256Of(string content)
+    {
+        return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(content))).ToLowerInvariant();
     }
 
     private async Task<(ProjectDto Project, TaskItemDto Task, User Owner)> ArrangeTaskAsync()
@@ -199,10 +216,5 @@ public class AttachmentServiceTests : IDisposable
         using var stream = new MemoryStream(Encoding.UTF8.GetBytes(content));
 
         return await _attachments.UploadAsync(projectId, taskId, stream, fileName, "text/plain", stream.Length);
-    }
-
-    private static string Sha256Of(string content)
-    {
-        return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(content))).ToLowerInvariant();
     }
 }

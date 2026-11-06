@@ -49,6 +49,7 @@ public class ProjectTeamServiceTests : IDisposable
         var owner = await _host.CreateUserAsync("owner");
         var project = await _host.CreateProjectAsync(owner);
         var team = await _host.CreateTeamAsync("Developers");
+
         _host.SignIn(owner);
 
         await Assert.ThrowsAsync<ValidationFailedException>(() => _teams.AddAsync(project.Id, new AddProjectTeamRequest { UserGroupId = team.Id, Role = ProjectMemberRole.Owner }));
@@ -69,7 +70,9 @@ public class ProjectTeamServiceTests : IDisposable
         var outsider = await _host.CreateUserAsync("outsider");
         var admin = await _host.CreateUserAsync("admin", Roles.Admin);
         var project = await _host.CreateProjectAsync(owner);
+
         await _host.AddMemberAsync(project, owner, editor, ProjectMemberRole.Editor);
+
         var team = await _host.CreateTeamAsync("Developers");
         var request = new AddProjectTeamRequest { UserGroupId = team.Id, Role = ProjectMemberRole.Viewer };
 
@@ -96,6 +99,7 @@ public class ProjectTeamServiceTests : IDisposable
         var project = await _host.CreateProjectAsync(owner);
         var added = await _host.CreateTeamAsync("Added");
         var free = await _host.CreateTeamAsync("Free", owner);
+
         await _host.AddTeamAsync(project, owner, added, ProjectMemberRole.Viewer);
 
         var available = Assert.Single(await _teams.GetAvailableAsync(project.Id));
@@ -113,6 +117,7 @@ public class ProjectTeamServiceTests : IDisposable
         var writer = await _host.CreateUserAsync("writer");
         var project = await _host.CreateProjectAsync(owner);
         var task = await _tasks.CreateAsync(project.Id, new CreateTaskItemRequest { Title = "Task" });
+
         await _host.AddTeamAsync(project, owner, await _host.CreateTeamAsync("Readers", reader), ProjectMemberRole.Viewer);
         await _host.AddTeamAsync(project, owner, await _host.CreateTeamAsync("Writers", writer), ProjectMemberRole.Editor);
 
@@ -134,6 +139,7 @@ public class ProjectTeamServiceTests : IDisposable
         var raised = await _host.CreateUserAsync("raised");
         var kept = await _host.CreateUserAsync("kept");
         var project = await _host.CreateProjectAsync(owner);
+
         await _host.AddMemberAsync(project, owner, raised, ProjectMemberRole.Viewer);
         await _host.AddMemberAsync(project, owner, kept, ProjectMemberRole.Editor);
         await _host.AddTeamAsync(project, owner, await _host.CreateTeamAsync("Editors", raised), ProjectMemberRole.Editor);
@@ -152,16 +158,19 @@ public class ProjectTeamServiceTests : IDisposable
         var member = await _host.CreateUserAsync("member");
         var outsider = await _host.CreateUserAsync("outsider");
         var project = await _host.CreateProjectAsync(owner, "Shared");
+
         await _host.CreateProjectAsync(owner, "Private");
         await _tasks.CreateAsync(project.Id, new CreateTaskItemRequest { Title = "Shared task", DueDate = DateTime.UtcNow.AddDays(1) });
         await _host.AddTeamAsync(project, owner, await _host.CreateTeamAsync("Developers", member), ProjectMemberRole.Viewer);
 
         _host.SignIn(member);
+
         var projects = await _projects.GetAccessibleProjectsAsync();
         var tasks = await _tasks.GetMyTasksAsync();
         var calendar = await _tasks.GetCalendarAsync(DateTime.UtcNow.AddDays(-1), DateTime.UtcNow.AddDays(7));
 
         _host.SignIn(outsider);
+
         var outsiderProjects = await _projects.GetAccessibleProjectsAsync();
         var outsiderTasks = await _tasks.GetMyTasksAsync();
 
@@ -179,6 +188,7 @@ public class ProjectTeamServiceTests : IDisposable
         var direct = await _host.CreateUserAsync("direct");
         var viaTeam = await _host.CreateUserAsync("viateam");
         var project = await _host.CreateProjectAsync(owner);
+
         await _host.AddMemberAsync(project, owner, direct, ProjectMemberRole.Viewer);
         await _host.AddTeamAsync(project, owner, await _host.CreateTeamAsync("Editors", direct, viaTeam), ProjectMemberRole.Editor);
 
@@ -205,6 +215,7 @@ public class ProjectTeamServiceTests : IDisposable
         var member = await _host.CreateUserAsync("member");
         var outsider = await _host.CreateUserAsync("outsider");
         var project = await _host.CreateProjectAsync(owner);
+
         await _host.AddTeamAsync(project, owner, await _host.CreateTeamAsync("Developers", member), ProjectMemberRole.Viewer);
 
         var assigned = await _tasks.CreateAsync(project.Id, new CreateTaskItemRequest { Title = "For the team", AssignedUserId = member.Id });
@@ -221,7 +232,9 @@ public class ProjectTeamServiceTests : IDisposable
         var staying = await _host.CreateUserAsync("staying");
         var project = await _host.CreateProjectAsync(owner);
         var team = await _host.CreateTeamAsync("Developers", leaving, staying);
+
         await _host.AddTeamAsync(project, owner, team, ProjectMemberRole.Editor);
+
         var groups = _host.Get<IUserGroupService>();
 
         await groups.RemoveMemberAsync(team.Id, leaving.Id);
@@ -246,6 +259,7 @@ public class ProjectTeamServiceTests : IDisposable
         var member = await _host.CreateUserAsync("member");
         var project = await _host.CreateProjectAsync(owner);
         var team = await _host.CreateTeamAsync("Developers", member);
+
         await _host.AddTeamAsync(project, owner, team, ProjectMemberRole.Editor);
 
         await _host.Get<IUserGroupService>().DeleteAsync(team.Id);

@@ -28,6 +28,7 @@ public class RegistrationSecurityTests : IDisposable
         await response.ReadErrorsAsync(HttpStatusCode.Forbidden);
 
         var providers = await _factory.Anonymous().GetAsync<AuthProvidersDto>(ApiRoutes.Providers);
+
         Assert.False(providers.RegistrationEnabled);
     }
 
@@ -35,6 +36,7 @@ public class RegistrationSecurityTests : IDisposable
     public async Task Registration_WhenOpened_CreatesAnOrdinaryUser()
     {
         await UpdateSecurityAsync(settings => settings.RegistrationEnabled = true);
+
         var registration = NewRegistration();
 
         var created = await _factory.Anonymous().PostAsync<UserDto>(ApiRoutes.Register, registration, HttpStatusCode.Created);
@@ -54,6 +56,7 @@ public class RegistrationSecurityTests : IDisposable
     public async Task Registration_IgnoresPrivilegesSentWithTheRequest()
     {
         await UpdateSecurityAsync(settings => settings.RegistrationEnabled = true);
+
         var userName = NewUserName();
 
         var response = await _factory.Anonymous().PostAsync(ApiRoutes.Register, new
@@ -73,11 +76,13 @@ public class RegistrationSecurityTests : IDisposable
         });
 
         var created = await response.ReadAsync<UserDto>(HttpStatusCode.Created);
+
         Assert.Equal(new[] { Roles.User }, created.Roles);
         Assert.NotEqual(Guid.Empty, created.Id);
 
         var user = await _factory.LoginAsync(userName, TaskHubApiFactory.UserPassword);
         var adminPanel = await user.GetAsync(ApiRoutes.AdminUsers);
+
         await adminPanel.ShouldBeAsync(HttpStatusCode.Forbidden);
     }
 
@@ -85,30 +90,38 @@ public class RegistrationSecurityTests : IDisposable
     public async Task Registration_CannotTakeAnExistingUserNameOrEmail()
     {
         await UpdateSecurityAsync(settings => settings.RegistrationEnabled = true);
+
         var first = NewRegistration();
+
         await _factory.Anonymous().PostAsync<UserDto>(ApiRoutes.Register, first, HttpStatusCode.Created);
 
         var sameName = NewRegistration();
+
         sameName.UserName = first.UserName;
 
         var sameNameOtherCase = NewRegistration();
+
         sameNameOtherCase.UserName = first.UserName.ToUpperInvariant();
 
         var sameEmail = NewRegistration();
+
         sameEmail.Email = first.Email;
 
         var adminName = NewRegistration();
+
         adminName.UserName = TaskHubApiFactory.AdminUserName;
 
         foreach (var request in new[] { sameName, sameNameOtherCase, sameEmail, adminName })
         {
             var response = await _factory.Anonymous().PostAsync(ApiRoutes.Register, request);
+
             await response.ReadErrorsAsync(HttpStatusCode.BadRequest);
         }
 
         // The administrator account is untouched by the attempt to register its name.
         var admin = await _factory.AdminAsync();
         var users = await admin.GetAsync<List<AdminUserDto>>(ApiRoutes.AdminUsers);
+
         Assert.Single(users, user => string.Equals(user.UserName, TaskHubApiFactory.AdminUserName, StringComparison.OrdinalIgnoreCase));
     }
 
@@ -135,6 +148,7 @@ public class RegistrationSecurityTests : IDisposable
 
         var admin = await _factory.AdminAsync();
         var users = await admin.GetAsync<List<AdminUserDto>>(ApiRoutes.AdminUsers);
+
         Assert.Single(users);
     }
 
@@ -142,15 +156,19 @@ public class RegistrationSecurityTests : IDisposable
     public async Task Registration_ClosedAgain_StopsNewAccountsButKeepsExistingOnes()
     {
         await UpdateSecurityAsync(settings => settings.RegistrationEnabled = true);
+
         var registration = NewRegistration();
+
         await _factory.Anonymous().PostAsync<UserDto>(ApiRoutes.Register, registration, HttpStatusCode.Created);
 
         await UpdateSecurityAsync(settings => settings.RegistrationEnabled = false);
 
         var refused = await _factory.Anonymous().PostAsync(ApiRoutes.Register, NewRegistration());
+
         await refused.ShouldBeAsync(HttpStatusCode.Forbidden);
 
         var existing = await _factory.LoginAsync(registration.UserName, registration.Password);
+
         Assert.NotNull(existing.Token);
     }
 
@@ -165,16 +183,20 @@ public class RegistrationSecurityTests : IDisposable
         });
 
         var providers = await _factory.Anonymous().GetAsync<AuthProvidersDto>(ApiRoutes.Providers);
+
         Assert.Equal(12, providers.PasswordPolicy.MinLength);
         Assert.True(providers.PasswordPolicy.RequireNonAlphanumeric);
 
         var tooShort = NewRegistration();
+
         tooShort.Password = "Sh0rt-Pass";
 
         var noSymbol = NewRegistration();
+
         noSymbol.Password = "LongEnoughPassw0rd";
 
         var valid = NewRegistration();
+
         valid.Password = "Long-Enough-Passw0rd";
 
         var tooShortResponse = await _factory.Anonymous().PostAsync(ApiRoutes.Register, tooShort);
@@ -190,6 +212,7 @@ public class RegistrationSecurityTests : IDisposable
     public async Task PasswordPolicy_AppliesToPasswordsAssignedByAnAdministrator()
     {
         await UpdateSecurityAsync(settings => settings.PasswordPolicy.MinLength = 20);
+
         var admin = await _factory.AdminAsync();
         var userName = NewUserName();
 
@@ -201,6 +224,7 @@ public class RegistrationSecurityTests : IDisposable
 
         // The refused reset did not end the administrator's session.
         var stillSignedIn = await admin.GetAsync(ApiRoutes.AdminUsers);
+
         await stillSignedIn.ShouldBeAsync(HttpStatusCode.OK);
     }
 
@@ -232,6 +256,7 @@ public class RegistrationSecurityTests : IDisposable
         await response.ReadErrorsAsync(HttpStatusCode.BadRequest);
 
         var after = await admin.GetAsync<SecuritySettingsDto>(ApiRoutes.AdminSecurity);
+
         Assert.Equal(before.MaxFailedAccessAttempts, after.MaxFailedAccessAttempts);
         Assert.Equal(before.LockoutMinutes, after.LockoutMinutes);
         Assert.Equal(before.PasswordPolicy.MinLength, after.PasswordPolicy.MinLength);
@@ -241,16 +266,19 @@ public class RegistrationSecurityTests : IDisposable
     public async Task Lockout_SwitchedOff_NoLongerLocksAccounts()
     {
         await UpdateSecurityAsync(settings => settings.LockoutEnabled = false);
+
         var user = await _factory.CreateUserAsync();
         var anonymous = _factory.Anonymous();
 
         for (var attempt = 0; attempt < TaskHubApiFactory.MaxFailedAccessAttempts * 3; attempt++)
         {
             var failed = await anonymous.PostAsync(ApiRoutes.Login, new LoginRequest { UserName = user.UserName, Password = "Wrong-Passw0rd-1" });
+
             await failed.ShouldBeAsync(HttpStatusCode.Unauthorized);
         }
 
         var login = await anonymous.PostAsync(ApiRoutes.Login, new LoginRequest { UserName = user.UserName, Password = user.Password });
+
         await login.ShouldBeAsync(HttpStatusCode.OK);
     }
 
@@ -258,12 +286,14 @@ public class RegistrationSecurityTests : IDisposable
     public async Task Lockout_ThresholdChangedByTheAdministrator_IsApplied()
     {
         await UpdateSecurityAsync(settings => settings.MaxFailedAccessAttempts = 1);
+
         var user = await _factory.CreateUserAsync();
         var anonymous = _factory.Anonymous();
 
         await anonymous.PostAsync(ApiRoutes.Login, new LoginRequest { UserName = user.UserName, Password = "Wrong-Passw0rd-1" });
 
         var login = await anonymous.PostAsync(ApiRoutes.Login, new LoginRequest { UserName = user.UserName, Password = user.Password });
+
         await login.ShouldBeAsync(HttpStatusCode.Unauthorized);
     }
 

@@ -25,6 +25,7 @@ public class ApiTokenServiceTests : IDisposable
     public async Task Create_ReturnsTheTokenOnceAndStoresOnlyItsHash()
     {
         var user = await _host.CreateUserAsync("anna");
+
         _host.SignIn(user);
 
         var created = await _tokens.CreateAsync(new CreateApiTokenRequest { Name = "  Script  ", ExpiresInDays = 30 });
@@ -44,6 +45,7 @@ public class ApiTokenServiceTests : IDisposable
     public async Task Create_MakesEveryTokenDifferent()
     {
         var user = await _host.CreateUserAsync("anna");
+
         _host.SignIn(user);
 
         var first = await _tokens.CreateAsync(new CreateApiTokenRequest { Name = "Same" });
@@ -57,6 +59,7 @@ public class ApiTokenServiceTests : IDisposable
     public async Task Create_SetsTheExpiryFromTheNumberOfDays_OrNoneAtAll()
     {
         var user = await _host.CreateUserAsync("anna");
+
         _host.SignIn(user);
 
         var week = await _tokens.CreateAsync(new CreateApiTokenRequest { Name = "Week", ExpiresInDays = 7 });
@@ -76,6 +79,7 @@ public class ApiTokenServiceTests : IDisposable
     public async Task Create_RejectsABlankName(string name)
     {
         var user = await _host.CreateUserAsync("anna");
+
         _host.SignIn(user);
 
         await Assert.ThrowsAsync<ValidationFailedException>(() => _tokens.CreateAsync(new CreateApiTokenRequest { Name = name }));
@@ -87,6 +91,7 @@ public class ApiTokenServiceTests : IDisposable
     {
         var user = await _host.CreateUserAsync("anna");
         var other = await _host.CreateUserAsync("bartek");
+
         _host.SignIn(user);
 
         for (var index = 0; index < 20; index++)
@@ -106,9 +111,11 @@ public class ApiTokenServiceTests : IDisposable
     {
         var user = await _host.CreateUserAsync("anna");
         var other = await _host.CreateUserAsync("bartek");
+
         _host.SignIn(other);
         await _tokens.CreateAsync(new CreateApiTokenRequest { Name = "Foreign" });
         _host.SignIn(user);
+
         var older = await _tokens.CreateAsync(new CreateApiTokenRequest { Name = "Older" });
         var newer = await _tokens.CreateAsync(new CreateApiTokenRequest { Name = "Newer" });
 
@@ -123,10 +130,15 @@ public class ApiTokenServiceTests : IDisposable
     {
         var user = await _host.CreateUserAsync("anna");
         var other = await _host.CreateUserAsync("bartek");
+
         _host.SignIn(user);
+
         var mine = await _tokens.CreateAsync(new CreateApiTokenRequest { Name = "Mine" });
+
         _host.SignIn(other);
+
         var theirs = await _tokens.CreateAsync(new CreateApiTokenRequest { Name = "Theirs" });
+
         _host.SignIn(user);
 
         await _tokens.RevokeAsync(mine.Id);
@@ -142,11 +154,15 @@ public class ApiTokenServiceTests : IDisposable
     public async Task Authenticate_ReturnsTheUserWithTheirCurrentRoles_AndRecordsTheUse()
     {
         var user = await _host.CreateUserAsync("anna", Roles.User);
+
         _host.SignIn(user);
+
         var created = await _tokens.CreateAsync(new CreateApiTokenRequest { Name = "Script" });
 
         var asUser = await _tokens.AuthenticateAsync(created.Token);
+
         await _host.Users.AddToRoleAsync(user, Roles.Admin);
+
         var asAdmin = await _tokens.AuthenticateAsync(created.Token);
         var stored = await _host.Db.ApiTokens.AsNoTracking().SingleAsync();
 
@@ -165,9 +181,13 @@ public class ApiTokenServiceTests : IDisposable
     public async Task Authenticate_ReportsThatTheUserMustChangeThePassword()
     {
         var user = await _host.CreateUserAsync("anna");
+
         _host.SignIn(user);
+
         var created = await _tokens.CreateAsync(new CreateApiTokenRequest { Name = "Script" });
+
         user.MustChangePassword = true;
+
         await _host.Users.UpdateAsync(user);
 
         var identity = await _tokens.AuthenticateAsync(created.Token);
@@ -180,7 +200,9 @@ public class ApiTokenServiceTests : IDisposable
     public async Task Authenticate_RejectsWhatIsNotAValidToken()
     {
         var user = await _host.CreateUserAsync("anna");
+
         _host.SignIn(user);
+
         var created = await _tokens.CreateAsync(new CreateApiTokenRequest { Name = "Script" });
         var stored = await _host.Db.ApiTokens.AsNoTracking().SingleAsync();
 
@@ -207,11 +229,15 @@ public class ApiTokenServiceTests : IDisposable
     public async Task Authenticate_RejectsAnExpiredToken_AndTheListMarksIt()
     {
         var user = await _host.CreateUserAsync("anna");
+
         _host.SignIn(user);
+
         var created = await _tokens.CreateAsync(new CreateApiTokenRequest { Name = "Script", ExpiresInDays = 1 });
 
         var stored = await _host.Db.ApiTokens.SingleAsync();
+
         stored.ExpiresAt = DateTime.UtcNow.AddSeconds(-1);
+
         await _host.Db.SaveChangesAsync();
 
         Assert.Null(await _tokens.AuthenticateAsync(created.Token));
@@ -222,15 +248,21 @@ public class ApiTokenServiceTests : IDisposable
     public async Task Authenticate_RejectsTheTokenOfALockedUser_UntilTheLockEnds()
     {
         var user = await _host.CreateUserAsync("anna");
+
         _host.SignIn(user);
+
         var created = await _tokens.CreateAsync(new CreateApiTokenRequest { Name = "Script" });
 
         user.LockoutEnd = DateTimeOffset.UtcNow.AddMinutes(10);
+
         await _host.Users.UpdateAsync(user);
+
         var whileLocked = await _tokens.AuthenticateAsync(created.Token);
 
         user.LockoutEnd = DateTimeOffset.UtcNow.AddMinutes(-1);
+
         await _host.Users.UpdateAsync(user);
+
         var afterLock = await _tokens.AuthenticateAsync(created.Token);
 
         Assert.Null(whileLocked);
@@ -241,7 +273,9 @@ public class ApiTokenServiceTests : IDisposable
     public async Task DeletingTheUser_RemovesTheirTokens()
     {
         var user = await _host.CreateUserAsync("anna");
+
         _host.SignIn(user);
+
         var created = await _tokens.CreateAsync(new CreateApiTokenRequest { Name = "Script" });
 
         await _host.Users.DeleteAsync(user);

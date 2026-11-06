@@ -8,11 +8,6 @@ namespace TaskHub.Tests.Support;
 /// </summary>
 public sealed class FakeHostEnvironment : IHostEnvironment
 {
-    public FakeHostEnvironment(string contentRootPath)
-    {
-        ContentRootPath = contentRootPath;
-    }
-
     public string EnvironmentName { get; set; } = "Testing";
 
     public string ApplicationName { get; set; } = "TaskHub.Tests";
@@ -20,4 +15,9 @@ public sealed class FakeHostEnvironment : IHostEnvironment
     public string ContentRootPath { get; set; }
 
     public IFileProvider ContentRootFileProvider { get; set; } = new NullFileProvider();
+
+    public FakeHostEnvironment(string contentRootPath)
+    {
+        ContentRootPath = contentRootPath;
+    }
 }

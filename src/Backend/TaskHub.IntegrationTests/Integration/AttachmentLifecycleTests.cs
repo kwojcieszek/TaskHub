@@ -24,6 +24,7 @@ public class AttachmentLifecycleTests : IClassFixture<TaskHubApiFactory>
     public async Task UploadedFile_IsDescribedByItsContent()
     {
         var (user, project, task) = await CreateTaskAsync();
+
         var content = RandomContent(300);
 
         var attachment = await user.UploadAttachmentAsync(project.Id, task.Id, "report.pdf", content, "application/pdf");
@@ -37,6 +38,7 @@ public class AttachmentLifecycleTests : IClassFixture<TaskHubApiFactory>
         Assert.Equal(project.Id, attachment.ProjectId);
 
         var reloadedTask = await user.GetAsync<TaskItemDto>(ApiRoutes.Task(project.Id, task.Id));
+
         Assert.Equal(1, reloadedTask.AttachmentCount);
     }
 
@@ -44,6 +46,7 @@ public class AttachmentLifecycleTests : IClassFixture<TaskHubApiFactory>
     public async Task UploadedFile_IsDownloadedUnchanged()
     {
         var (user, project, task) = await CreateTaskAsync();
+
         var content = RandomContent(1000);
         var attachment = await user.UploadAttachmentAsync(project.Id, task.Id, "data.bin", content);
 
@@ -64,9 +67,11 @@ public class AttachmentLifecycleTests : IClassFixture<TaskHubApiFactory>
     public async Task Attachments_AreListedPerTaskAndFoundByHash()
     {
         var (user, project, task) = await CreateTaskAsync();
+
         var otherTask = await user.CreateTaskAsync(project.Id, "Other");
         var first = await user.UploadAttachmentAsync(project.Id, task.Id, "first.txt", RandomContent(10));
         var second = await user.UploadAttachmentAsync(project.Id, task.Id, "second.txt", RandomContent(20));
+
         await user.UploadAttachmentAsync(project.Id, otherTask.Id, "elsewhere.txt", RandomContent(30));
 
         var list = await user.GetAsync<List<AttachmentDto>>(ApiRoutes.Attachments(project.Id, task.Id));
@@ -82,6 +87,7 @@ public class AttachmentLifecycleTests : IClassFixture<TaskHubApiFactory>
     public async Task SameContent_IsStoredOnceAndSurvivesUntilItsLastAttachmentIsDeleted()
     {
         var (user, project, task) = await CreateTaskAsync();
+
         var otherTask = await user.CreateTaskAsync(project.Id, "Other");
         var content = RandomContent(64);
 
@@ -92,13 +98,16 @@ public class AttachmentLifecycleTests : IClassFixture<TaskHubApiFactory>
         Assert.Single(StoredFiles(first.Sha256));
 
         var deleteFirst = await user.DeleteAsync(ApiRoutes.Attachment(project.Id, task.Id, first.Id));
+
         await deleteFirst.ShouldBeAsync(HttpStatusCode.NoContent);
 
         var copy = await user.GetAsync(ApiRoutes.AttachmentContent(project.Id, otherTask.Id, second.Id));
+
         await copy.ShouldBeAsync(HttpStatusCode.OK);
         Assert.Equal(content, await copy.Content.ReadAsByteArrayAsync());
 
         var deleteSecond = await user.DeleteAsync(ApiRoutes.Attachment(project.Id, otherTask.Id, second.Id));
+
         await deleteSecond.ShouldBeAsync(HttpStatusCode.NoContent);
 
         Assert.Empty(StoredFiles(first.Sha256));
@@ -108,9 +117,11 @@ public class AttachmentLifecycleTests : IClassFixture<TaskHubApiFactory>
     public async Task DeletedAttachment_IsGone()
     {
         var (user, project, task) = await CreateTaskAsync();
+
         var attachment = await user.UploadAttachmentAsync(project.Id, task.Id, "gone.txt", RandomContent(16));
 
         var delete = await user.DeleteAsync(ApiRoutes.Attachment(project.Id, task.Id, attachment.Id));
+
         await delete.ShouldBeAsync(HttpStatusCode.NoContent);
 
         var download = await user.GetAsync(ApiRoutes.AttachmentContent(project.Id, task.Id, attachment.Id));
@@ -128,14 +139,17 @@ public class AttachmentLifecycleTests : IClassFixture<TaskHubApiFactory>
     public async Task DeletedTask_TakesItsAttachmentsAndTheirFilesAlong()
     {
         var (user, project, task) = await CreateTaskAsync();
+
         var subTask = await user.CreateSubTaskAsync(project.Id, task.Id);
         var onTask = await user.UploadAttachmentAsync(project.Id, task.Id, "task.txt", RandomContent(16));
         var onSubTask = await user.UploadAttachmentAsync(project.Id, subTask.Id, "subtask.txt", RandomContent(16));
 
         var delete = await user.DeleteAsync(ApiRoutes.Task(project.Id, task.Id));
+
         await delete.ShouldBeAsync(HttpStatusCode.NoContent);
 
         var list = await user.GetAsync(ApiRoutes.Attachments(project.Id, task.Id));
+
         await list.ShouldBeAsync(HttpStatusCode.NotFound);
         Assert.Empty(StoredFiles(onTask.Sha256));
         Assert.Empty(StoredFiles(onSubTask.Sha256));
@@ -148,9 +162,13 @@ public class AttachmentLifecycleTests : IClassFixture<TaskHubApiFactory>
 
         var before = await user.GetAsync<AttachmentLimitsDto>(ApiRoutes.AttachmentLimits);
         var attachment = await user.UploadAttachmentAsync(project.Id, task.Id, "first.bin", RandomContent(200));
+
         await user.UploadAttachmentAsync(project.Id, task.Id, "second.bin", RandomContent(50));
+
         var afterUploads = await user.GetAsync<AttachmentLimitsDto>(ApiRoutes.AttachmentLimits);
+
         await user.DeleteAsync(ApiRoutes.Attachment(project.Id, task.Id, attachment.Id));
+
         var afterDelete = await user.GetAsync<AttachmentLimitsDto>(ApiRoutes.AttachmentLimits);
 
         Assert.Equal(TaskHubApiFactory.MaxFileSizeBytes, before.MaxFileSizeBytes);
@@ -167,21 +185,27 @@ public class AttachmentLifecycleTests : IClassFixture<TaskHubApiFactory>
         var other = await factory.CreateUserAsync();
         var project = await user.CreateProjectAsync();
         var task = await user.CreateTaskAsync(project.Id);
+
         await user.AddMemberAsync(project.Id, other.UserId, ProjectMemberRole.Editor);
+
         var url = ApiRoutes.Attachments(project.Id, task.Id);
 
         var first = await user.UploadAttachmentAsync(project.Id, task.Id, "first.bin", RandomContent(600));
         var overQuota = await user.UploadAsync(url, "second.bin", RandomContent(600));
         var errors = await overQuota.ReadErrorsAsync(HttpStatusCode.BadRequest);
+
         Assert.Contains("quota", errors[0]);
 
         // The quota is per user: a colleague can still upload to the same task.
         var byOther = await other.UploadAsync(url, "other.bin", RandomContent(600));
+
         await byOther.ShouldBeAsync(HttpStatusCode.OK);
 
         // Deleting frees the space again.
         await user.DeleteAsync(ApiRoutes.Attachment(project.Id, task.Id, first.Id));
+
         var afterDelete = await user.UploadAsync(url, "second.bin", RandomContent(600));
+
         await afterDelete.ShouldBeAsync(HttpStatusCode.OK);
     }
 

@@ -24,6 +24,7 @@ public class ApiTokensController : ApiControllerBase
     public async Task<ActionResult<IReadOnlyCollection<ApiTokenDto>>> GetAll(CancellationToken cancellationToken)
     {
         var tokens = await _apiTokenService.GetMineAsync(cancellationToken);
+
         return Ok(tokens);
     }
 
@@ -31,6 +32,7 @@ public class ApiTokensController : ApiControllerBase
     public async Task<ActionResult<CreatedApiTokenDto>> Create(CreateApiTokenRequest request, CancellationToken cancellationToken)
     {
         var token = await _apiTokenService.CreateAsync(request, cancellationToken);
+
         return StatusCode(StatusCodes.Status201Created, token);
     }
 
@@ -38,6 +40,7 @@ public class ApiTokensController : ApiControllerBase
     public async Task<IActionResult> Revoke(Guid tokenId, CancellationToken cancellationToken)
     {
         await _apiTokenService.RevokeAsync(tokenId, cancellationToken);
+
         return NoContent();
     }
 }

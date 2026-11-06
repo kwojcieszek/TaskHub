@@ -104,6 +104,7 @@ public class SecuritySettingsService : ISecuritySettingsService
             if (setting is null)
             {
                 setting = new SystemSetting { Key = key };
+
                 _dbContext.SystemSettings.Add(setting);
             }
 

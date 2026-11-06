@@ -5,18 +5,26 @@
     <h1>{{ 'dashboard.greeting' | translate: { name: auth.currentUser()?.displayName } }}</h1>
     <p class="page-header__subtitle">{{ todayLabel() }}</p>
   </div>
-  <div class="segmented" role="group" [attr.aria-label]="'dashboard.scope' | translate">
-    @for (option of scopes; track option) {
-      <button
-        type="button"
-        class="segmented__option"
-        [class.segmented__option--active]="scope() === option"
-        [attr.aria-pressed]="scope() === option"
-        (click)="scope.set(option)"
-      >
-        {{ 'dashboard.scope.' + option | translate }}
-      </button>
-    }
+  <div class="dashboard-actions">
+    <div class="segmented" role="group" [attr.aria-label]="'dashboard.scope' | translate">
+      @for (option of scopes; track option) {
+        <button
+          type="button"
+          class="segmented__option"
+          [class.segmented__option--active]="scope() === option"
+          [attr.aria-pressed]="scope() === option"
+          (click)="scope.set(option)"
+        >
+          {{ 'dashboard.scope.' + option | translate }}
+        </button>
+      }
+    </div>
+    <p-button
+      [label]="'tasks.newTask' | translate"
+      icon="pi pi-plus"
+      [disabled]="activeProjects().length === 0"
+      (onClick)="addTask()"
+    />
   </div>
 </div>
 

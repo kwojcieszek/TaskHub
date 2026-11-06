@@ -24,17 +24,22 @@ public class UserSettingsAndAuditTests : IClassFixture<TaskHubApiFactory>
         var user = await _factory.CreateUserAsync();
 
         var saved = await user.PutAsync<UserSettingDto>(ApiRoutes.Setting("theme"), new SetUserSettingRequest { Value = "dark" });
+
         Assert.Equal("theme", saved.Key);
         Assert.Equal("dark", saved.Value);
 
         var read = await user.GetAsync<UserSettingDto>(ApiRoutes.Setting("theme"));
+
         Assert.Equal("dark", read.Value);
 
         var changed = await user.PutAsync<UserSettingDto>(ApiRoutes.Setting("theme"), new SetUserSettingRequest { Value = "light" });
+
         Assert.Equal("light", changed.Value);
 
         await user.PutAsync<UserSettingDto>(ApiRoutes.Setting("language"), new SetUserSettingRequest { Value = "pl" });
+
         var all = await user.GetAsync<List<UserSettingDto>>(ApiRoutes.Settings);
+
         Assert.Equal(new[] { "language", "theme" }, all.Select(setting => setting.Key));
 
         var delete = await user.DeleteAsync(ApiRoutes.Setting("theme"));
@@ -51,6 +56,7 @@ public class UserSettingsAndAuditTests : IClassFixture<TaskHubApiFactory>
     {
         var admin = await _factory.AdminAsync();
         var user = await _factory.CreateUserAsync();
+
         await user.PutAsync<UserSettingDto>(ApiRoutes.Setting("theme"), new SetUserSettingRequest { Value = "dark" });
 
         var delete = await admin.DeleteAsync(ApiRoutes.AdminUser(user.UserId));
@@ -64,6 +70,7 @@ public class UserSettingsAndAuditTests : IClassFixture<TaskHubApiFactory>
         var admin = await _factory.AdminAsync();
         var user = await _factory.CreateUserAsync("audited");
         var project = await user.CreateProjectAsync();
+
         await user.GetAsync(ApiRoutes.Projects);
         await user.DeleteAsync(ApiRoutes.Project(Guid.NewGuid()));
         await user.DeleteAsync(ApiRoutes.Project(project.Id));

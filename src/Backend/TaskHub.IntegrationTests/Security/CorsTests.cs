@@ -48,6 +48,7 @@ public class CorsTests : IClassFixture<TaskHubApiFactory>
     {
         var user = await _factory.CreateUserAsync();
         var request = new HttpRequestMessage(HttpMethod.Get, ApiRoutes.Me);
+
         request.Headers.Add("Origin", origin);
 
         var response = await user.Client.SendAsync(request);
@@ -60,6 +61,7 @@ public class CorsTests : IClassFixture<TaskHubApiFactory>
     public async Task Cors_NeverAllowsEveryOriginOrCredentials()
     {
         var request = new HttpRequestMessage(HttpMethod.Get, ApiRoutes.Providers);
+
         request.Headers.Add("Origin", AllowedOrigin);
 
         var response = await _factory.Anonymous().Client.SendAsync(request);
@@ -72,6 +74,7 @@ public class CorsTests : IClassFixture<TaskHubApiFactory>
     private Task<HttpResponseMessage> PreflightAsync(string origin, string method)
     {
         var request = new HttpRequestMessage(HttpMethod.Options, ApiRoutes.Projects);
+
         request.Headers.TryAddWithoutValidation("Origin", origin);
         request.Headers.Add("Access-Control-Request-Method", method);
         request.Headers.Add("Access-Control-Request-Headers", "authorization,content-type");

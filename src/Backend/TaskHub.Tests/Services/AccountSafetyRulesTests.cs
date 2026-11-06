@@ -26,6 +26,7 @@ public class AccountSafetyRulesTests : IDisposable
     {
         var admin = await _host.CreateUserAsync("admin", Roles.Admin);
         var service = _host.Get<IAdminUserService>();
+
         _host.SignIn(admin, Roles.Admin);
 
         await Assert.ThrowsAsync<ConflictException>(() => service.DeleteUserAsync(admin.Id));
@@ -42,6 +43,7 @@ public class AccountSafetyRulesTests : IDisposable
     {
         var admin = await _host.CreateUserAsync("admin", Roles.Admin);
         var service = _host.Get<IAdminUserService>();
+
         _host.SignIn(admin, Roles.Admin);
 
         var updated = await service.UpdateRolesAsync(admin.Id, new UpdateUserRolesRequest { Roles = new[] { Roles.Admin, Roles.User } });
@@ -59,10 +61,12 @@ public class AccountSafetyRulesTests : IDisposable
         var second = await _host.CreateUserAsync("second", Roles.Admin);
         var third = await _host.CreateUserAsync("third", Roles.Admin);
         var service = _host.Get<IAdminUserService>();
+
         _host.SignIn(admin, Roles.Admin);
 
         var demoted = await service.UpdateRolesAsync(second.Id, new UpdateUserRolesRequest { Roles = new[] { Roles.User } });
         var locked = await service.SetLockoutAsync(second.Id, new SetUserLockoutRequest { LockedOut = true });
+
         await service.DeleteUserAsync(third.Id);
 
         Assert.DoesNotContain(Roles.Admin, demoted.Roles);
@@ -77,7 +81,9 @@ public class AccountSafetyRulesTests : IDisposable
         var member = await _host.CreateUserAsync("member");
         var outsider = await _host.CreateUserAsync("outsider");
         var project = await _host.CreateProjectAsync(owner);
+
         await _host.AddMemberAsync(project, owner, member, ProjectMemberRole.Viewer);
+
         var tasks = _host.Get<ITaskItemService>();
 
         var toMember = await tasks.CreateAsync(project.Id, new CreateTaskItemRequest { Title = "For a member", AssignedUserId = member.Id });
@@ -96,13 +102,18 @@ public class AccountSafetyRulesTests : IDisposable
         var owner = await _host.CreateUserAsync("owner");
         var member = await _host.CreateUserAsync("member");
         var project = await _host.CreateProjectAsync(owner);
+
         await _host.AddMemberAsync(project, owner, member, ProjectMemberRole.Editor);
+
         var tasks = _host.Get<ITaskItemService>();
         var task = await tasks.CreateAsync(project.Id, new CreateTaskItemRequest { Title = "Assigned", AssignedUserId = member.Id });
+
         await _host.Get<IProjectService>().RemoveMemberAsync(project.Id, member.Id);
         Assert.Null((await tasks.GetByIdAsync(project.Id, task.Id)).AssignedUserId);
         Assert.Contains(await tasks.GetHistoryAsync(project.Id, task.Id), h => h.Field == "AssignedUserId" && h.OldValue == member.Id.ToString() && h.NewValue == null);
+
         var renamed = await tasks.UpdateAsync(project.Id, task.Id, new UpdateTaskItemRequest { Title = "Renamed" });
+
         Assert.Equal("Renamed", renamed.Title);
         await Assert.ThrowsAsync<ValidationFailedException>(() => tasks.UpdateAsync(project.Id, task.Id, new UpdateTaskItemRequest { Title = "Renamed", AssignedUserId = member.Id }));
     }

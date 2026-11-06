@@ -1,7 +1,9 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ConfirmationService } from 'primeng/api';
+import { Button } from 'primeng/button';
 import { ConfirmDialog } from 'primeng/confirmdialog';
+import { DialogService } from 'primeng/dynamicdialog';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { forkJoin } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
@@ -9,9 +11,11 @@ import { LanguageService } from '../../core/services/language.service';
 import { ProjectService } from '../../core/services/project.service';
 import { TaskItemService } from '../../core/services/task-item.service';
 import { DashboardScope, DashboardSection, DashboardStat } from '../../core/models/dashboard.model';
+import { Project } from '../../core/models/project.model';
 import { TaskItem, TaskItemPriority } from '../../core/models/task.model';
 import { projectColor } from '../../core/utils/project-color';
 import { TaskRowComponent } from '../../shared/task-row/task-row.component';
+import { TaskDialogComponent } from '../projects/task-dialog/task-dialog.component';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const UPCOMING_DAYS = 7;
@@ -22,8 +26,8 @@ const PRIORITY_ORDER: Record<TaskItemPriority, number> = { Critical: 0, High: 1,
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [RouterLink, ConfirmDialog, TranslateModule, TaskRowComponent],
-  providers: [ConfirmationService],
+  imports: [RouterLink, Button, ConfirmDialog, TranslateModule, TaskRowComponent],
+  providers: [ConfirmationService, DialogService],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'
 })
@@ -32,16 +36,27 @@ export class DashboardComponent implements OnInit {
   private readonly projectService = inject(ProjectService);
   private readonly language = inject(LanguageService);
   private readonly confirmationService = inject(ConfirmationService);
+  private readonly dialogService = inject(DialogService);
   private readonly translate = inject(TranslateService);
   readonly auth = inject(AuthService);
 
   private readonly tasks = signal<TaskItem[]>([]);
-  private readonly projectNames = signal<Record<string, string>>({});
+  private readonly projects = signal<Project[]>([]);
+  private readonly projectNames = computed<Record<string, string>>(() =>
+    Object.fromEntries(this.projects().map((project) => [project.id, project.name]))
+  );
   readonly loading = signal(false);
   readonly loadError = signal(false);
-  readonly scope = signal<DashboardScope>('All');
-  readonly scopes: DashboardScope[] = ['All', 'Mine'];
+  readonly scope = signal<DashboardScope>('Mine');
+  readonly scopes: DashboardScope[] = ['Mine', 'All'];
   readonly sectionLimit = SECTION_LIMIT;
+
+  // New tasks go only to active projects.
+  readonly activeProjects = computed(() =>
+    this.projects()
+      .filter((project) => project.isActive)
+      .sort((a, b) => a.name.localeCompare(b.name))
+  );
 
   readonly todayLabel = computed(() =>
     new Intl.DateTimeFormat(this.language.current(), { dateStyle: 'full' }).format(new Date())
@@ -130,12 +145,26 @@ export class DashboardComponent implements OnInit {
     }).subscribe({
       next: ({ tasks, projects }) => {
         this.tasks.set(tasks);
-        this.projectNames.set(Object.fromEntries(projects.map((project) => [project.id, project.name])));
+        this.projects.set(projects);
         this.loading.set(false);
       },
       error: () => {
         this.loading.set(false);
         this.loadError.set(true);
+      }
+    });
+  }
+
+  addTask(): void {
+    const ref = this.dialogService.open(TaskDialogComponent, {
+      header: this.translate.instant('tasks.newTask'),
+      width: 'min(620px, 96vw)',
+      data: { members: [], projects: this.activeProjects() }
+    });
+
+    ref?.onClose.subscribe((result) => {
+      if (result) {
+        this.load();
       }
     });
   }

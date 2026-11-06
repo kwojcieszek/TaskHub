@@ -15,11 +15,6 @@ namespace TaskHub.Infrastructure.Persistence.Migrations;
 /// </remarks>
 public abstract class TaskHubMigration : Migration
 {
-    protected TaskHubMigration(DatabaseOptions options)
-    {
-        Provider = options.Provider;
-    }
-
     protected DatabaseProvider Provider { get; }
 
     protected string DateTimeType => Provider switch
@@ -32,4 +27,9 @@ public abstract class TaskHubMigration : Migration
     };
 
     protected string OffsetType => Provider == DatabaseProvider.MsSql ? "datetimeoffset" : DateTimeType;
+
+    protected TaskHubMigration(DatabaseOptions options)
+    {
+        Provider = options.Provider;
+    }
 }

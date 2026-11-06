@@ -23,6 +23,7 @@ public class AdminController : ApiControllerBase
     public async Task<ActionResult<IReadOnlyCollection<AdminUserDto>>> GetAll(CancellationToken cancellationToken)
     {
         var users = await _adminUserService.GetAllUsersAsync(cancellationToken);
+
         return Ok(users);
     }
 
@@ -30,6 +31,7 @@ public class AdminController : ApiControllerBase
     public async Task<ActionResult<AdminUserDto>> Create(CreateUserRequest request, CancellationToken cancellationToken)
     {
         var user = await _adminUserService.CreateUserAsync(request, cancellationToken);
+
         return StatusCode(StatusCodes.Status201Created, user);
     }
 
@@ -37,6 +39,7 @@ public class AdminController : ApiControllerBase
     public async Task<ActionResult<AdminUserDto>> ResetPassword(Guid userId, ResetUserPasswordRequest request, CancellationToken cancellationToken)
     {
         var user = await _adminUserService.ResetPasswordAsync(userId, request, cancellationToken);
+
         return Ok(user);
     }
 
@@ -44,6 +47,7 @@ public class AdminController : ApiControllerBase
     public async Task<ActionResult<AdminUserDto>> UpdateRoles(Guid userId, UpdateUserRolesRequest request, CancellationToken cancellationToken)
     {
         var user = await _adminUserService.UpdateRolesAsync(userId, request, cancellationToken);
+
         return Ok(user);
     }
 
@@ -51,6 +55,7 @@ public class AdminController : ApiControllerBase
     public async Task<ActionResult<AdminUserDto>> SetLockout(Guid userId, SetUserLockoutRequest request, CancellationToken cancellationToken)
     {
         var user = await _adminUserService.SetLockoutAsync(userId, request, cancellationToken);
+
         return Ok(user);
     }
 
@@ -58,6 +63,7 @@ public class AdminController : ApiControllerBase
     public async Task<IActionResult> Delete(Guid userId, CancellationToken cancellationToken)
     {
         await _adminUserService.DeleteUserAsync(userId, cancellationToken);
+
         return NoContent();
     }
 }

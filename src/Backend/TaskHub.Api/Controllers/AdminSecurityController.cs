@@ -23,6 +23,7 @@ public class AdminSecurityController : ApiControllerBase
     public async Task<ActionResult<SecuritySettingsDto>> Get(CancellationToken cancellationToken)
     {
         var settings = await _securitySettingsService.GetAsync(cancellationToken);
+
         return Ok(settings);
     }
 
@@ -30,6 +31,7 @@ public class AdminSecurityController : ApiControllerBase
     public async Task<ActionResult<SecuritySettingsDto>> Update(SecuritySettingsDto request, CancellationToken cancellationToken)
     {
         var settings = await _securitySettingsService.UpdateAsync(request, cancellationToken);
+
         return Ok(settings);
     }
 }

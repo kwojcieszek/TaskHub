@@ -27,6 +27,7 @@ public class AuditLogServiceTests : IDisposable
         var user = await _host.CreateUserAsync("anna");
 
         await _audit.RecordLoginAsync(user.Id, "anna", null);
+
         var entry = await _host.Db.UserActivityLogs.AsNoTracking().SingleAsync();
 
         Assert.Equal(UserActivityType.Login, entry.Type);
@@ -43,6 +44,7 @@ public class AuditLogServiceTests : IDisposable
     public async Task FailedLogin_KeepsTheReason_AlsoForAnUnknownUser()
     {
         await _audit.RecordLoginAsync(null, "nobody", LoginFailureReason.UserNotFound);
+
         var entry = await _host.Db.UserActivityLogs.AsNoTracking().SingleAsync();
 
         Assert.Equal(UserActivityType.Login, entry.Type);
@@ -57,6 +59,7 @@ public class AuditLogServiceTests : IDisposable
         var user = await _host.CreateUserAsync("anna");
 
         await _audit.RecordActivityAsync(user.Id, "anna", "Projects.Create", "POST", "/v1/projects", 201);
+
         var entry = await _host.Db.UserActivityLogs.AsNoTracking().SingleAsync();
 
         Assert.Equal(UserActivityType.Request, entry.Type);
@@ -74,6 +77,7 @@ public class AuditLogServiceTests : IDisposable
 
         await _audit.RecordLoginAsync(null, new string('u', 400), LoginFailureReason.UserNotFound);
         await _audit.RecordActivityAsync(user.Id, new string('u', 400), new string('a', 400), "POST", new string('p', 900), 200);
+
         var entries = await _host.Db.UserActivityLogs.AsNoTracking().ToListAsync();
 
         Assert.All(entries, entry => Assert.Equal(256, entry.UserName.Length));
@@ -84,6 +88,7 @@ public class AuditLogServiceTests : IDisposable
     public async Task Logins_AndActivity_AreReadSeparately()
     {
         var user = await _host.CreateUserAsync("anna");
+
         await _audit.RecordLoginAsync(user.Id, "anna", null);
         await _audit.RecordLoginAsync(user.Id, "anna", LoginFailureReason.InvalidPassword);
         await _audit.RecordActivityAsync(user.Id, "anna", "Projects.Create", "POST", "/v1/projects", 201);
@@ -103,6 +108,7 @@ public class AuditLogServiceTests : IDisposable
     {
         var anna = await _host.CreateUserAsync("anna");
         var bartek = await _host.CreateUserAsync("bartek");
+
         await _audit.RecordLoginAsync(anna.Id, "anna", null);
         await _audit.RecordLoginAsync(bartek.Id, "bartek", null);
         await _audit.RecordLoginAsync(null, "anna", LoginFailureReason.UserNotFound);
@@ -119,6 +125,7 @@ public class AuditLogServiceTests : IDisposable
     public async Task Search_MatchesTheUserNameAndForActivityAlsoTheActionAndThePath()
     {
         var user = await _host.CreateUserAsync("anna");
+
         await _audit.RecordLoginAsync(user.Id, "anna", null);
         await _audit.RecordLoginAsync(null, "bartek", LoginFailureReason.UserNotFound);
         await _audit.RecordActivityAsync(user.Id, "anna", "Projects.Create", "POST", "/v1/projects", 201);

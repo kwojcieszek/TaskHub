@@ -26,6 +26,7 @@ public class SessionRevocationTests : IClassFixture<TaskHubApiFactory>
         var user = await _factory.CreateUserAsync();
 
         var delete = await admin.DeleteAsync(ApiRoutes.AdminUser(user.UserId));
+
         await delete.ShouldBeAsync(HttpStatusCode.NoContent);
 
         var me = await user.GetAsync(ApiRoutes.Me);
@@ -42,6 +43,7 @@ public class SessionRevocationTests : IClassFixture<TaskHubApiFactory>
     {
         var admin = await _factory.AdminAsync();
         var user = await _factory.CreateUserAsync();
+
         await admin.DeleteAsync(ApiRoutes.AdminUser(user.UserId));
 
         var login = await _factory.Anonymous().PostAsync(ApiRoutes.Login, new LoginRequest { UserName = user.UserName, Password = user.Password });
@@ -56,18 +58,23 @@ public class SessionRevocationTests : IClassFixture<TaskHubApiFactory>
         var user = await _factory.CreateUserAsync();
 
         var locked = await admin.PutAsync<AdminUserDto>(ApiRoutes.AdminUserLockout(user.UserId), new SetUserLockoutRequest { LockedOut = true });
+
         Assert.True(locked.LockedOut);
 
         var whileLocked = await user.GetAsync(ApiRoutes.Me);
+
         await whileLocked.ShouldBeAsync(HttpStatusCode.Unauthorized);
 
         var login = await _factory.Anonymous().PostAsync(ApiRoutes.Login, new LoginRequest { UserName = user.UserName, Password = user.Password });
+
         await login.ShouldBeAsync(HttpStatusCode.Unauthorized);
 
         var unlocked = await admin.PutAsync<AdminUserDto>(ApiRoutes.AdminUserLockout(user.UserId), new SetUserLockoutRequest { LockedOut = false });
+
         Assert.False(unlocked.LockedOut);
 
         var afterUnlock = await user.GetAsync(ApiRoutes.Me);
+
         await afterUnlock.ShouldBeAsync(HttpStatusCode.OK);
     }
 
@@ -87,9 +94,11 @@ public class SessionRevocationTests : IClassFixture<TaskHubApiFactory>
         await adminWithOldToken.ShouldBeAsync(HttpStatusCode.Unauthorized);
 
         var login = await _factory.LoginAsync(user);
+
         Assert.Contains(Roles.Admin, login.User!.Roles);
 
         var adminWithNewToken = await user.GetAsync(ApiRoutes.AdminUsers);
+
         await adminWithNewToken.ShouldBeAsync(HttpStatusCode.OK);
     }
 
@@ -100,11 +109,13 @@ public class SessionRevocationTests : IClassFixture<TaskHubApiFactory>
         var demoted = await _factory.CreateAdminAsync();
 
         var before = await demoted.GetAsync(ApiRoutes.AdminUsers);
+
         await before.ShouldBeAsync(HttpStatusCode.OK);
 
         await admin.PutAsync<AdminUserDto>(ApiRoutes.AdminUserRoles(demoted.UserId), new UpdateUserRolesRequest { Roles = new[] { Roles.User } });
 
         var withOldToken = await demoted.GetAsync(ApiRoutes.AdminUsers);
+
         await withOldToken.ShouldBeAsync(HttpStatusCode.Unauthorized);
 
         await _factory.LoginAsync(demoted);
@@ -140,21 +151,26 @@ public class SessionRevocationTests : IClassFixture<TaskHubApiFactory>
         var oldPassword = user.Password;
 
         var reset = await admin.PutAsync(ApiRoutes.AdminUserPassword(user.UserId), new ResetUserPasswordRequest { NewPassword = resetPassword });
+
         await reset.ShouldBeAsync(HttpStatusCode.OK);
 
         var withOldToken = await user.GetAsync(ApiRoutes.Me);
+
         await withOldToken.ShouldBeAsync(HttpStatusCode.Unauthorized);
 
         var withOldPassword = await _factory.Anonymous().PostAsync(ApiRoutes.Login, new LoginRequest { UserName = user.UserName, Password = oldPassword });
+
         await withOldPassword.ShouldBeAsync(HttpStatusCode.Unauthorized);
 
         user.Password = resetPassword;
+
         var login = await _factory.LoginAsync(user);
 
         // The administrator knows the new password, so it only lets the user in to replace it.
         Assert.True(login.User!.MustChangePassword);
 
         var projects = await user.GetAsync(ApiRoutes.Projects);
+
         await projects.ShouldBeAsync(HttpStatusCode.Forbidden);
     }
 
@@ -169,6 +185,7 @@ public class SessionRevocationTests : IClassFixture<TaskHubApiFactory>
 
         var changed = await user.PostAsync<LoginResponse>(ApiRoutes.Password, new ChangePasswordRequest { CurrentPassword = oldPassword, NewPassword = newPassword });
         var oldToken = user.Token!;
+
         user.Authenticate(changed.AccessToken!);
 
         var onOtherDevice = await otherDevice.GetAsync(ApiRoutes.Me);
@@ -207,9 +224,11 @@ public class SessionRevocationTests : IClassFixture<TaskHubApiFactory>
         var editor = scenario.Cast.Editor;
 
         var before = await editor.GetAsync(ApiRoutes.Project(scenario.Project.Id));
+
         await before.ShouldBeAsync(HttpStatusCode.OK);
 
         var remove = await scenario.Cast.Owner.DeleteAsync(ApiRoutes.ProjectMember(scenario.Project.Id, editor.UserId));
+
         await remove.ShouldBeAsync(HttpStatusCode.NoContent);
 
         var project = await editor.GetAsync(ApiRoutes.Project(scenario.Project.Id));

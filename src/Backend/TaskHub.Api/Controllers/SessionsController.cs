@@ -10,22 +10,36 @@ namespace TaskHub.Api.Controllers;
 [Authorize(Policy = AuthorizationPolicies.InteractiveSession)]
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/auth/sessions")]
-public class SessionsController(ISessionService sessions) : ApiControllerBase
+public class SessionsController : ApiControllerBase
 {
+    private readonly ISessionService _sessionService;
+
+    public SessionsController(ISessionService sessionService)
+    {
+        _sessionService = sessionService;
+    }
+
     [HttpGet]
-    public async Task<ActionResult<IReadOnlyCollection<SessionDto>>> Get(CancellationToken ct) => Ok(await sessions.GetMineAsync(ct));
+    public async Task<ActionResult<IReadOnlyCollection<SessionDto>>> Get(CancellationToken cancellationToken)
+    {
+        var sessions = await _sessionService.GetMineAsync(cancellationToken);
+
+        return Ok(sessions);
+    }
 
     [HttpDelete("{id:guid}")]
-    public async Task<IActionResult> Revoke(Guid id, CancellationToken ct)
+    public async Task<IActionResult> Revoke(Guid id, CancellationToken cancellationToken)
     {
-        await sessions.RevokeAsync(id, ct);
+        await _sessionService.RevokeAsync(id, cancellationToken);
+
         return NoContent();
     }
 
     [HttpPost("logout")]
-    public async Task<IActionResult> Logout([FromQuery] bool all, CancellationToken ct)
+    public async Task<IActionResult> Logout([FromQuery] bool all, CancellationToken cancellationToken)
     {
-        await sessions.LogoutAsync(all, ct);
+        await _sessionService.LogoutAsync(all, cancellationToken);
+
         return NoContent();
     }
 }

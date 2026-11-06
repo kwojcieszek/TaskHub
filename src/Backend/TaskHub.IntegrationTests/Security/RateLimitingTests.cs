@@ -25,12 +25,14 @@ public class RateLimitingTests
         for (var attempt = 0; attempt < limit; attempt++)
         {
             var allowed = await anonymous.PostAsync(ApiRoutes.Login, new LoginRequest { UserName = "nobody", Password = "Wrong-Passw0rd-1" });
+
             await allowed.ShouldBeAsync(HttpStatusCode.Unauthorized);
         }
 
         var limited = await anonymous.PostAsync(ApiRoutes.Login, new LoginRequest { UserName = "nobody", Password = "Wrong-Passw0rd-1" });
 
         var errors = await limited.ReadErrorsAsync(HttpStatusCode.TooManyRequests);
+
         Assert.Contains("Too many requests", errors[0]);
         Assert.True(limited.Headers.Contains("Retry-After"));
     }
@@ -118,6 +120,7 @@ public class RateLimitingTests
         for (var request = 0; request < limit + 5; request++)
         {
             var response = await busy.GetAsync(ApiRoutes.Projects);
+
             statuses.Add(response.StatusCode);
         }
 
@@ -127,6 +130,7 @@ public class RateLimitingTests
 
         // The other user has a budget of their own.
         var other = await quiet.GetAsync(ApiRoutes.Projects);
+
         await other.ShouldBeAsync(HttpStatusCode.OK);
     }
 
@@ -145,6 +149,7 @@ public class RateLimitingTests
         for (var request = 0; request < limit + 3; request++)
         {
             var response = await anonymous.GetAsync(ApiRoutes.Providers);
+
             statuses.Add(response.StatusCode);
         }
 

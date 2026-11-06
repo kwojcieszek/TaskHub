@@ -42,6 +42,14 @@ public class TaskHubApiFactory : WebApplicationFactory<ApiControllerBase>
     private TestCast? _cast;
     private int _userCounter;
 
+    public string DatabasePath => Path.Combine(_workDirectory, "taskhub.db");
+
+    public string AttachmentsPath => Path.Combine(_workDirectory, "attachments");
+
+    public CapturingEmailSender Email { get; } = new();
+
+    public JwtOptions Jwt => Services.GetRequiredService<IOptions<JwtOptions>>().Value;
+
     public TaskHubApiFactory()
     {
         _settings = new Dictionary<string, string?>
@@ -76,14 +84,6 @@ public class TaskHubApiFactory : WebApplicationFactory<ApiControllerBase>
         };
     }
 
-    public string DatabasePath => Path.Combine(_workDirectory, "taskhub.db");
-
-    public string AttachmentsPath => Path.Combine(_workDirectory, "attachments");
-
-    public CapturingEmailSender Email { get; } = new();
-
-    public JwtOptions Jwt => Services.GetRequiredService<IOptions<JwtOptions>>().Value;
-
     /// <summary>Overrides one configuration value. Only has an effect before the first request starts the API.</summary>
     public TaskHubApiFactory WithSetting(string key, string? value)
     {
@@ -100,6 +100,7 @@ public class TaskHubApiFactory : WebApplicationFactory<ApiControllerBase>
     public ApiSession WithToken(string token)
     {
         var session = Anonymous();
+
         session.Authenticate(token);
 
         return session;
@@ -168,6 +169,7 @@ public class TaskHubApiFactory : WebApplicationFactory<ApiControllerBase>
         var session = await CreateActiveUserAsync(admin, prefix);
 
         var response = await admin.PutAsync(ApiRoutes.AdminUserRoles(session.UserId), new UpdateUserRolesRequest { Roles = new[] { Roles.Admin, Roles.User } });
+
         await response.ShouldBeAsync(HttpStatusCode.OK);
 
         // Changing roles ends the user's sessions, so the new role arrives with a fresh sign-in.
@@ -195,10 +197,12 @@ public class TaskHubApiFactory : WebApplicationFactory<ApiControllerBase>
     public async Task<ApiSession> LoginAsync(string userName, string password)
     {
         var session = Anonymous();
+
         session.UserName = userName;
         session.Password = password;
 
         var login = await LoginAsync(session);
+
         session.UserId = login.User?.Id ?? Guid.Empty;
 
         return session;
@@ -255,6 +259,15 @@ public class TaskHubApiFactory : WebApplicationFactory<ApiControllerBase>
         }
     }
 
+    private static async Task ChangePasswordAsync(ApiSession session, string newPassword)
+    {
+        var changed = await session.PostAsync<LoginResponse>(ApiRoutes.Password, new ChangePasswordRequest { CurrentPassword = session.Password, NewPassword = newPassword });
+
+        session.Password = newPassword;
+
+        session.Authenticate(changed.AccessToken!);
+    }
+
     private async Task<ApiSession> EnsureAdminAsync()
     {
         if (_admin is not null)
@@ -263,10 +276,12 @@ public class TaskHubApiFactory : WebApplicationFactory<ApiControllerBase>
         }
 
         var session = Anonymous();
+
         session.UserName = AdminUserName;
         session.Password = InitialAdminPassword;
 
         var login = await LoginAsync(session);
+
         session.UserId = login.User!.Id;
         session.Email = login.User.Email;
 
@@ -292,6 +307,7 @@ public class TaskHubApiFactory : WebApplicationFactory<ApiControllerBase>
         var created = await admin.PostAsync<AdminUserDto>(ApiRoutes.AdminUsers, request, HttpStatusCode.Created);
 
         var session = Anonymous();
+
         session.UserId = created.Id;
         session.UserName = created.UserName;
         session.Email = created.Email;
@@ -308,13 +324,5 @@ public class TaskHubApiFactory : WebApplicationFactory<ApiControllerBase>
         await ChangePasswordAsync(session, UserPassword);
 
         return session;
-    }
-
-    private static async Task ChangePasswordAsync(ApiSession session, string newPassword)
-    {
-        var changed = await session.PostAsync<LoginResponse>(ApiRoutes.Password, new ChangePasswordRequest { CurrentPassword = session.Password, NewPassword = newPassword });
-
-        session.Password = newPassword;
-        session.Authenticate(changed.AccessToken!);
     }
 }

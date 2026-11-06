@@ -22,6 +22,7 @@ public class InMemoryAttachmentStorage : IAttachmentStorage
     public async Task SaveAsync(string sha256, Stream content, CancellationToken cancellationToken = default)
     {
         using var buffer = new MemoryStream();
+
         await content.CopyToAsync(buffer, cancellationToken);
 
         _files[sha256] = buffer.ToArray();

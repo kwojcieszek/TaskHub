@@ -10,12 +10,12 @@ public class GoogleTokenValidator : IGoogleTokenValidator
 {
     private readonly GoogleAuthOptions _options;
 
+    public string? ClientId => string.IsNullOrWhiteSpace(_options.ClientId) ? null : _options.ClientId.Trim();
+
     public GoogleTokenValidator(IOptions<GoogleAuthOptions> options)
     {
         _options = options.Value;
     }
-
-    public string? ClientId => string.IsNullOrWhiteSpace(_options.ClientId) ? null : _options.ClientId.Trim();
 
     public async Task<GoogleUserInfo?> ValidateAsync(string idToken, CancellationToken cancellationToken = default)
     {

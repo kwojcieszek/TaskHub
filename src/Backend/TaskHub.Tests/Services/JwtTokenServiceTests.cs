@@ -24,9 +24,11 @@ public class JwtTokenServiceTests
     public void AccessToken_CarriesTheUserRolesAndSessionVersion()
     {
         var user = NewUser();
+
         user.TokenVersion = 3;
 
         var (token, expiresAt) = _tokens.CreateAccessToken(user, new[] { Roles.Admin, Roles.User });
+
         var jwt = new JwtSecurityTokenHandler().ReadJwtToken(token);
 
         Assert.Equal(user.Id.ToString(), jwt.Claims.Single(claim => claim.Type == ClaimTypes.NameIdentifier).Value);

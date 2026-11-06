@@ -80,6 +80,7 @@ public class ApiTokenTests : IClassFixture<TaskHubApiFactory>
         Assert.NotNull(longest.ExpiresAt);
 
         var withForever = await _factory.WithToken(forever.Token).GetAsync(ApiRoutes.Me);
+
         await withForever.ShouldBeAsync(HttpStatusCode.OK);
     }
 
@@ -120,13 +121,16 @@ public class ApiTokenTests : IClassFixture<TaskHubApiFactory>
         var withToken = _factory.WithToken(created.Token);
 
         var before = await withToken.GetAsync(ApiRoutes.Me);
+
         await before.ShouldBeAsync(HttpStatusCode.OK);
 
         using (var scope = _factory.Services.CreateScope())
         {
             var database = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
             var stored = await database.ApiTokens.SingleAsync(token => token.Id == created.Id);
+
             stored.ExpiresAt = DateTime.UtcNow.AddSeconds(-1);
+
             await database.SaveChangesAsync();
         }
 
@@ -145,6 +149,7 @@ public class ApiTokenTests : IClassFixture<TaskHubApiFactory>
         var revoked = await CreateTokenAsync(user, "Revoked");
 
         var revoke = await user.DeleteAsync(ApiRoutes.Token(revoked.Id));
+
         await revoke.ShouldBeAsync(HttpStatusCode.NoContent);
 
         var withRevoked = await _factory.WithToken(revoked.Token).GetAsync(ApiRoutes.Me);
@@ -177,6 +182,7 @@ public class ApiTokenTests : IClassFixture<TaskHubApiFactory>
         Assert.Equal(await missingRevoke.Content.ReadAsStringAsync(), await attackerRevoke.Content.ReadAsStringAsync());
 
         var stillWorks = await _factory.WithToken(created.Token).GetAsync(ApiRoutes.Me);
+
         await stillWorks.ShouldBeAsync(HttpStatusCode.OK);
     }
 
@@ -207,6 +213,7 @@ public class ApiTokenTests : IClassFixture<TaskHubApiFactory>
         Assert.Single(await user.GetAsync<List<ApiTokenDto>>(ApiRoutes.Tokens));
 
         var signIn = await _factory.Anonymous().PostAsync(ApiRoutes.Login, new LoginRequest { UserName = user.UserName, Password = user.Password });
+
         await signIn.ShouldBeAsync(HttpStatusCode.OK);
     }
 
@@ -221,11 +228,15 @@ public class ApiTokenTests : IClassFixture<TaskHubApiFactory>
         var asUser = await withToken.GetAsync(ApiRoutes.AdminUsers);
 
         var promote = await admin.PutAsync(ApiRoutes.AdminUserRoles(user.UserId), new UpdateUserRolesRequest { Roles = new[] { Roles.Admin, Roles.User } });
+
         await promote.ShouldBeAsync(HttpStatusCode.OK);
+
         var asAdmin = await withToken.GetAsync(ApiRoutes.AdminUsers);
 
         var demote = await admin.PutAsync(ApiRoutes.AdminUserRoles(user.UserId), new UpdateUserRolesRequest { Roles = new[] { Roles.User } });
+
         await demote.ShouldBeAsync(HttpStatusCode.OK);
+
         var asUserAgain = await withToken.GetAsync(ApiRoutes.AdminUsers);
 
         await asUser.ShouldBeAsync(HttpStatusCode.Forbidden);
@@ -242,15 +253,21 @@ public class ApiTokenTests : IClassFixture<TaskHubApiFactory>
         var withToken = _factory.WithToken(created.Token);
 
         var locking = await admin.PutAsync(ApiRoutes.AdminUserLockout(user.UserId), new SetUserLockoutRequest { LockedOut = true });
+
         await locking.ShouldBeAsync(HttpStatusCode.OK);
+
         var whileLocked = await withToken.GetAsync(ApiRoutes.Me);
 
         var unlocking = await admin.PutAsync(ApiRoutes.AdminUserLockout(user.UserId), new SetUserLockoutRequest { LockedOut = false });
+
         await unlocking.ShouldBeAsync(HttpStatusCode.OK);
+
         var afterUnlock = await withToken.GetAsync(ApiRoutes.Me);
 
         var deleting = await admin.DeleteAsync(ApiRoutes.AdminUser(user.UserId));
+
         await deleting.ShouldBeAsync(HttpStatusCode.NoContent);
+
         var afterDelete = await withToken.GetAsync(ApiRoutes.Me);
 
         await whileLocked.ShouldBeAsync(HttpStatusCode.Unauthorized);
@@ -259,6 +276,7 @@ public class ApiTokenTests : IClassFixture<TaskHubApiFactory>
 
         using var scope = _factory.Services.CreateScope();
         var database = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
         Assert.False(await database.ApiTokens.AnyAsync(token => token.Id == created.Id));
     }
 
@@ -271,6 +289,7 @@ public class ApiTokenTests : IClassFixture<TaskHubApiFactory>
         var oldSession = _factory.WithToken(user.Token!);
 
         var change = await user.PostAsync<LoginResponse>(ApiRoutes.Password, new ChangePasswordRequest { CurrentPassword = user.Password, NewPassword = "Another-Passw0rd-1" });
+
         user.Authenticate(change.AccessToken!);
 
         var withOldSession = await oldSession.GetAsync(ApiRoutes.Me);
@@ -302,6 +321,7 @@ public class ApiTokenTests : IClassFixture<TaskHubApiFactory>
         foreach (var candidate in candidates)
         {
             var session = _factory.Anonymous();
+
             session.Client.DefaultRequestHeaders.TryAddWithoutValidation("Authorization", $"Bearer {candidate}");
 
             var response = await session.GetAsync(ApiRoutes.Me);
@@ -314,6 +334,7 @@ public class ApiTokenTests : IClassFixture<TaskHubApiFactory>
     public async Task UserWithAnAssignedPassword_CannotCreateTokens()
     {
         var pending = await _factory.CreatePendingUserAsync("tokenpending");
+
         await _factory.LoginAsync(pending);
 
         var create = await pending.PostAsync(ApiRoutes.Tokens, new CreateApiTokenRequest { Name = "Early" });
@@ -331,6 +352,7 @@ public class ApiTokenTests : IClassFixture<TaskHubApiFactory>
         var created = await CreateTokenAsync(user);
 
         var reset = await admin.PutAsync(ApiRoutes.AdminUserPassword(user.UserId), new ResetUserPasswordRequest { NewPassword = TaskHubApiFactory.AssignedPassword });
+
         await reset.ShouldBeAsync(HttpStatusCode.OK);
 
         var projects = await _factory.WithToken(created.Token).GetAsync(ApiRoutes.Projects);
@@ -377,7 +399,9 @@ public class ApiTokenTests : IClassFixture<TaskHubApiFactory>
 
         var unused = Assert.Single(await user.GetAsync<List<ApiTokenDto>>(ApiRoutes.Tokens));
         var use = await _factory.WithToken(created.Token).GetAsync(ApiRoutes.Me);
+
         await use.ShouldBeAsync(HttpStatusCode.OK);
+
         var used = Assert.Single(await user.GetAsync<List<ApiTokenDto>>(ApiRoutes.Tokens));
 
         Assert.Null(unused.LastUsedAt);

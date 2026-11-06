@@ -30,6 +30,7 @@ public class ProjectAccessGuardTests : IDisposable
         var outsider = await _host.CreateUserAsync("outsider");
         var admin = await _host.CreateUserAsync("admin", Roles.Admin);
         var project = await _host.CreateProjectAsync(owner);
+
         await _host.AddMemberAsync(project, owner, editor, ProjectMemberRole.Editor);
         await _host.AddMemberAsync(project, owner, viewer, ProjectMemberRole.Viewer);
 
@@ -67,6 +68,7 @@ public class ProjectAccessGuardTests : IDisposable
     public async Task MissingProject_IsAnsweredLikeOneWithoutAccess()
     {
         var user = await _host.CreateUserAsync("user");
+
         _host.SignIn(user);
 
         await Assert.ThrowsAsync<ForbiddenAccessException>(() => _guard.EnsureCanViewAsync(Guid.NewGuid()));
@@ -80,6 +82,7 @@ public class ProjectAccessGuardTests : IDisposable
         var member = await _host.CreateUserAsync("member");
         var shared = await _host.CreateProjectAsync(owner, "Shared");
         var secret = await _host.CreateProjectAsync(owner, "Secret");
+
         await _host.AddMemberAsync(shared, owner, member, ProjectMemberRole.Editor);
 
         _host.SignIn(member);
@@ -94,7 +97,9 @@ public class ProjectAccessGuardTests : IDisposable
         var owner = await _host.CreateUserAsync("owner");
         var other = await _host.CreateUserAsync("other");
         var admin = await _host.CreateUserAsync("admin", Roles.Admin);
+
         _host.SignIn(owner);
+
         var group = await _host.Get<IProjectGroupService>().CreateAsync(new CreateProjectGroupRequest { Name = "Group" });
 
         await _guard.EnsureCanManageGroupAsync(group.Id);

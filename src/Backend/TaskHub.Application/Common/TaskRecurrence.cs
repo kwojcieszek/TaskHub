@@ -26,6 +26,7 @@ public static class TaskRecurrence
         while (next <= completedOn)
         {
             steps++;
+
             next = Advance(dueDate.Value, recurrence, steps);
         }
 

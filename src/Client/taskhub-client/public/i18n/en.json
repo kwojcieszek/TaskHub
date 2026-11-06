@@ -71,6 +71,8 @@
     "languageHint": "Language of the application interface.",
     "theme": "Theme",
     "themeHint": "Light, dark or following your system setting.",
+    "assignToMe": "Assign new tasks to me",
+    "assignToMeHint": "New tasks you create are assigned to you by default.",
     "security": "Security",
     "openProfile": "Go to profile"
   },
@@ -207,6 +209,9 @@
     "deleteWithSubTasksConfirm": "Delete this task together with its subtasks? This cannot be undone.",
     "title": "Tasks",
     "newTask": "New task",
+    "project": "Project",
+    "selectProject": "Select a project",
+    "projectReadOnly": "You can only view this project, so you cannot add tasks to it.",
     "newSubTask": "New subtask",
     "previewDescription": "Preview description",
     "noTasks": "No tasks in this project yet.",

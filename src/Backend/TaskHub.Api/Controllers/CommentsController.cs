@@ -22,6 +22,7 @@ public class CommentsController : ApiControllerBase
     public async Task<ActionResult<IReadOnlyCollection<CommentDto>>> GetForProject(Guid projectId, CancellationToken cancellationToken)
     {
         var comments = await _commentService.GetForProjectAsync(projectId, cancellationToken);
+
         return Ok(comments);
     }
 
@@ -29,6 +30,7 @@ public class CommentsController : ApiControllerBase
     public async Task<ActionResult<CommentDto>> AddToProject(Guid projectId, SaveCommentRequest request, CancellationToken cancellationToken)
     {
         var comment = await _commentService.AddToProjectAsync(projectId, request, cancellationToken);
+
         return Ok(comment);
     }
 
@@ -36,6 +38,7 @@ public class CommentsController : ApiControllerBase
     public async Task<ActionResult<IReadOnlyCollection<CommentDto>>> GetForTask(Guid projectId, Guid taskId, CancellationToken cancellationToken)
     {
         var comments = await _commentService.GetForTaskAsync(projectId, taskId, cancellationToken);
+
         return Ok(comments);
     }
 
@@ -43,6 +46,7 @@ public class CommentsController : ApiControllerBase
     public async Task<ActionResult<CommentDto>> AddToTask(Guid projectId, Guid taskId, SaveCommentRequest request, CancellationToken cancellationToken)
     {
         var comment = await _commentService.AddToTaskAsync(projectId, taskId, request, cancellationToken);
+
         return Ok(comment);
     }
 
@@ -51,6 +55,7 @@ public class CommentsController : ApiControllerBase
     public async Task<ActionResult<CommentDto>> Update(Guid projectId, Guid commentId, SaveCommentRequest request, CancellationToken cancellationToken)
     {
         var comment = await _commentService.UpdateAsync(projectId, commentId, request, cancellationToken);
+
         return Ok(comment);
     }
 
@@ -58,6 +63,7 @@ public class CommentsController : ApiControllerBase
     public async Task<IActionResult> Delete(Guid projectId, Guid commentId, CancellationToken cancellationToken)
     {
         await _commentService.DeleteAsync(projectId, commentId, cancellationToken);
+
         return NoContent();
     }
 }

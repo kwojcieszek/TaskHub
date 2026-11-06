@@ -29,6 +29,7 @@ public class UserDirectoryServiceTests : IDisposable
     public async Task Search_ReturnsNothingForAMissingOrTooShortQuery(string? query)
     {
         var searcher = await ArrangeAsync();
+
         _host.SignIn(searcher, Roles.Admin);
 
         Assert.Empty(await _directory.SearchAsync(query));
@@ -38,6 +39,7 @@ public class UserDirectoryServiceTests : IDisposable
     public async Task Search_ReturnsNothingForAnOverlongQuery()
     {
         var searcher = await ArrangeAsync();
+
         _host.SignIn(searcher);
 
         Assert.Empty(await _directory.SearchAsync(new string('a', 101)));
@@ -51,6 +53,7 @@ public class UserDirectoryServiceTests : IDisposable
     public async Task Search_FindsByPartOfTheDisplayName_WhateverTheCase(string query)
     {
         var searcher = await ArrangeAsync();
+
         _host.SignIn(searcher);
 
         var found = Assert.Single(await _directory.SearchAsync(query));
@@ -64,10 +67,12 @@ public class UserDirectoryServiceTests : IDisposable
         var searcher = await ArrangeAsync();
 
         _host.SignIn(searcher);
+
         var byFullLogin = await _directory.SearchAsync("ZKOWALSKA");
         var byPartOfLogin = await _directory.SearchAsync("zkowal");
 
         _host.SignIn(searcher, Roles.Admin);
+
         var byPartOfLoginAsAdmin = await _directory.SearchAsync("zkowal");
 
         Assert.Equal("Zofia Kowalska", Assert.Single(byFullLogin).DisplayName);
@@ -81,9 +86,11 @@ public class UserDirectoryServiceTests : IDisposable
         var searcher = await ArrangeAsync();
 
         _host.SignIn(searcher);
+
         var asUser = Assert.Single(await _directory.SearchAsync("Kowalska"));
 
         _host.SignIn(searcher, Roles.Admin);
+
         var asAdmin = Assert.Single(await _directory.SearchAsync("Kowalska"));
 
         Assert.Null(asUser.UserName);
@@ -98,6 +105,7 @@ public class UserDirectoryServiceTests : IDisposable
     public async Task Search_TreatsWildcardsAsOrdinaryText(string query)
     {
         var searcher = await ArrangeAsync();
+
         _host.SignIn(searcher, Roles.Admin);
 
         Assert.Empty(await _directory.SearchAsync(query));
@@ -114,6 +122,7 @@ public class UserDirectoryServiceTests : IDisposable
         }
 
         _host.SignIn(searcher);
+
         var found = await _directory.SearchAsync("Crowd");
 
         Assert.Equal(20, found.Count);
@@ -131,7 +140,9 @@ public class UserDirectoryServiceTests : IDisposable
     private async Task<User> CreateNamedUserAsync(string userName, string displayName)
     {
         var user = await _host.CreateUserAsync(userName);
+
         user.DisplayName = displayName;
+
         await _host.Users.UpdateAsync(user);
 
         return user;

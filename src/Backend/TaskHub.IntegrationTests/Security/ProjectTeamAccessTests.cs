@@ -30,6 +30,7 @@ public class ProjectTeamAccessTests : IClassFixture<TaskHubApiFactory>
         var team = await CreateTeamAsync(member);
 
         var before = await member.GetAsync(ApiRoutes.Project(project.Id));
+
         await owner.AddTeamAsync(project.Id, team.Id, ProjectMemberRole.Viewer);
 
         var read = await member.GetAsync<TaskItemDto>(ApiRoutes.Task(project.Id, task.Id));
@@ -55,6 +56,7 @@ public class ProjectTeamAccessTests : IClassFixture<TaskHubApiFactory>
         var project = await owner.CreateProjectAsync("Shared with editors");
         var team = await CreateTeamAsync(member);
         var otherTeam = await CreateTeamAsync(outsider);
+
         await owner.AddTeamAsync(project.Id, team.Id, ProjectMemberRole.Editor);
 
         var created = await member.CreateTaskAsync(project.Id, "Created through a team");
@@ -81,6 +83,7 @@ public class ProjectTeamAccessTests : IClassFixture<TaskHubApiFactory>
         await available.ShouldBeAsync(HttpStatusCode.Forbidden);
 
         var outsiderRead = await outsider.GetAsync(ApiRoutes.Project(project.Id));
+
         await outsiderRead.ShouldBeAsync(HttpStatusCode.Forbidden);
     }
 
@@ -94,8 +97,11 @@ public class ProjectTeamAccessTests : IClassFixture<TaskHubApiFactory>
         var project = await owner.CreateProjectAsync("Listed for the team", group.Id);
         var hidden = await owner.CreateProjectAsync("Not shared", group.Id);
         var task = await owner.CreateTaskAsync(project.Id, "Listed task", DateTime.UtcNow.AddDays(1));
+
         await owner.CreateTaskAsync(hidden.Id, "Hidden task", DateTime.UtcNow.AddDays(1));
+
         var team = await CreateTeamAsync(member);
+
         await owner.AddTeamAsync(project.Id, team.Id, ProjectMemberRole.Viewer);
 
         var projects = await member.GetAsync<List<ProjectDto>>(ApiRoutes.Projects);
@@ -121,6 +127,7 @@ public class ProjectTeamAccessTests : IClassFixture<TaskHubApiFactory>
         var project = await owner.CreateProjectAsync("Shared for a while");
         var task = await owner.CreateTaskAsync(project.Id);
         var team = await CreateTeamAsync(member);
+
         await owner.AddTeamAsync(project.Id, team.Id, ProjectMemberRole.Editor);
 
         var whileShared = await member.GetAsync(ApiRoutes.Task(project.Id, task.Id));
@@ -147,15 +154,18 @@ public class ProjectTeamAccessTests : IClassFixture<TaskHubApiFactory>
         var staying = await _factory.CreateUserAsync("teamstaying");
         var project = await owner.CreateProjectAsync("Shared with a changing team");
         var team = await CreateTeamAsync(leaving, staying);
+
         await owner.AddTeamAsync(project.Id, team.Id, ProjectMemberRole.Editor);
 
         var leave = await admin.DeleteAsync(ApiRoutes.UserGroupMember(team.Id, leaving.UserId));
+
         await leave.ShouldBeAsync(HttpStatusCode.NoContent);
 
         var leavingRead = await leaving.GetAsync(ApiRoutes.Project(project.Id));
         var stayingRead = await staying.GetAsync(ApiRoutes.Project(project.Id));
 
         var deleteTeam = await admin.DeleteAsync(ApiRoutes.UserGroup(team.Id));
+
         await deleteTeam.ShouldBeAsync(HttpStatusCode.NoContent);
 
         var stayingAfterDelete = await staying.GetAsync(ApiRoutes.Project(project.Id));
@@ -174,12 +184,15 @@ public class ProjectTeamAccessTests : IClassFixture<TaskHubApiFactory>
         var raised = await _factory.CreateUserAsync("teamraised");
         var kept = await _factory.CreateUserAsync("teamkept");
         var project = await owner.CreateProjectAsync("Mixed roles");
+
         await owner.AddMemberAsync(project.Id, raised.UserId, ProjectMemberRole.Viewer);
         await owner.AddMemberAsync(project.Id, kept.UserId, ProjectMemberRole.Editor);
+
         var editors = await CreateTeamAsync(raised);
         var viewers = await CreateTeamAsync(kept, raised);
 
         var beforeTeam = await raised.PostAsync(ApiRoutes.Tasks(project.Id), new CreateTaskItemRequest { Title = "Too early" });
+
         await owner.AddTeamAsync(project.Id, editors.Id, ProjectMemberRole.Editor);
         await owner.AddTeamAsync(project.Id, viewers.Id, ProjectMemberRole.Viewer);
 
@@ -193,6 +206,7 @@ public class ProjectTeamAccessTests : IClassFixture<TaskHubApiFactory>
 
         var raisedEntry = members.Single(member => member.UserId == raised.UserId);
         var keptEntry = members.Single(member => member.UserId == kept.UserId);
+
         Assert.Equal(ProjectMemberRole.Editor.ToString(), raisedEntry.Role);
         Assert.Equal(ProjectMemberRole.Editor.ToString(), keptEntry.Role);
         Assert.True(raisedEntry.Direct);
@@ -207,6 +221,7 @@ public class ProjectTeamAccessTests : IClassFixture<TaskHubApiFactory>
         var outsider = await _factory.CreateUserAsync("teamoutsider");
         var project = await owner.CreateProjectAsync("Team assignments");
         var team = await CreateTeamAsync(member);
+
         await owner.AddTeamAsync(project.Id, team.Id, ProjectMemberRole.Viewer);
 
         var members = await owner.GetAsync<List<ProjectMemberDto>>(ApiRoutes.ProjectMembers(project.Id));
@@ -214,6 +229,7 @@ public class ProjectTeamAccessTests : IClassFixture<TaskHubApiFactory>
         var toOutsider = await owner.PostAsync(ApiRoutes.Tasks(project.Id), new CreateTaskItemRequest { Title = "For an outsider", AssignedUserId = outsider.UserId });
 
         var entry = members.Single(listed => listed.UserId == member.UserId);
+
         Assert.False(entry.Direct);
         Assert.Equal(ProjectMemberRole.Viewer.ToString(), entry.Role);
         Assert.Equal(team.Name, Assert.Single(entry.Teams));
@@ -231,6 +247,7 @@ public class ProjectTeamAccessTests : IClassFixture<TaskHubApiFactory>
         var secret = await owner.CreateProjectAsync("Secret");
         var secretTask = await owner.CreateTaskAsync(secret.Id, "Secret task");
         var team = await CreateTeamAsync(member);
+
         await owner.AddTeamAsync(shared.Id, team.Id, ProjectMemberRole.Editor);
 
         var direct = await member.GetAsync(ApiRoutes.Task(secret.Id, secretTask.Id));
@@ -301,6 +318,7 @@ public class ProjectTeamAccessTests : IClassFixture<TaskHubApiFactory>
         Assert.DoesNotContain(available, offered => offered.UserGroupId == team.Id);
 
         var teams = await owner.GetAsync<List<ProjectTeamDto>>(ApiRoutes.ProjectTeams(project.Id));
+
         Assert.Equal(ProjectMemberRole.Viewer.ToString(), Assert.Single(teams).Role);
     }
 
@@ -312,7 +330,9 @@ public class ProjectTeamAccessTests : IClassFixture<TaskHubApiFactory>
         var member = await _factory.CreateUserAsync("teammember");
         var project = await owner.CreateProjectAsync("Renamed team");
         var team = await CreateTeamAsync(member);
+
         await owner.AddTeamAsync(project.Id, team.Id, ProjectMemberRole.Editor);
+
         var request = new UpdateUserGroupRequest { Name = "Hijacked" };
 
         var byOwner = await owner.PutAsync(ApiRoutes.UserGroup(team.Id), request);
@@ -346,6 +366,7 @@ public class ProjectTeamAccessTests : IClassFixture<TaskHubApiFactory>
         foreach (var member in members)
         {
             var added = await admin.PostAsync(ApiRoutes.UserGroupMembers(team.Id), new AddUserGroupMemberRequest { UserId = member.UserId });
+
             await added.ShouldBeAsync(HttpStatusCode.OK);
         }
 

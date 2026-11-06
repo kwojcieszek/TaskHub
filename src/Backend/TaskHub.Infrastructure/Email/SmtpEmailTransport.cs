@@ -19,12 +19,15 @@ public class SmtpEmailTransport
     public async Task SendAsync(EmailMessage message, CancellationToken cancellationToken)
     {
         var mime = new MimeMessage();
+
         mime.From.Add(new MailboxAddress(_options.FromName, _options.FromAddress));
         mime.To.Add(MailboxAddress.Parse(message.To));
+
         mime.Subject = message.Subject;
         mime.Body = new BodyBuilder { TextBody = message.TextBody, HtmlBody = message.HtmlBody }.ToMessageBody();
 
         using var client = new SmtpClient();
+
         await client.ConnectAsync(_options.Host, _options.Port, ToSocketOptions(_options.Security), cancellationToken);
 
         if (!string.IsNullOrEmpty(_options.UserName))

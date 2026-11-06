@@ -7,6 +7,16 @@ namespace TaskHub.IntegrationTests.Support;
 /// </summary>
 public sealed class AccessOperation
 {
+    public string Name { get; }
+
+    public AccessArea Area { get; }
+
+    public AccessLevel Required { get; }
+
+    public HttpStatusCode SuccessStatus { get; }
+
+    public Func<ApiSession, ProjectScenario, Task<HttpResponseMessage>> Execute { get; }
+
     public AccessOperation(
         string name,
         AccessArea area,
@@ -20,16 +30,6 @@ public sealed class AccessOperation
         SuccessStatus = successStatus;
         Execute = execute;
     }
-
-    public string Name { get; }
-
-    public AccessArea Area { get; }
-
-    public AccessLevel Required { get; }
-
-    public HttpStatusCode SuccessStatus { get; }
-
-    public Func<ApiSession, ProjectScenario, Task<HttpResponseMessage>> Execute { get; }
 
     public bool IsAllowedFor(Actor actor)
     {

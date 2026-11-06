@@ -34,6 +34,8 @@ public class AuthService : IAuthService
     private readonly IEmailSender _emailSender;
     private readonly PasswordResetOptions _passwordResetOptions;
 
+    private bool IsPasswordResetEnabled => _emailSender.IsConfigured && !string.IsNullOrWhiteSpace(_passwordResetOptions.ResetUrl);
+
     public AuthService(
         UserManager<User> userManager,
         IJwtTokenService tokenService,
@@ -94,6 +96,7 @@ public class AuthService : IAuthService
         if (user is null)
         {
             await _auditLogService.RecordLoginAsync(null, request.UserName ?? string.Empty, LoginFailureReason.UserNotFound, cancellationToken);
+
             throw new AuthenticationFailedException("Invalid username or password.");
         }
 
@@ -102,6 +105,7 @@ public class AuthService : IAuthService
         if (await _userManager.IsLockedOutAsync(user))
         {
             await _auditLogService.RecordLoginAsync(user.Id, userName, LoginFailureReason.LockedOut, cancellationToken);
+
             throw new AuthenticationFailedException("This account is locked out.");
         }
 
@@ -111,6 +115,7 @@ public class AuthService : IAuthService
         {
             await RegisterFailedAttemptAsync(user, cancellationToken);
             await _auditLogService.RecordLoginAsync(user.Id, userName, LoginFailureReason.InvalidPassword, cancellationToken);
+
             throw new AuthenticationFailedException("Invalid username or password.");
         }
 
@@ -140,15 +145,19 @@ public class AuthService : IAuthService
         var tokenHash = HashToken(request.TwoFactorToken);
         var now = DateTime.UtcNow;
         var challenge = await _dbContext.TwoFactorChallenges.AsNoTracking().FirstOrDefaultAsync(c => c.TokenHash == tokenHash, cancellationToken);
+
         if (challenge is null || challenge.UserId != user.Id || challenge.TokenVersion != user.TokenVersion ||
             challenge.SecurityStamp != user.SecurityStamp || challenge.ConsumedAt.HasValue || challenge.ExpiresAt <= now || !user.TwoFactorEnabled)
+        {
             throw new AuthenticationFailedException("Two-factor session expired, please log in again.");
+        }
 
         var userName = user.UserName ?? string.Empty;
 
         if (await _userManager.IsLockedOutAsync(user))
         {
             await _auditLogService.RecordLoginAsync(user.Id, userName, LoginFailureReason.LockedOut, cancellationToken);
+
             throw new AuthenticationFailedException("This account is locked out.");
         }
 
@@ -158,12 +167,18 @@ public class AuthService : IAuthService
         {
             await RegisterFailedAttemptAsync(user, cancellationToken);
             await _auditLogService.RecordLoginAsync(user.Id, userName, LoginFailureReason.InvalidTwoFactorCode, cancellationToken);
+
             throw new AuthenticationFailedException("Invalid authenticator code.");
         }
+
         // Only one competing request can consume the challenge.
         var consumed = await _dbContext.TwoFactorChallenges.Where(c => c.Id == challenge.Id && c.ConsumedAt == null)
             .ExecuteUpdateAsync(update => update.SetProperty(c => c.ConsumedAt, now), cancellationToken);
-        if (consumed != 1) throw new AuthenticationFailedException("Two-factor challenge has already been used.");
+
+        if (consumed != 1)
+        {
+            throw new AuthenticationFailedException("Two-factor challenge has already been used.");
+        }
 
         await _userManager.ResetAccessFailedCountAsync(user);
         await _auditLogService.RecordLoginAsync(user.Id, userName, null, cancellationToken);
@@ -182,6 +197,7 @@ public class AuthService : IAuthService
         }
 
         await _userManager.ResetAuthenticatorKeyAsync(user);
+
         var key = await _userManager.GetAuthenticatorKeyAsync(user)
             ?? throw new InvalidOperationException("Unable to generate authenticator key.");
 
@@ -281,6 +297,7 @@ public class AuthService : IAuthService
         if (!result.Succeeded)
         {
             var invalidToken = result.Errors.Any(e => e.Code == nameof(IdentityErrorDescriber.InvalidToken));
+
             throw new ValidationFailedException(invalidToken ? new[] { InvalidResetLinkMessage } : result.Errors.Select(e => e.Description));
         }
 
@@ -325,6 +342,7 @@ public class AuthService : IAuthService
         if (user is null)
         {
             await _auditLogService.RecordLoginAsync(null, googleUser.Email, LoginFailureReason.GoogleAccountNotLinked, cancellationToken);
+
             throw new AuthenticationFailedException("This Google account is not linked to any user.");
         }
 
@@ -333,6 +351,7 @@ public class AuthService : IAuthService
         if (await _userManager.IsLockedOutAsync(user))
         {
             await _auditLogService.RecordLoginAsync(user.Id, userName, LoginFailureReason.LockedOut, cancellationToken);
+
             throw new AuthenticationFailedException("This account is locked out.");
         }
 
@@ -353,12 +372,15 @@ public class AuthService : IAuthService
     public async Task<UserDto> LinkGoogleAsync(Guid userId, GoogleTokenRequest request, CancellationToken cancellationToken = default)
     {
         var account = await GetUserOrThrowAsync(userId);
+
         if (!await _userManager.CheckPasswordAsync(account, request.Password ?? string.Empty) ||
             (account.TwoFactorEnabled && !await _userManager.VerifyTwoFactorTokenAsync(account, AuthenticatorTokenProvider, request.Code ?? string.Empty)))
         {
             await RegisterFailedAttemptAsync(account, cancellationToken);
+
             throw new ValidationFailedException(new[] { "Confirm your password and authenticator code before linking Google." });
         }
+
         var googleUser = await _googleTokenValidator.ValidateAsync(request.IdToken, cancellationToken)
             ?? throw new ValidationFailedException(new[] { "The Google account could not be verified." });
 
@@ -409,23 +431,6 @@ public class AuthService : IAuthService
         return await MapToUserDtoAsync(user);
     }
 
-    private async Task<UserLoginInfo?> FindGoogleLoginAsync(User user)
-    {
-        var logins = await _userManager.GetLoginsAsync(user);
-
-        return logins.FirstOrDefault(l => l.LoginProvider == GoogleProvider);
-    }
-
-    private bool IsPasswordResetEnabled => _emailSender.IsConfigured && !string.IsNullOrWhiteSpace(_passwordResetOptions.ResetUrl);
-
-    private void EnsurePasswordResetEnabled()
-    {
-        if (!IsPasswordResetEnabled)
-        {
-            throw new ForbiddenAccessException("Password reset by e-mail is not available. Ask an administrator to reset your password.");
-        }
-    }
-
     private static string? DecodeResetToken(string encodedToken)
     {
         try
@@ -435,6 +440,33 @@ public class AuthService : IAuthService
         catch (FormatException)
         {
             return null;
+        }
+    }
+
+    private static string HashToken(string token)
+    {
+        return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(token)));
+    }
+
+    private static string BuildAuthenticatorUri(string email, string unformattedKey)
+    {
+        const string issuer = "TaskHub";
+
+        return $"otpauth://totp/{Uri.EscapeDataString(issuer)}:{Uri.EscapeDataString(email)}?secret={unformattedKey}&issuer={Uri.EscapeDataString(issuer)}&digits=6";
+    }
+
+    private async Task<UserLoginInfo?> FindGoogleLoginAsync(User user)
+    {
+        var logins = await _userManager.GetLoginsAsync(user);
+
+        return logins.FirstOrDefault(l => l.LoginProvider == GoogleProvider);
+    }
+
+    private void EnsurePasswordResetEnabled()
+    {
+        if (!IsPasswordResetEnabled)
+        {
+            throw new ForbiddenAccessException("Password reset by e-mail is not available. Ask an administrator to reset your password.");
         }
     }
 
@@ -484,14 +516,24 @@ public class AuthService : IAuthService
     {
         var roles = await _userManager.GetRolesAsync(user);
         var sessionId = Guid.NewGuid();
+
         var (token, expiresAt) = _tokenService.CreateAccessToken(user, roles.ToList(), sessionId);
+
         var now = DateTime.UtcNow;
-        _dbContext.UserSessions.Add(new UserSession {
-            Id = sessionId, UserId = user.Id, TokenVersion = user.TokenVersion,
-            CreatedAt = now, LastUsedAt = now, ExpiresAt = expiresAt.UtcDateTime,
+
+        var session = new UserSession
+        {
+            Id = sessionId,
+            UserId = user.Id,
+            TokenVersion = user.TokenVersion,
+            CreatedAt = now,
+            LastUsedAt = now,
+            ExpiresAt = expiresAt.UtcDateTime,
             IpAddress = _currentUser.IpAddress,
             UserAgent = _currentUser.UserAgent is { } agent ? agent[..Math.Min(agent.Length, 512)] : null
-        });
+        };
+
+        _dbContext.UserSessions.Add(session);
         await _dbContext.SaveChangesAsync();
 
         return new LoginResponse
@@ -528,30 +570,33 @@ public class AuthService : IAuthService
             ?? throw new NotFoundException("User not found.");
     }
 
-    private static string HashToken(string token) => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(token)));
-
-    private async Task<string> CreateChallengeAsync(User user, CancellationToken ct)
+    private async Task<string> CreateChallengeAsync(User user, CancellationToken cancellationToken)
     {
         var token = _tokenService.CreateTwoFactorToken(user.Id);
-        await _dbContext.TwoFactorChallenges.Where(c => c.ExpiresAt < DateTime.UtcNow).ExecuteDeleteAsync(ct);
-        _dbContext.TwoFactorChallenges.Add(new TwoFactorChallenge {
-            Id = Guid.NewGuid(), UserId = user.Id, TokenHash = HashToken(token), TokenVersion = user.TokenVersion,
-            SecurityStamp = user.SecurityStamp ?? string.Empty, ExpiresAt = DateTime.UtcNow.AddMinutes(5)
-        });
-        await _dbContext.SaveChangesAsync(ct);
+
+        await _dbContext.TwoFactorChallenges.Where(c => c.ExpiresAt < DateTime.UtcNow).ExecuteDeleteAsync(cancellationToken);
+
+        var challenge = new TwoFactorChallenge
+        {
+            Id = Guid.NewGuid(),
+            UserId = user.Id,
+            TokenHash = HashToken(token),
+            TokenVersion = user.TokenVersion,
+            SecurityStamp = user.SecurityStamp ?? string.Empty,
+            ExpiresAt = DateTime.UtcNow.AddMinutes(5)
+        };
+
+        _dbContext.TwoFactorChallenges.Add(challenge);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+
         return token;
     }
 
-    private async Task EndOtherSessionsAsync(Guid userId, CancellationToken ct)
+    private async Task EndOtherSessionsAsync(Guid userId, CancellationToken cancellationToken)
     {
         var currentSession = Guid.TryParse(_http.HttpContext?.User.FindFirstValue(AppClaimTypes.SessionId), out var id) ? id : Guid.Empty;
-        await _dbContext.UserSessions.Where(s => s.UserId == userId && s.Id != currentSession).ExecuteDeleteAsync(ct);
-        await _dbContext.TwoFactorChallenges.Where(c => c.UserId == userId).ExecuteDeleteAsync(ct);
-    }
 
-    private static string BuildAuthenticatorUri(string email, string unformattedKey)
-    {
-        const string issuer = "TaskHub";
-        return $"otpauth://totp/{Uri.EscapeDataString(issuer)}:{Uri.EscapeDataString(email)}?secret={unformattedKey}&issuer={Uri.EscapeDataString(issuer)}&digits=6";
+        await _dbContext.UserSessions.Where(s => s.UserId == userId && s.Id != currentSession).ExecuteDeleteAsync(cancellationToken);
+        await _dbContext.TwoFactorChallenges.Where(c => c.UserId == userId).ExecuteDeleteAsync(cancellationToken);
     }
 }

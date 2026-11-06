@@ -254,18 +254,6 @@ public sealed class MigrationInit : TaskHubMigration
         Index("TaskChanges", "IX_TaskChanges_TaskItemId_ChangedAt", false, "TaskItemId", "ChangedAt");
     }
 
-    private void Index(string table, string name, bool unique, params string[] columns)
-    {
-        var index = Create.Index(name).OnTable(table).OnColumn(columns[0]).Ascending();
-        foreach (var column in columns.Skip(1)) index = index.OnColumn(column).Ascending();
-        if (unique)
-        {
-            if (Provider == DatabaseProvider.MsSql && name is "UserNameIndex" or "RoleNameIndex")
-                index.WithOptions().UniqueNullsNotDistinct();
-            else index.WithOptions().Unique();
-        }
-    }
-
     public override void Down()
     {
         string[] tables = [
@@ -273,6 +261,32 @@ public sealed class MigrationInit : TaskHubMigration
             "ApiTokens", "Comments", "Attachments", "Tasks", "ProjectTeams", "UserGroupMembers", "UserGroups",
             "ProjectMembers", "Projects", "ProjectGroups", "UserTokens", "UserRoles", "UserLogins", "UserClaims", "RoleClaims", "Roles", "Users"
         ];
-        foreach (var table in tables) Delete.Table(table);
+
+        foreach (var table in tables)
+        {
+            Delete.Table(table);
+        }
+    }
+
+    private void Index(string table, string name, bool unique, params string[] columns)
+    {
+        var index = Create.Index(name).OnTable(table).OnColumn(columns[0]).Ascending();
+
+        foreach (var column in columns.Skip(1))
+        {
+            index = index.OnColumn(column).Ascending();
+        }
+
+        if (unique)
+        {
+            if (Provider == DatabaseProvider.MsSql && name is "UserNameIndex" or "RoleNameIndex")
+            {
+                index.WithOptions().UniqueNullsNotDistinct();
+            }
+            else
+            {
+                index.WithOptions().Unique();
+            }
+        }
     }
 }

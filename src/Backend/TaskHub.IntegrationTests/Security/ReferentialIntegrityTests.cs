@@ -52,20 +52,6 @@ public class ReferentialIntegrityTests : IClassFixture<TaskHubApiFactory>
         await AssertRoleIsRefusedAsync(role);
     }
 
-    private async Task AssertRoleIsRefusedAsync(string role)
-    {
-        // A role outside Owner/Editor/Viewer is not covered by the access checks, so it must never be stored.
-        var scenario = await ProjectScenario.CreateAsync(_factory);
-        var body = $"{{\"userId\":\"{scenario.Cast.Stranger.UserId}\",\"role\":{role}}}";
-
-        var response = await scenario.Cast.Owner.Client.PostAsync(ApiRoutes.ProjectMembers(scenario.Project.Id), new StringContent(body, System.Text.Encoding.UTF8, "application/json"));
-
-        await response.ShouldBeAsync(HttpStatusCode.BadRequest);
-
-        var members = await scenario.Cast.Owner.GetAsync<List<ProjectMemberDto>>(ApiRoutes.ProjectMembers(scenario.Project.Id));
-        Assert.DoesNotContain(members, member => member.UserId == scenario.Cast.Stranger.UserId);
-    }
-
     [Fact]
     public async Task AssigningATask_ToAUserWhoDoesNotExist_IsRefused()
     {
@@ -155,6 +141,7 @@ public class ReferentialIntegrityTests : IClassFixture<TaskHubApiFactory>
 
         // Neither the roles nor the session of the user changed.
         var me = await user.GetAsync(ApiRoutes.Me);
+
         await me.ShouldBeAsync(HttpStatusCode.OK);
     }
 
@@ -165,10 +152,13 @@ public class ReferentialIntegrityTests : IClassFixture<TaskHubApiFactory>
         var owner = await _factory.CreateUserAsync("owner");
         var member = await _factory.CreateUserAsync("member");
         var project = await owner.CreateProjectAsync();
+
         await owner.AddMemberAsync(project.Id, member.UserId, ProjectMemberRole.Editor);
+
         var task = await owner.PostAsync<TaskItemDto>(ApiRoutes.Tasks(project.Id), new CreateTaskItemRequest { Title = "Assigned", AssignedUserId = member.UserId });
 
         var delete = await admin.DeleteAsync(ApiRoutes.AdminUser(member.UserId));
+
         await delete.ShouldBeAsync(HttpStatusCode.NoContent);
 
         var members = await owner.GetAsync<List<ProjectMemberDto>>(ApiRoutes.ProjectMembers(project.Id));
@@ -184,6 +174,7 @@ public class ReferentialIntegrityTests : IClassFixture<TaskHubApiFactory>
         // Either the deletion is refused with an explanation, or it succeeds; it must not end in an unhandled error.
         var admin = await _factory.AdminAsync();
         var owner = await _factory.CreateUserAsync("owner");
+
         await owner.CreateProjectAsync();
 
         var response = await admin.DeleteAsync(ApiRoutes.AdminUser(owner.UserId));
@@ -199,6 +190,7 @@ public class ReferentialIntegrityTests : IClassFixture<TaskHubApiFactory>
         var uploader = await _factory.CreateUserAsync("uploader");
         var project = await owner.CreateProjectAsync();
         var task = await owner.CreateTaskAsync(project.Id);
+
         await owner.AddMemberAsync(project.Id, uploader.UserId, ProjectMemberRole.Editor);
         await uploader.UploadAttachmentAsync(project.Id, task.Id, "file.bin", Guid.NewGuid().ToByteArray());
 
@@ -212,6 +204,7 @@ public class ReferentialIntegrityTests : IClassFixture<TaskHubApiFactory>
     {
         var admin = await _factory.AdminAsync();
         var owner = await _factory.CreateUserAsync("owner");
+
         await owner.CreateProjectGroupAsync();
 
         var response = await admin.DeleteAsync(ApiRoutes.AdminUser(owner.UserId));
@@ -265,6 +258,7 @@ public class ReferentialIntegrityTests : IClassFixture<TaskHubApiFactory>
 
         var relogin = await factory.LoginAsync(TaskHubApiFactory.AdminUserName, TaskHubApiFactory.AdminPassword);
         var adminPanel = await relogin.GetAsync(ApiRoutes.AdminUsers);
+
         await adminPanel.ShouldBeAsync(HttpStatusCode.OK);
     }
 
@@ -282,5 +276,20 @@ public class ReferentialIntegrityTests : IClassFixture<TaskHubApiFactory>
         var request = response.RequestMessage;
 
         Assert.True((int)response.StatusCode < 500, $"{request?.Method} {request?.RequestUri?.PathAndQuery} ended in an unhandled error ({(int)response.StatusCode}). Body: {body}");
+    }
+
+    private async Task AssertRoleIsRefusedAsync(string role)
+    {
+        // A role outside Owner/Editor/Viewer is not covered by the access checks, so it must never be stored.
+        var scenario = await ProjectScenario.CreateAsync(_factory);
+        var body = $"{{\"userId\":\"{scenario.Cast.Stranger.UserId}\",\"role\":{role}}}";
+
+        var response = await scenario.Cast.Owner.Client.PostAsync(ApiRoutes.ProjectMembers(scenario.Project.Id), new StringContent(body, System.Text.Encoding.UTF8, "application/json"));
+
+        await response.ShouldBeAsync(HttpStatusCode.BadRequest);
+
+        var members = await scenario.Cast.Owner.GetAsync<List<ProjectMemberDto>>(ApiRoutes.ProjectMembers(scenario.Project.Id));
+
+        Assert.DoesNotContain(members, member => member.UserId == scenario.Cast.Stranger.UserId);
     }
 }

@@ -44,6 +44,7 @@ public class ProjectLifecycleTests : IClassFixture<TaskHubApiFactory>
 
         var members = await user.GetAsync<List<ProjectMemberDto>>(ApiRoutes.ProjectMembers(project.Id));
         var owner = Assert.Single(members);
+
         Assert.Equal(user.UserId, owner.UserId);
         Assert.Equal(ProjectMemberRole.Owner.ToString(), owner.Role);
     }
@@ -82,6 +83,7 @@ public class ProjectLifecycleTests : IClassFixture<TaskHubApiFactory>
         Assert.NotNull(updated.UpdatedAt);
 
         var reloaded = await user.GetAsync<ProjectDto>(ApiRoutes.Project(project.Id));
+
         Assert.Equal("After", reloaded.Name);
     }
 
@@ -93,6 +95,7 @@ public class ProjectLifecycleTests : IClassFixture<TaskHubApiFactory>
         var task = await user.CreateTaskAsync(project.Id, "Hidden", DateTime.UtcNow.AddDays(1));
 
         var deactivated = await user.PutAsync<ProjectDto>(ApiRoutes.Project(project.Id), new UpdateProjectRequest { Name = project.Name, IsActive = false });
+
         Assert.False(deactivated.IsActive);
 
         var overview = await user.GetAsync<List<TaskItemDto>>(ApiRoutes.AllTasks);
@@ -104,9 +107,11 @@ public class ProjectLifecycleTests : IClassFixture<TaskHubApiFactory>
         Assert.Equal(task.Id, Assert.Single(inProject).Id);
 
         var reactivated = await user.PutAsync<ProjectDto>(ApiRoutes.Project(project.Id), new UpdateProjectRequest { Name = project.Name, IsActive = true });
+
         Assert.True(reactivated.IsActive);
 
         overview = await user.GetAsync<List<TaskItemDto>>(ApiRoutes.AllTasks);
+
         Assert.Contains(overview, existing => existing.Id == task.Id);
     }
 
@@ -118,10 +123,12 @@ public class ProjectLifecycleTests : IClassFixture<TaskHubApiFactory>
         var admin = scenario.Cast.Admin;
 
         var delete = await owner.DeleteAsync(ApiRoutes.Project(scenario.Project.Id));
+
         await delete.ShouldBeAsync(HttpStatusCode.NoContent);
 
         var list = await owner.GetAsync<List<ProjectDto>>(ApiRoutes.Projects);
         var overview = await owner.GetAsync<List<TaskItemDto>>(ApiRoutes.AllTasks);
+
         Assert.DoesNotContain(list, project => project.Id == scenario.Project.Id);
         Assert.DoesNotContain(overview, task => task.ProjectId == scenario.Project.Id);
 
@@ -142,6 +149,7 @@ public class ProjectLifecycleTests : IClassFixture<TaskHubApiFactory>
         var stored = Directory.Exists(_factory.AttachmentsPath)
             ? Directory.GetFiles(_factory.AttachmentsPath, "*", SearchOption.AllDirectories)
             : Array.Empty<string>();
+
         Assert.DoesNotContain(stored, path => Path.GetFileName(path).StartsWith(scenario.Attachment.Sha256, StringComparison.OrdinalIgnoreCase));
     }
 
@@ -161,21 +169,26 @@ public class ProjectLifecycleTests : IClassFixture<TaskHubApiFactory>
         Assert.Equal(ProjectMemberRole.Viewer.ToString(), addedViewer.Role);
 
         var duplicate = await owner.PostAsync(ApiRoutes.ProjectMembers(project.Id), new AddProjectMemberRequest { UserId = editor.UserId, Role = ProjectMemberRole.Viewer });
+
         await duplicate.ReadErrorsAsync(HttpStatusCode.Conflict);
 
         var members = await viewer.GetAsync<List<ProjectMemberDto>>(ApiRoutes.ProjectMembers(project.Id));
+
         Assert.Equal(3, members.Count);
 
         // The project now shows up for the new members.
         var editorProjects = await editor.GetAsync<List<ProjectDto>>(ApiRoutes.Projects);
+
         Assert.Equal(project.Id, Assert.Single(editorProjects).Id);
 
         var remove = await owner.DeleteAsync(ApiRoutes.ProjectMember(project.Id, editor.UserId));
         var removeAgain = await owner.DeleteAsync(ApiRoutes.ProjectMember(project.Id, editor.UserId));
+
         await remove.ShouldBeAsync(HttpStatusCode.NoContent);
         await removeAgain.ShouldBeAsync(HttpStatusCode.NotFound);
 
         editorProjects = await editor.GetAsync<List<ProjectDto>>(ApiRoutes.Projects);
+
         Assert.Empty(editorProjects);
     }
 
@@ -191,6 +204,7 @@ public class ProjectLifecycleTests : IClassFixture<TaskHubApiFactory>
         Assert.Equal(ProjectMemberRole.Viewer.ToString(), added.Role);
 
         var edit = await member.PostAsync(ApiRoutes.Tasks(project.Id), new CreateTaskItemRequest { Title = "Not allowed" });
+
         await edit.ShouldBeAsync(HttpStatusCode.Forbidden);
     }
 
@@ -201,36 +215,44 @@ public class ProjectLifecycleTests : IClassFixture<TaskHubApiFactory>
 
         var response = await user.PostAsync(ApiRoutes.ProjectGroups, new CreateProjectGroupRequest { Name = "Clients", Description = "Client work" });
         var group = await response.ReadAsync<ProjectGroupDto>(HttpStatusCode.Created);
+
         Assert.Equal(user.UserId, group.OwnerId);
         Assert.Equal(0, group.ProjectCount);
 
         var inGroup = await user.CreateProjectAsync("In the group", group.Id);
         var outside = await user.CreateProjectAsync("Outside");
+
         Assert.Equal(group.Id, inGroup.ProjectGroupId);
         Assert.Equal("Clients", inGroup.ProjectGroupName);
 
         var moved = await user.PutAsync<ProjectDto>(ApiRoutes.ProjectGroupOf(outside.Id), new SetProjectGroupRequest { ProjectGroupId = group.Id });
+
         Assert.Equal(group.Id, moved.ProjectGroupId);
 
         var groupProjects = await user.GetAsync<List<ProjectDto>>(ApiRoutes.ProjectGroupProjects(group.Id));
         var filtered = await user.GetAsync<List<ProjectDto>>($"{ApiRoutes.Projects}?groupId={group.Id}");
         var reloadedGroup = await user.GetAsync<ProjectGroupDto>(ApiRoutes.ProjectGroup(group.Id));
+
         Assert.Equal(2, groupProjects.Count);
         Assert.Equal(2, filtered.Count);
         Assert.Equal(2, reloadedGroup.ProjectCount);
 
         var renamed = await user.PutAsync<ProjectGroupDto>(ApiRoutes.ProjectGroup(group.Id), new UpdateProjectGroupRequest { Name = "Customers" });
+
         Assert.Equal("Customers", renamed.Name);
 
         var takenOut = await user.PutAsync<ProjectDto>(ApiRoutes.ProjectGroupOf(outside.Id), new SetProjectGroupRequest { ProjectGroupId = null });
+
         Assert.Null(takenOut.ProjectGroupId);
 
         var delete = await user.DeleteAsync(ApiRoutes.ProjectGroup(group.Id));
+
         await delete.ShouldBeAsync(HttpStatusCode.NoContent);
 
         // Deleting a group never deletes its projects.
         var survivor = await user.GetAsync<ProjectDto>(ApiRoutes.Project(inGroup.Id));
         var groups = await user.GetAsync<List<ProjectGroupDto>>(ApiRoutes.ProjectGroups);
+
         Assert.Null(survivor.ProjectGroupId);
         Assert.Empty(groups);
     }
@@ -265,6 +287,7 @@ public class ProjectLifecycleTests : IClassFixture<TaskHubApiFactory>
         Assert.Equal(scenario.Cast.Owner.UserId, renamed.OwnerId);
 
         var members = await admin.GetAsync<List<ProjectMemberDto>>(ApiRoutes.ProjectMembers(scenario.Project.Id));
+
         Assert.DoesNotContain(members, member => member.UserId == admin.UserId);
     }
 }

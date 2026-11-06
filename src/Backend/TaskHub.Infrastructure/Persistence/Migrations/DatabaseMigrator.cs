@@ -18,6 +18,9 @@ public class DatabaseMigrator
     private readonly DatabaseOptions _options;
     private readonly ILogger<DatabaseMigrator> _logger;
 
+    /// <summary>The path of the backup made before migrating, or null when none was needed.</summary>
+    public string? BackupPath { get; private set; }
+
     public DatabaseMigrator(
         IMigrationRunner runner,
         IVersionLoader versionLoader,
@@ -32,9 +35,6 @@ public class DatabaseMigrator
         _logger = logger;
     }
 
-    /// <summary>The path of the backup made before migrating, or null when none was needed.</summary>
-    public string? BackupPath { get; private set; }
-
     public void Migrate()
     {
         _versionLoader.LoadVersionInfo();
@@ -44,6 +44,7 @@ public class DatabaseMigrator
 
         // Starting an older application on a newer schema would let it write data the schema no longer expects.
         var unknown = applied.Where(version => !known.Contains(version)).Order().ToList();
+
         if (unknown.Count > 0)
         {
             throw new InvalidOperationException(
@@ -52,9 +53,11 @@ public class DatabaseMigrator
         }
 
         var pending = known.Where(version => !applied.Contains(version)).ToList();
+
         if (pending.Count == 0)
         {
             _logger.LogInformation("The database schema is up to date (version {Version}).", known.LastOrDefault());
+
             return;
         }
 
@@ -74,10 +77,12 @@ public class DatabaseMigrator
         if (_options.Provider != DatabaseProvider.Sqlite)
         {
             _logger.LogWarning("Migrating the {Provider} database without an automatic backup; back it up before upgrading TaskHub.", _options.Provider);
+
             return;
         }
 
         var source = new SqliteConnectionStringBuilder(_options.ConnectionString) { Pooling = false };
+
         if (string.IsNullOrEmpty(source.DataSource) || source.DataSource == ":memory:" || source.Mode == SqliteOpenMode.Memory || !File.Exists(source.DataSource))
         {
             return;
@@ -94,6 +99,7 @@ public class DatabaseMigrator
         }
 
         BackupPath = backupPath;
+
         _logger.LogInformation("Backed up the database to {BackupPath} before migrating.", backupPath);
     }
 }

@@ -22,6 +22,7 @@ public class ProjectTeamsController : ApiControllerBase
     public async Task<ActionResult<IReadOnlyCollection<ProjectTeamDto>>> GetAll(Guid projectId, CancellationToken cancellationToken)
     {
         var teams = await _projectTeamService.GetAsync(projectId, cancellationToken);
+
         return Ok(teams);
     }
 
@@ -30,6 +31,7 @@ public class ProjectTeamsController : ApiControllerBase
     public async Task<ActionResult<IReadOnlyCollection<ProjectTeamDto>>> GetAvailable(Guid projectId, CancellationToken cancellationToken)
     {
         var teams = await _projectTeamService.GetAvailableAsync(projectId, cancellationToken);
+
         return Ok(teams);
     }
 
@@ -37,6 +39,7 @@ public class ProjectTeamsController : ApiControllerBase
     public async Task<ActionResult<ProjectTeamDto>> Add(Guid projectId, AddProjectTeamRequest request, CancellationToken cancellationToken)
     {
         var team = await _projectTeamService.AddAsync(projectId, request, cancellationToken);
+
         return Ok(team);
     }
 
@@ -44,6 +47,7 @@ public class ProjectTeamsController : ApiControllerBase
     public async Task<IActionResult> Remove(Guid projectId, Guid userGroupId, CancellationToken cancellationToken)
     {
         await _projectTeamService.RemoveAsync(projectId, userGroupId, cancellationToken);
+
         return NoContent();
     }
 }

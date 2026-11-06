@@ -50,6 +50,7 @@ public class PasswordResetTests : IClassFixture<TaskHubApiFactory>
         var anonymous = _factory.Anonymous();
 
         await RequestResetAsync(anonymous, user.Email);
+
         var link = _factory.Email.LastLinkQueryFor(user.Email);
         var reset = await anonymous.PostAsync(ApiRoutes.ResetPassword, new ResetPasswordRequest { Email = link["email"], Token = link["token"], NewPassword = NewPassword });
 
@@ -57,6 +58,7 @@ public class PasswordResetTests : IClassFixture<TaskHubApiFactory>
         await (await user.GetAsync(ApiRoutes.Me)).ShouldBeAsync(HttpStatusCode.Unauthorized);
 
         var signedIn = await _factory.LoginAsync(user.UserName, NewPassword);
+
         await (await signedIn.GetAsync(ApiRoutes.Projects)).ShouldBeAsync(HttpStatusCode.OK);
     }
 
@@ -67,13 +69,16 @@ public class PasswordResetTests : IClassFixture<TaskHubApiFactory>
         var anonymous = _factory.Anonymous();
 
         await RequestResetAsync(anonymous, user.Email);
+
         var link = _factory.Email.LastLinkQueryFor(user.Email);
         var first = await anonymous.PostAsync(ApiRoutes.ResetPassword, new ResetPasswordRequest { Email = link["email"], Token = link["token"], NewPassword = NewPassword });
+
         await first.ShouldBeAsync(HttpStatusCode.NoContent);
 
         var replay = await anonymous.PostAsync(ApiRoutes.ResetPassword, new ResetPasswordRequest { Email = link["email"], Token = link["token"], NewPassword = "Replayed-Passw0rd-3" });
 
         var errors = await replay.ReadErrorsAsync(HttpStatusCode.BadRequest);
+
         Assert.Contains("invalid or has expired", errors[0]);
     }
 
@@ -84,6 +89,7 @@ public class PasswordResetTests : IClassFixture<TaskHubApiFactory>
         var attacker = await _factory.CreateUserAsync("attacker");
 
         await RequestResetAsync(attacker, attacker.Email);
+
         var attackersLink = _factory.Email.LastLinkQueryFor(attacker.Email);
 
         var response = await attacker.PostAsync(ApiRoutes.ResetPassword, new ResetPasswordRequest { Email = victim.Email, Token = attackersLink["token"], NewPassword = NewPassword });
@@ -99,6 +105,7 @@ public class PasswordResetTests : IClassFixture<TaskHubApiFactory>
         var anonymous = _factory.Anonymous();
 
         await RequestResetAsync(anonymous, user.Email);
+
         var link = _factory.Email.LastLinkQueryFor(user.Email);
 
         var response = await anonymous.PostAsync(ApiRoutes.ResetPassword, new ResetPasswordRequest { Email = link["email"], Token = link["token"], NewPassword = "weak" });
