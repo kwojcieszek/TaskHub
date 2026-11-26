@@ -74,7 +74,10 @@
     "assignToMe": "Przypisuj nowe zadania do mnie",
     "assignToMeHint": "Tworzone przez Ciebie zadania są domyślnie przypisane do Ciebie.",
     "security": "Bezpieczeństwo",
-    "openProfile": "Przejdź do profilu"
+    "openProfile": "Przejdź do profilu",
+    "skin": "Skórka",
+    "skinHint": "Wygląd aplikacji. Skórki dodaje administrator.",
+    "skinDefault": "Domyślna"
   },
   "profile": {
     "title": "Twój profil",

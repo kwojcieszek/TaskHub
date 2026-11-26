@@ -48,6 +48,24 @@
     </div>
   </div>
 
+  <div class="setting-row tone-rose">
+    <span class="setting-row__icon"><i class="pi pi-images"></i></span>
+    <div class="setting-row__body">
+      <label class="setting-row__title" for="skin">{{ 'settings.skin' | translate }}</label>
+      <span class="setting-row__hint">{{ selectedSkinDescription() || ('settings.skinHint' | translate) }}</span>
+    </div>
+    <p-select
+      inputId="skin"
+      appendTo="body"
+      styleClass="skin-select"
+      [options]="skinOptions()"
+      optionLabel="label"
+      optionValue="value"
+      [ngModel]="skins.selectedId()"
+      (ngModelChange)="skins.select($event)"
+    />
+  </div>
+
   <div class="setting-row tone-amber">
     <span class="setting-row__icon"><i class="pi pi-user-plus"></i></span>
     <div class="setting-row__body">

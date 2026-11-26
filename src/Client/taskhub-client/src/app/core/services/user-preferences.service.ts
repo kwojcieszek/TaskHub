@@ -1,17 +1,19 @@
 import { Injectable, effect, inject, signal, untracked } from '@angular/core';
 import { AuthService } from './auth.service';
 import { AppLanguage, LanguageService } from './language.service';
+import { SkinSelectionService } from './skin-selection.service';
 import { ThemeMode, ThemeService } from './theme.service';
 import { UserSettingService } from './user-setting.service';
 
 const THEME_KEY = 'ui.theme';
 const LANGUAGE_KEY = 'ui.language';
+const SKIN_KEY = 'ui.skin';
 const ASSIGN_TO_ME_KEY = 'tasks.assignToMeByDefault';
 const THEME_MODES: ThemeMode[] = ['light', 'dark', 'auto'];
 const LANGUAGES: AppLanguage[] = ['en', 'pl'];
 
 /**
- * Keeps the theme, language and task defaults of the signed-in user in sync with their settings stored in the API.
+ * Keeps the theme, skin, language and task defaults of the signed-in user in sync with their settings stored in the API.
  * localStorage stays the source for the sign-in pages and for instant start-up.
  */
 @Injectable({ providedIn: 'root' })
@@ -19,6 +21,7 @@ export class UserPreferencesService {
   private readonly auth = inject(AuthService);
   private readonly theme = inject(ThemeService);
   private readonly language = inject(LanguageService);
+  private readonly skins = inject(SkinSelectionService);
   private readonly userSettingService = inject(UserSettingService);
 
   private readonly assignToMeByDefaultSignal = signal(false);
@@ -55,6 +58,7 @@ export class UserPreferencesService {
     return {
       [THEME_KEY]: this.theme.mode(),
       [LANGUAGE_KEY]: this.language.current(),
+      [SKIN_KEY]: this.skins.selectedId(),
       [ASSIGN_TO_ME_KEY]: String(this.assignToMeByDefaultSignal())
     };
   }
@@ -70,6 +74,9 @@ export class UserPreferencesService {
         if (theme && THEME_MODES.includes(theme)) {
           this.theme.setMode(theme);
         }
+
+        // Checked against the deployed skins: a skin removed from the skins directory falls back to the default one.
+        this.skins.select(this.synced[SKIN_KEY] ?? this.skins.selectedId());
 
         const language = this.synced[LANGUAGE_KEY] as AppLanguage | undefined;
         if (language && LANGUAGES.includes(language)) {

@@ -74,7 +74,10 @@
     "assignToMe": "Assign new tasks to me",
     "assignToMeHint": "New tasks you create are assigned to you by default.",
     "security": "Security",
-    "openProfile": "Go to profile"
+    "openProfile": "Go to profile",
+    "skin": "Skin",
+    "skinHint": "Look of the application. Skins are added by the administrator.",
+    "skinDefault": "Default"
   },
   "profile": {
     "title": "Your profile",

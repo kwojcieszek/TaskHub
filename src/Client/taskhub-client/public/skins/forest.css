@@ -1,0 +1,44 @@
+/*
+ * Example TaskHub skin: "Forest".
+ *
+ * A skin is a stylesheet in the skins/ directory of the deployed web client, listed in skins/skins.json:
+ *   { "file": "forest.css", "name": "Forest", "description": "...", "version": "1" }
+ * The file name (letters, digits, - and _ only) without .css is the id of the skin; raise "version" after changing
+ * a stylesheet, so browsers do not keep the old one. The stylesheet is linked after the styles of the app,
+ * so it only needs to override their CSS variables:
+ *   --p-primary-*          accent colour of the component library (buttons, links, focus)
+ *   --app-*                backgrounds, surfaces, borders, shadows, radii and font of the app
+ *   --task-color           colour of task tiles and calendar entries
+ * Rules under :root[data-theme='dark'] apply to the dark theme.
+ */
+
+:root {
+  --p-primary-50: #ecfdf5;
+  --p-primary-100: #d1fae5;
+  --p-primary-200: #a7f3d0;
+  --p-primary-300: #6ee7b7;
+  --p-primary-400: #34d399;
+  --p-primary-500: #10b981;
+  --p-primary-600: #059669;
+  --p-primary-700: #047857;
+  --p-primary-800: #065f46;
+  --p-primary-900: #064e3b;
+  --p-primary-950: #022c22;
+  --p-primary-color: #059669;
+  --p-primary-hover-color: #047857;
+  --p-primary-active-color: #065f46;
+
+  --app-bg: #fbfdfb;
+  --app-subtle: #f1f7f2;
+  --app-border: #dde9df;
+  --app-hero-bg: linear-gradient(135deg, #047857 0%, #10b981 60%, #6ee7b7 100%);
+  --app-radius: 12px;
+}
+
+:root[data-theme='dark'] {
+  --p-primary-color: #34d399;
+  --p-primary-hover-color: #6ee7b7;
+  --p-primary-active-color: #a7f3d0;
+
+  --app-hero-bg: linear-gradient(135deg, #0b1f17 0%, #065f46 60%, #059669 100%);
+}

@@ -1,0 +1,10 @@
+{
+  "skins": [
+    {
+      "file": "forest.css",
+      "name": "Forest",
+      "description": "Green accents and softer corners.",
+      "version": "1"
+    }
+  ]
+}
