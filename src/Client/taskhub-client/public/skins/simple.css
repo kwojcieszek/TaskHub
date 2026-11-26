@@ -1,0 +1,104 @@
+/*
+ * TaskHub skin: "Simple".
+ *
+ * A calm, minimal look: neutral greys, one quiet indigo accent, flat surfaces without gradients or shadows,
+ * hairline borders and plain white space. Follows the light and dark theme.
+ */
+
+:root {
+  --p-primary-50: #eef2ff;
+  --p-primary-100: #e0e7ff;
+  --p-primary-200: #c7d2fe;
+  --p-primary-300: #a5b4fc;
+  --p-primary-400: #818cf8;
+  --p-primary-500: #6366f1;
+  --p-primary-600: #4f46e5;
+  --p-primary-700: #4338ca;
+  --p-primary-800: #3730a3;
+  --p-primary-900: #312e81;
+  --p-primary-950: #1e1b4b;
+  --p-primary-color: #4f46e5;
+  --p-primary-contrast-color: #ffffff;
+  --p-primary-hover-color: #4338ca;
+  --p-primary-active-color: #3730a3;
+
+  --p-text-color: #27272a;
+  --p-text-muted-color: #71717a;
+
+  --app-font: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --app-bg: #ffffff;
+  --app-subtle: #fafafa;
+  --app-surface: #ffffff;
+  --app-hover: #f4f4f5;
+  --app-border: #e4e4e7;
+  --app-highlight: #eef2ff;
+  --app-shadow: none;
+  --app-bar-bg: #ffffff;
+  --app-bar-shadow: 0 1px 0 #e4e4e7;
+  --app-hero-bg: #4f46e5;
+  --app-menu-active-bg: #3f3f46;
+  --app-accent: #4f46e5;
+  --app-radius: 8px;
+  --app-control-radius: 6px;
+  --app-control-radius-inner: 4px;
+  --app-label-radius: 6px;
+  --task-color: #a1a1aa;
+}
+
+:root[data-theme='dark'] {
+  --p-primary-color: #a5b4fc;
+  --p-primary-contrast-color: #18181b;
+  --p-primary-hover-color: #c7d2fe;
+  --p-primary-active-color: #e0e7ff;
+
+  --p-surface-0: #ffffff;
+  --p-surface-50: #fafafa;
+  --p-surface-100: #f4f4f5;
+  --p-surface-200: #e4e4e7;
+  --p-surface-300: #d4d4d8;
+  --p-surface-400: #a1a1aa;
+  --p-surface-500: #71717a;
+  --p-surface-600: #52525b;
+  --p-surface-700: #3f3f46;
+  --p-surface-800: #27272a;
+  --p-surface-900: #1c1c1f;
+  --p-surface-950: #121214;
+
+  --p-text-color: #e4e4e7;
+  --p-text-muted-color: #a1a1aa;
+
+  --app-bg: #121214;
+  --app-subtle: #121214;
+  --app-surface: #18181b;
+  --app-hover: #27272a;
+  --app-border: #27272a;
+  --app-highlight: rgba(165, 180, 252, 0.12);
+  --app-shadow: none;
+  --app-bar-bg: #121214;
+  --app-bar-shadow: 0 1px 0 #27272a;
+  --app-hero-bg: #312e81;
+  --app-menu-active-bg: #3f3f46;
+  --task-color: #71717a;
+}
+
+/* Flat everywhere: borders separate the content instead of shadows and gradients. */
+.panel,
+.p-card {
+  box-shadow: none !important;
+  border: 1px solid var(--app-border);
+}
+
+.page-header h1,
+.page-title {
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.page-title i {
+  color: var(--p-text-muted-color);
+}
+
+.p-button {
+  box-shadow: none !important;
+  font-weight: 500;
+}

@@ -1,0 +1,176 @@
+/*
+ * TaskHub skin: "Candy".
+ *
+ * Sweet pastels: pink and lilac accents, a rounded Quicksand font, soft bubbly corners and candy-stripe gradients.
+ * The light theme is cotton candy, the dark theme is a berry night.
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap');
+
+:root {
+  --p-primary-50: #fff0f7;
+  --p-primary-100: #ffe0ef;
+  --p-primary-200: #ffc2df;
+  --p-primary-300: #ff99c8;
+  --p-primary-400: #ff6fb0;
+  --p-primary-500: #f74e9a;
+  --p-primary-600: #e03282;
+  --p-primary-700: #bb2368;
+  --p-primary-800: #951e55;
+  --p-primary-900: #7a1c48;
+  --p-primary-950: #4a0826;
+  --p-primary-color: #f74e9a;
+  --p-primary-contrast-color: #ffffff;
+  --p-primary-hover-color: #e03282;
+  --p-primary-active-color: #bb2368;
+
+  --p-text-color: #5b3a63;
+  --p-text-muted-color: #a07ba8;
+
+  --app-font: 'Quicksand', 'Nunito', 'Segoe UI', sans-serif;
+  --app-bg: #fff7fb;
+  --app-subtle: #fdf0fa;
+  --app-surface: #ffffff;
+  --app-hover: #fde7f3;
+  --app-border: #f6d5ea;
+  --app-highlight: #ffe0ef;
+  --app-shadow: 0 2px 4px rgba(247, 78, 154, 0.06), 0 12px 28px rgba(186, 104, 255, 0.12);
+  --app-bar-bg: rgba(255, 255, 255, 0.85);
+  --app-bar-shadow: 0 6px 24px rgba(247, 78, 154, 0.12);
+  --app-hero-bg: linear-gradient(135deg, #ff9ecf 0%, #c9a7ff 50%, #8fd8ff 100%);
+  --app-menu-active-bg: linear-gradient(135deg, #ff6fb0 0%, #b77cff 100%);
+  --app-accent: #f74e9a;
+  --app-radius: 24px;
+  --app-control-radius: 999px;
+  --app-control-radius-inner: 999px;
+  --app-label-radius: 999px;
+  --task-color: #7ee0b5;
+
+  --p-button-border-radius: 999px;
+  --p-border-radius-sm: 10px;
+  --p-border-radius-md: 14px;
+  --p-border-radius-lg: 18px;
+  --p-border-radius-xl: 24px;
+
+  --tone-slate-solid: #b9a7c9;
+  --tone-blue-solid: #7cc4ff;
+  --tone-blue-fg: #2f7fc4;
+  --tone-blue-bg: #dff1ff;
+  --tone-green-solid: #6fe0b0;
+  --tone-green-fg: #1f8f63;
+  --tone-green-bg: #dcfaee;
+  --tone-rose-solid: #ff7fbf;
+  --tone-rose-fg: #c22d76;
+  --tone-rose-bg: #ffe0ef;
+  --tone-amber-solid: #ffcf5c;
+  --tone-amber-fg: #a8700a;
+  --tone-amber-bg: #fff3cf;
+  --tone-orange-solid: #ffa26b;
+  --tone-orange-fg: #c45a1c;
+  --tone-orange-bg: #ffe6d6;
+  --tone-red-solid: #ff6b8a;
+  --tone-red-fg: #c42448;
+  --tone-red-bg: #ffe0e7;
+  --tone-teal-solid: #6fe0d6;
+  --tone-teal-fg: #16857c;
+  --tone-teal-bg: #dbfaf7;
+  --tone-violet-solid: #b98cff;
+  --tone-violet-fg: #7a3fd1;
+  --tone-violet-bg: #efe4ff;
+}
+
+:root[data-theme='dark'] {
+  --p-primary-color: #ff8cc2;
+  --p-primary-contrast-color: #2a1030;
+  --p-primary-hover-color: #ffadd3;
+  --p-primary-active-color: #ffc2df;
+
+  --p-surface-0: #ffffff;
+  --p-surface-50: #fbeefa;
+  --p-surface-100: #ecd6ee;
+  --p-surface-200: #d5b5da;
+  --p-surface-300: #b48fbd;
+  --p-surface-400: #8f6a9a;
+  --p-surface-500: #6e4d7a;
+  --p-surface-600: #563a61;
+  --p-surface-700: #45294f;
+  --p-surface-800: #351e3e;
+  --p-surface-900: #28152f;
+  --p-surface-950: #1c0d22;
+
+  --p-text-color: #fbe6f4;
+  --p-text-muted-color: #c9a3cf;
+
+  --app-bg: #1c0d22;
+  --app-subtle: #1c0d22;
+  --app-surface: #28152f;
+  --app-hover: #351e3e;
+  --app-border: #45294f;
+  --app-highlight: rgba(255, 140, 194, 0.2);
+  --app-shadow: 0 2px 4px rgba(0, 0, 0, 0.3), 0 12px 28px rgba(255, 111, 176, 0.12);
+  --app-bar-bg: rgba(40, 21, 47, 0.88);
+  --app-bar-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
+  --app-hero-bg: linear-gradient(135deg, #7a1c48 0%, #5b2a9c 55%, #1f5f8f 100%);
+  --app-menu-active-bg: linear-gradient(135deg, #e03282 0%, #8a4ee0 100%);
+
+  --tone-blue-fg: #a9d8ff;
+  --tone-blue-bg: rgba(124, 196, 255, 0.22);
+  --tone-green-fg: #9ff0cc;
+  --tone-green-bg: rgba(111, 224, 176, 0.2);
+  --tone-rose-fg: #ffb3d7;
+  --tone-rose-bg: rgba(255, 127, 191, 0.22);
+  --tone-amber-fg: #ffe08f;
+  --tone-amber-bg: rgba(255, 207, 92, 0.2);
+  --tone-orange-fg: #ffc39e;
+  --tone-orange-bg: rgba(255, 162, 107, 0.2);
+  --tone-red-fg: #ffa3b6;
+  --tone-red-bg: rgba(255, 107, 138, 0.22);
+  --tone-teal-fg: #a3f0e9;
+  --tone-teal-bg: rgba(111, 224, 214, 0.2);
+  --tone-violet-fg: #d6bcff;
+  --tone-violet-bg: rgba(185, 140, 255, 0.24);
+  --tone-slate-fg: #e0d0e6;
+  --tone-slate-bg: rgba(185, 167, 201, 0.2);
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+body {
+  background-image: radial-gradient(circle at 10% 0%, rgba(255, 158, 207, 0.18), transparent 40%),
+    radial-gradient(circle at 90% 10%, rgba(143, 216, 255, 0.18), transparent 40%);
+  background-attachment: fixed;
+}
+
+.page-header h1,
+.page-title {
+  font-weight: 700;
+  background: linear-gradient(90deg, #f74e9a, #9b5cff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.page-title i {
+  -webkit-text-fill-color: #f74e9a;
+}
+
+.p-button:not(.p-button-text):not(.p-button-outlined):not(.p-button-secondary) {
+  background: linear-gradient(135deg, #ff6fb0 0%, #b77cff 100%);
+  border-color: transparent;
+  box-shadow: 0 6px 16px -6px rgba(247, 78, 154, 0.6);
+  font-weight: 600;
+}
+
+.p-button:not(.p-button-text):not(.p-button-outlined):not(.p-button-secondary):hover {
+  filter: brightness(1.06);
+}
+
+::selection {
+  background: #ffc2df;
+  color: #5b3a63;
+}

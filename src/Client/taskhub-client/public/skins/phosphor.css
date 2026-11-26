@@ -1,0 +1,228 @@
+/*
+ * TaskHub skin: "Phosphor".
+ *
+ * A green-screen CRT look: green phosphor text on black, a monospace font, square corners, no soft shadows,
+ * a shell prompt before page titles and faint scan lines. The skin is always dark, also when the light theme is chosen.
+ */
+
+:root,
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  /* Surfaces of the component library: from bright phosphor (0) down to the black of the screen (950). */
+  --p-surface-0: #e6ffe6;
+  --p-surface-50: #c8f7c8;
+  --p-surface-100: #a8e6a8;
+  --p-surface-200: #86cc86;
+  --p-surface-300: #66b366;
+  --p-surface-400: #4d994d;
+  --p-surface-500: #3a7a3a;
+  --p-surface-600: #2b5c2b;
+  --p-surface-700: #1f421f;
+  --p-surface-800: #152e15;
+  --p-surface-900: #0d1a0d;
+  --p-surface-950: #060c06;
+
+  --p-primary-50: #e9ffef;
+  --p-primary-100: #c6ffd5;
+  --p-primary-200: #93fdb0;
+  --p-primary-300: #5cf888;
+  --p-primary-400: #33f06a;
+  --p-primary-500: #1fd655;
+  --p-primary-600: #14ad43;
+  --p-primary-700: #128737;
+  --p-primary-800: #136a2f;
+  --p-primary-900: #115729;
+  --p-primary-950: #033114;
+  --p-primary-color: #33f06a;
+  --p-primary-contrast-color: #000000;
+  --p-primary-hover-color: #5cf888;
+  --p-primary-active-color: #93fdb0;
+
+  --p-highlight-background: rgba(51, 240, 106, 0.16);
+  --p-highlight-focus-background: rgba(51, 240, 106, 0.26);
+  --p-highlight-color: #c6ffd5;
+  --p-highlight-focus-color: #e9ffef;
+
+  --p-text-color: #b6f5bf;
+  --p-text-hover-color: #e6ffe6;
+  --p-text-muted-color: #5fae6c;
+  --p-text-hover-muted-color: #86cc86;
+
+  --p-content-background: #0a140a;
+  --p-content-hover-background: #122212;
+  --p-content-border-color: #1f421f;
+  --p-content-color: #b6f5bf;
+  --p-content-hover-color: #e6ffe6;
+
+  --p-form-field-background: #000000;
+  --p-form-field-filled-background: #050a05;
+  --p-form-field-border-color: #2b5c2b;
+  --p-form-field-hover-border-color: #4d994d;
+  --p-form-field-focus-border-color: #33f06a;
+  --p-form-field-color: #c6ffd5;
+  --p-form-field-placeholder-color: #3a7a3a;
+
+  --p-overlay-select-background: #050a05;
+  --p-overlay-select-border-color: #2b5c2b;
+  --p-overlay-popover-background: #050a05;
+  --p-overlay-popover-border-color: #2b5c2b;
+  --p-overlay-modal-background: #050a05;
+  --p-overlay-modal-border-color: #33f06a;
+  --p-mask-background: rgba(0, 0, 0, 0.75);
+
+  --p-border-radius-xs: 0;
+  --p-border-radius-sm: 0;
+  --p-border-radius-md: 0;
+  --p-border-radius-lg: 0;
+  --p-border-radius-xl: 0;
+  --p-button-border-radius: 0;
+
+  /* Design tokens of the app. */
+  --app-font: 'JetBrains Mono', 'Fira Code', 'DejaVu Sans Mono', 'Ubuntu Mono', Consolas, 'Courier New', monospace;
+  --app-bg: #000000;
+  --app-subtle: #030703;
+  --app-surface: #0a140a;
+  --app-hover: #122212;
+  --app-border: #1f421f;
+  --app-highlight: rgba(51, 240, 106, 0.16);
+  --app-shadow: 0 0 0 1px #1f421f;
+  --app-bar-bg: #000000;
+  --app-bar-shadow: 0 1px 0 #1f421f;
+  --app-hero-bg: linear-gradient(180deg, #0d1a0d 0%, #000000 100%);
+  --app-menu-active-bg: linear-gradient(90deg, #136a2f 0%, #0d1a0d 100%);
+  --app-accent: #33f06a;
+  --app-radius: 0;
+  --app-control-radius: 0;
+  --app-control-radius-inner: 0;
+  --app-label-radius: 0;
+  --task-color: #33f06a;
+
+  /* Status, priority and role colours in the ANSI palette of a terminal. */
+  --tone-slate-solid: #8a9a8a;
+  --tone-slate-fg: #c0ccc0;
+  --tone-slate-bg: rgba(138, 154, 138, 0.18);
+  --tone-blue-solid: #3b8eea;
+  --tone-blue-fg: #79b8ff;
+  --tone-blue-bg: rgba(59, 142, 234, 0.2);
+  --tone-green-solid: #23d18b;
+  --tone-green-fg: #5af7b0;
+  --tone-green-bg: rgba(35, 209, 139, 0.2);
+  --tone-rose-solid: #d670d6;
+  --tone-rose-fg: #f2a2f2;
+  --tone-rose-bg: rgba(214, 112, 214, 0.2);
+  --tone-amber-solid: #e5e510;
+  --tone-amber-fg: #f5f543;
+  --tone-amber-bg: rgba(229, 229, 16, 0.16);
+  --tone-orange-solid: #f59e42;
+  --tone-orange-fg: #ffc285;
+  --tone-orange-bg: rgba(245, 158, 66, 0.18);
+  --tone-red-solid: #f14c4c;
+  --tone-red-fg: #ff8080;
+  --tone-red-bg: rgba(241, 76, 76, 0.2);
+  --tone-teal-solid: #29b8db;
+  --tone-teal-fg: #6fdcf5;
+  --tone-teal-bg: rgba(41, 184, 219, 0.2);
+  --tone-violet-solid: #a77df2;
+  --tone-violet-fg: #c9b0ff;
+  --tone-violet-bg: rgba(167, 125, 242, 0.2);
+}
+
+body {
+  background: #000000;
+  color: var(--p-text-color);
+  text-shadow: 0 0 2px rgba(51, 240, 106, 0.35);
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+::selection {
+  background: #33f06a;
+  color: #000000;
+  text-shadow: none;
+}
+
+a {
+  color: var(--p-primary-color);
+}
+
+/* Faint scan lines over the whole screen; they never catch a click. */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 2147483647;
+  pointer-events: none;
+  background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.18) 0, rgba(0, 0, 0, 0.18) 1px, transparent 1px, transparent 3px);
+}
+
+/* A shell prompt before page titles and a blinking cursor after them. */
+.page-header h1::before,
+.page-title::before {
+  content: '$ ';
+  color: var(--p-primary-color);
+}
+
+.page-header h1::after,
+.page-title::after {
+  content: '_';
+  margin-left: 0.15em;
+  color: var(--p-primary-color);
+  animation: terminal-cursor 1s steps(1) infinite;
+}
+
+@keyframes terminal-cursor {
+  50% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-header h1::after,
+  .page-title::after {
+    animation: none;
+  }
+}
+
+/* Solid outlines instead of soft shadows. */
+.panel,
+.p-card,
+.p-dialog,
+.p-select-overlay,
+.p-popover,
+.p-menu {
+  box-shadow: none !important;
+  border: 1px solid var(--app-border);
+}
+
+.p-dialog {
+  border-color: #33f06a;
+}
+
+.p-button:not(.p-button-text):not(.p-button-outlined) {
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #000000;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1f421f;
+  border: 2px solid #000000;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #2b5c2b;
+}

@@ -1,0 +1,215 @@
+/*
+ * TaskHub skin: "Black & White".
+ *
+ * Strict monochrome with high contrast: black on white in the light theme and white on black in the dark theme,
+ * no colours at all, thick 2 px outlines and square corners, like ink on paper. Statuses and priorities stay
+ * distinguishable by their labels and by shades of grey.
+ */
+
+:root {
+  --p-primary-50: #f5f5f5;
+  --p-primary-100: #e5e5e5;
+  --p-primary-200: #cccccc;
+  --p-primary-300: #a3a3a3;
+  --p-primary-400: #737373;
+  --p-primary-500: #404040;
+  --p-primary-600: #262626;
+  --p-primary-700: #171717;
+  --p-primary-800: #0a0a0a;
+  --p-primary-900: #000000;
+  --p-primary-950: #000000;
+  --p-primary-color: #000000;
+  --p-primary-contrast-color: #ffffff;
+  --p-primary-hover-color: #262626;
+  --p-primary-active-color: #404040;
+
+  --p-highlight-background: #000000;
+  --p-highlight-focus-background: #262626;
+  --p-highlight-color: #ffffff;
+  --p-highlight-focus-color: #ffffff;
+
+  --p-text-color: #000000;
+  --p-text-muted-color: #4d4d4d;
+
+  --app-font: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --app-bg: #ffffff;
+  --app-subtle: #ffffff;
+  --app-surface: #ffffff;
+  --app-hover: #ededed;
+  --app-border: #000000;
+  --app-highlight: #e0e0e0;
+  --app-shadow: 4px 4px 0 #000000;
+  --app-bar-bg: #ffffff;
+  --app-bar-shadow: 0 2px 0 #000000;
+  --app-hero-bg: #000000;
+  --app-menu-active-bg: #000000;
+  --app-accent: #000000;
+  --app-radius: 0;
+  --app-control-radius: 0;
+  --app-control-radius-inner: 0;
+  --app-label-radius: 0;
+  --task-color: #000000;
+
+  --p-button-border-radius: 0;
+  --p-border-radius-xs: 0;
+  --p-border-radius-sm: 0;
+  --p-border-radius-md: 0;
+  --p-border-radius-lg: 0;
+  --p-border-radius-xl: 0;
+
+  /* Every tone becomes a shade of grey; darker means more urgent or more active. */
+  --tone-slate-solid: #a3a3a3;
+  --tone-slate-fg: #404040;
+  --tone-slate-bg: #f0f0f0;
+  --tone-blue-solid: #404040;
+  --tone-blue-fg: #000000;
+  --tone-blue-bg: #dedede;
+  --tone-green-solid: #000000;
+  --tone-green-fg: #000000;
+  --tone-green-bg: #ffffff;
+  --tone-rose-solid: #737373;
+  --tone-rose-fg: #404040;
+  --tone-rose-bg: #ebebeb;
+  --tone-amber-solid: #737373;
+  --tone-amber-fg: #262626;
+  --tone-amber-bg: #e5e5e5;
+  --tone-orange-solid: #404040;
+  --tone-orange-fg: #000000;
+  --tone-orange-bg: #d4d4d4;
+  --tone-red-solid: #000000;
+  --tone-red-fg: #ffffff;
+  --tone-red-bg: #000000;
+  --tone-teal-solid: #595959;
+  --tone-teal-fg: #262626;
+  --tone-teal-bg: #e5e5e5;
+  --tone-violet-solid: #262626;
+  --tone-violet-fg: #000000;
+  --tone-violet-bg: #d9d9d9;
+}
+
+:root[data-theme='dark'] {
+  --p-primary-color: #ffffff;
+  --p-primary-contrast-color: #000000;
+  --p-primary-hover-color: #d9d9d9;
+  --p-primary-active-color: #bfbfbf;
+
+  --p-highlight-background: #ffffff;
+  --p-highlight-focus-background: #d9d9d9;
+  --p-highlight-color: #000000;
+  --p-highlight-focus-color: #000000;
+
+  --p-surface-0: #ffffff;
+  --p-surface-50: #f2f2f2;
+  --p-surface-100: #d9d9d9;
+  --p-surface-200: #bfbfbf;
+  --p-surface-300: #a6a6a6;
+  --p-surface-400: #8c8c8c;
+  --p-surface-500: #737373;
+  --p-surface-600: #595959;
+  --p-surface-700: #404040;
+  --p-surface-800: #262626;
+  --p-surface-900: #0d0d0d;
+  --p-surface-950: #000000;
+
+  --p-text-color: #ffffff;
+  --p-text-muted-color: #b3b3b3;
+
+  --app-bg: #000000;
+  --app-subtle: #000000;
+  --app-surface: #000000;
+  --app-hover: #1f1f1f;
+  --app-border: #ffffff;
+  --app-highlight: #333333;
+  --app-shadow: 4px 4px 0 #ffffff;
+  --app-bar-bg: #000000;
+  --app-bar-shadow: 0 2px 0 #ffffff;
+  --app-hero-bg: #ffffff;
+  --app-menu-active-bg: #404040;
+  --app-accent: #ffffff;
+  --task-color: #ffffff;
+
+  --tone-slate-solid: #737373;
+  --tone-slate-fg: #bfbfbf;
+  --tone-slate-bg: #1a1a1a;
+  --tone-blue-solid: #bfbfbf;
+  --tone-blue-fg: #ffffff;
+  --tone-blue-bg: #333333;
+  --tone-green-solid: #ffffff;
+  --tone-green-fg: #ffffff;
+  --tone-green-bg: #000000;
+  --tone-rose-solid: #8c8c8c;
+  --tone-rose-fg: #d9d9d9;
+  --tone-rose-bg: #262626;
+  --tone-amber-solid: #a6a6a6;
+  --tone-amber-fg: #e6e6e6;
+  --tone-amber-bg: #2b2b2b;
+  --tone-orange-solid: #d9d9d9;
+  --tone-orange-fg: #ffffff;
+  --tone-orange-bg: #404040;
+  --tone-red-solid: #ffffff;
+  --tone-red-fg: #000000;
+  --tone-red-bg: #ffffff;
+  --tone-teal-solid: #a6a6a6;
+  --tone-teal-fg: #e6e6e6;
+  --tone-teal-bg: #2b2b2b;
+  --tone-violet-solid: #d9d9d9;
+  --tone-violet-fg: #ffffff;
+  --tone-violet-bg: #383838;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+html {
+  filter: grayscale(1);
+}
+
+/* Thick ink outlines on panels, cards, dialogs and form fields. */
+.panel,
+.p-card,
+.p-dialog,
+.p-select-overlay,
+.p-popover {
+  border: 2px solid var(--app-border) !important;
+}
+
+.p-inputtext,
+.p-select,
+.p-textarea,
+.p-inputnumber-input {
+  border-width: 2px;
+  border-color: var(--p-text-color);
+}
+
+.p-button {
+  border-width: 2px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.page-header h1,
+.page-title {
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+a {
+  color: inherit;
+  text-decoration: underline;
+}
+
+:focus-visible {
+  outline: 3px solid var(--p-text-color);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: var(--p-text-color);
+  color: var(--app-bg);
+}

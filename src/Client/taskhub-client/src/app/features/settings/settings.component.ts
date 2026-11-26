@@ -1,4 +1,5 @@
 import { Component, OnInit, computed, inject } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -20,6 +21,9 @@ import { UserPreferencesService } from '../../core/services/user-preferences.ser
 export class SettingsComponent implements OnInit {
   private readonly translate = inject(TranslateService);
 
+  // Streamed, so the label appears once the translations are loaded and follows a change of the language.
+  private readonly defaultSkinLabel = toSignal(this.translate.stream('settings.skinDefault'), { initialValue: '' });
+
   readonly auth = inject(AuthService);
   readonly language = inject(LanguageService);
   readonly theme = inject(ThemeService);
@@ -37,13 +41,11 @@ export class SettingsComponent implements OnInit {
     { mode: 'auto', icon: 'pi pi-desktop' }
   ];
 
-  // The default skin is the built-in look; its label follows the interface language.
+  // The default skin is the built-in look of the app.
   readonly skinOptions = computed(() => {
-    this.language.current();
-
     const options = this.skins.skins().map((skin) => ({ value: skin.id, label: skin.name }));
 
-    return [{ value: DEFAULT_SKIN_ID, label: this.translate.instant('settings.skinDefault') }, ...options];
+    return [{ value: DEFAULT_SKIN_ID, label: this.defaultSkinLabel() as string }, ...options];
   });
 
   readonly selectedSkinDescription = computed(() => {

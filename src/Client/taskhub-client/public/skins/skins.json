@@ -1,9 +1,45 @@
 {
   "skins": [
     {
+      "file": "black-white.css",
+      "name": "Black & White",
+      "description": "Strict monochrome with high contrast, thick outlines and square corners.",
+      "version": "1"
+    },
+    {
+      "file": "candy.css",
+      "name": "Candy",
+      "description": "Sweet pastels, pink and lilac gradients, rounded font and bubbly corners.",
+      "version": "1"
+    },
+    {
       "file": "forest.css",
       "name": "Forest",
       "description": "Green accents and softer corners.",
+      "version": "1"
+    },
+    {
+      "file": "phosphor.css",
+      "name": "Phosphor",
+      "description": "Green-screen CRT: phosphor text on black, monospace font.",
+      "version": "1"
+    },
+    {
+      "file": "simple.css",
+      "name": "Simple",
+      "description": "Calm and minimal: neutral greys, one quiet accent, flat surfaces.",
+      "version": "1"
+    },
+    {
+      "file": "terminal.css",
+      "name": "Terminal",
+      "description": "Modern console: grey text on black, a yellow prompt segment, green and blue accents.",
+      "version": "1"
+    },
+    {
+      "file": "windows.css",
+      "name": "Windows",
+      "description": "Windows 11 Fluent: Segoe UI, Windows blue, Mica-like backgrounds and small corners.",
       "version": "1"
     }
   ]

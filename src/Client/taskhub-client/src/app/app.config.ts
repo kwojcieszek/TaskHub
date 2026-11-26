@@ -10,6 +10,7 @@ import { providePrimeNG } from 'primeng/config';
 import { DialogService } from 'primeng/dynamicdialog';
 
 import { routes } from './app.routes';
+import { appVersion } from './core/config/app-version';
 import { TaskHubPreset } from './app.theme';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
 import { apiFeedbackInterceptor } from './core/interceptors/api-feedback.interceptor';
@@ -17,8 +18,9 @@ import { apiFeedbackInterceptor } from './core/interceptors/api-feedback.interce
 // English ships with Angular; every other interface language needs its date and number formats registered.
 registerLocaleData(localePl);
 
+// The release version in the address makes browsers fetch the translations again after every release.
 function httpLoaderFactory(http: HttpClient): TranslateLoader {
-  return new TranslateHttpLoader(http, '/i18n/', '.json');
+  return new TranslateHttpLoader(http, '/i18n/', `.json?v=${encodeURIComponent(appVersion)}`);
 }
 
 export const appConfig: ApplicationConfig = {
